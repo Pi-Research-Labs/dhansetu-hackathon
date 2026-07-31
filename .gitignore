@@ -1,0 +1,18 @@
+# Python / backend
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.env
+
+# OS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
