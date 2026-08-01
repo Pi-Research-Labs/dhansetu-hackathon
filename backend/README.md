@@ -69,6 +69,31 @@ function body from a fresh connection — every call failed with
 `visit_outcomes` and `UPDATE (status)` on `officer_tasks` — neither was
 covered by the original grants).
 
+## Deployment
+
+Running live on the GCP VM (`instance-20260801-123322`) as a systemd service
+— see [`../API.md`](../API.md) for the base URL and full endpoint docs
+consumed by `mobile`/`web`.
+
+```bash
+# on the VM
+sudo systemctl status dhansetu-backend    # check it's up
+sudo systemctl restart dhansetu-backend   # after redeploying code
+journalctl -u dhansetu-backend -f         # tail logs
+```
+
+`Restart=always` + `WantedBy=multi-user.target`, so it survives crashes and
+the VM's 9AM/9PM auto stop-start schedule. `DATABASE_URL` on the VM points at
+`localhost` (backend and Postgres are colocated there), not the public IP —
+faster and one less thing exposed over the public interface. Port 8000 is
+open in the `dhansetu-backend-firewall` rule, same open-to-internet tradeoff
+already made for Postgres on 5432.
+
+To redeploy after code changes: copy the updated `backend/` to
+`~/dhansetu-backend` on the VM (excluding `.venv`/`.env`), reinstall
+requirements if `requirements.txt` changed, then `sudo systemctl restart
+dhansetu-backend`.
+
 ## Structure
 
 ```
