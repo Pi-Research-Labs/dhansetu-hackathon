@@ -41,6 +41,34 @@ interchangeably. Demo credentials for the 6 named personas and 6 officers are
 in `../database/README.md`. This is a hackathon shortcut — phone + OTP is the
 right login for the actual target users; see that README for why.
 
+- `GET /api/v1/auth/me` — works with either token type, returns the caller's
+  own identity. Use this on app start to restore a session from a stored
+  token without re-prompting for a password.
+
+## API
+
+All routes below require `Authorization: Bearer <token>` from one of the
+login endpoints above.
+
+| Route | Access | Backed by |
+|---|---|---|
+| `GET /api/v1/worklist` | officer only | `v_officer_worklist`, filtered to the caller's own `officer_id` |
+| `GET /api/v1/enterprise/{enterprise_id}` | officer (any), merchant (own enterprise only) | `v_enterprise_card` + `v_live_forecast` + latest `v_alert_actions` |
+| `POST /api/v1/outcome` | officer only | `dhansetu.record_outcome()` — closes the task and writes a `visit_outcomes` row |
+
+A merchant token requesting another enterprise's detail gets `403`; an
+officer token can view any enterprise (needed for cross-district visibility
+during shock events — see `v_district_event_watch` in `../database/README.md`).
+
+**Found and fixed while wiring this up:** `record_outcome()` referenced bare
+table names that only resolved via `search_path`, which doesn't carry into a
+function body from a fresh connection — every call failed with
+`relation "officer_tasks" does not exist` until the function was altered to
+`SET search_path = dhansetu, public` (see `../database/05_views.sql` and
+`../database/09_app_grants.sql`, which also had to grant `INSERT` on
+`visit_outcomes` and `UPDATE (status)` on `officer_tasks` — neither was
+covered by the original grants).
+
 ## Structure
 
 ```

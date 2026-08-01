@@ -1,8 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.deps import get_token_claims
 from app.core.security import create_access_token
 from app.schemas.auth import LoginRequest, OfficerTokenResponse, TokenResponse
-from app.services.auth import authenticate_merchant, authenticate_officer
+from app.services.auth import (
+    authenticate_merchant,
+    authenticate_officer,
+    get_merchant_identity,
+    get_officer_identity,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -34,3 +40,21 @@ async def officer_login(payload: LoginRequest) -> OfficerTokenResponse:
         officer_name=officer["officer_name"],
         district_id=officer["district_id"],
     )
+
+
+@router.get("/me")
+async def me(claims: dict = Depends(get_token_claims)) -> dict:
+    role = claims.get("role")
+    subject = claims["sub"]
+
+    if role == "merchant":
+        identity = await get_merchant_identity(subject)
+    elif role == "officer":
+        identity = await get_officer_identity(subject)
+    else:
+        raise HTTPException(status_code=401, detail="Unknown token role")
+
+    if identity is None:
+        raise HTTPException(status_code=404, detail="Account no longer exists")
+
+    return {"role": role, **identity}

@@ -188,6 +188,15 @@ curl -X POST http://<VM_IP>:8000/api/v1/auth/officer-login \
   client-side and needs no superuser.
 - **`quantile` is a column name** — every identifier is double-quoted
   throughout.
+- **`record_outcome()` needs `SET search_path` on the function itself**, not
+  just at the top of the file that creates it. Its body references bare
+  table names (`officer_tasks`, `visit_outcomes`); those only resolved via
+  `search_path`, which doesn't carry into a plpgsql function body from a
+  fresh connection — every call failed with `relation "officer_tasks" does
+  not exist` until fixed in `05_views.sql` (`LANGUAGE plpgsql SET search_path
+  = dhansetu, public AS $$...`). Also needed `GRANT INSERT` on
+  `visit_outcomes` and `GRANT UPDATE (status)` on `officer_tasks` for
+  `dhansetu_user` — neither was in the original `09_app_grants.sql`.
 
 ## What we skipped (on purpose, for now)
 

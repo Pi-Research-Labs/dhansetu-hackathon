@@ -23,6 +23,10 @@ GRANT INSERT ON dhansetu.ledger_entries_live TO dhansetu_user;
 GRANT INSERT, UPDATE ON dhansetu.mandi_prices_live, dhansetu.weather_live TO dhansetu_user;
 GRANT INSERT, UPDATE ON dhansetu.ingestion_runs TO dhansetu_user;
 
+-- record_outcome() writes the officer's visit result and closes the task.
+GRANT INSERT ON dhansetu.visit_outcomes TO dhansetu_user;
+GRANT UPDATE (status) ON dhansetu.officer_tasks TO dhansetu_user;
+
 -- So future tables created the same way don't repeat this bug.
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA dhansetu
   GRANT SELECT ON TABLES TO dhansetu_user;

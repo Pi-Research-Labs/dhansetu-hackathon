@@ -285,7 +285,9 @@ CREATE OR REPLACE FUNCTION record_outcome(
     p_intervention TEXT DEFAULT NULL,
     p_note_lang    TEXT DEFAULT NULL
 ) RETURNS TEXT
-LANGUAGE plpgsql AS $$
+LANGUAGE plpgsql
+SET search_path = dhansetu, public
+AS $$
 DECLARE
     v_ent  TEXT;
     v_id   TEXT;
