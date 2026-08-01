@@ -1,0 +1,10 @@
+sub_type_id,sub_type,sector,typical_daily_turnover
+ST01,Dairy Producer,DAIRY,1400
+ST02,Poultry Unit (broiler),POULTRY,3200
+ST03,Handloom Weaver,HANDICRAFT,900
+ST04,Pottery / Terracotta Unit,HANDICRAFT,650
+ST05,Tailoring Unit,HANDICRAFT,750
+ST06,FPO / Agri Aggregator,FOODPROC,6500
+ST07,SHG Food Processing Unit,FOODPROC,2100
+ST08,Kirana Store,RETAIL,4200
+ST09,Vegetable Vendor,RETAIL,2600

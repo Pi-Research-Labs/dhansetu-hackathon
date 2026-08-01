@@ -1,0 +1,42 @@
+DHANSETU v1.2 data dictionary,rows,description
+DHANSETU prototype dataset v1.2,,
+252 enterprises | 6 districts / 6 states / 6 languages | 5 sectors | 8 sub-types | 1096 days (2023-08-01 to 2026-07-31) | seed 20260731,,
+,,
+table,rows,description
+districts,6,Six districts across six states; one per supported language.
+sectors,5,Five cash-flow physics / failure modes.
+sub_types,9,"Eight business types, mapped into the five sectors."
+sector_seasonality,60,Month-of-year inflow AND outflow multipliers. Separate curves are what make the dairy squeeze expressible.
+commodities,10,"Price drivers. Joined by (commodity_id, district_id, date) — never by persona."
+officers,6,"Six officers, 42 enterprises each, one district each."
+schemes,6,Government schemes; deltas are asserted to have actually landed.
+mechanisms,6,The six named stress mechanisms. Rules and reason codes share this vocabulary.
+actions,12,"Action vocabulary, deliberately DISTINCT from mechanisms."
+rules,18,"18 deterministic rules, three per mechanism, so any mechanism can rank first."
+market_risk_cards,16,Sector risk narrative cards.
+enterprises,252,252 enterprises. sim_* columns are simulator metadata and must NEVER be used as model features.
+daily_ledger,276192,"252 x 1096 daily rows. drv_* columns are the causal driver decomposition (ground truth, not features)."
+receivables,26447,"Invoice-level receivables with terms, settlement and write-offs. Absent entirely from v1.1."
+receivable_settlements,25508,Cash actually received against invoices.
+poultry_batches,630,42-day grow-out batches with dealer-credit feed financing.
+loans,232,Loan accounts including mid-panel disbursements.
+repayment_schedule,4439,Reducing-balance amortisation. closing_balance is monotonically decreasing per loan.
+mandi_prices,65760,Commodity x district x date price series.
+weather_daily,6576,District x date weather including THI for dairy heat stress.
+shock_events,25,Ten shocks expanded per district; scope is validated non-empty at build time.
+shock_event_scope,440,Which enterprises each shock actually touched.
+feature_snapshots,8316,Monthly as_of snapshots. Every feature uses only data at or before as_of.
+stress_episodes,202,GROUND TRUTH. Causal onset date and true mechanism per episode.
+rule_evaluations,149688,"Every rule at every as_of, with fired flag — replayable."
+risk_assessments,8316,"Fused score, tier, reason codes, headroom per enterprise per as_of."
+forecasts,149688,Vintage forecasts: origin_date x horizon x quantile. is_live_forecast marks forward calls with no actual yet.
+alerts,955,"AMBER/RED alerts with amount, cause, deadline and expiry. Never exported to a bureau."
+recommendations,2770,Up to three ranked ACTIONS per alert.
+officer_tasks,955,Triage queue.
+visit_outcomes,697,Field outcome — the training label that closes the loop.
+consent_artifacts,252,"DPDP-style consent, including revocations."
+access_grants,334,Time-boxed T2 detail grants.
+audit_log,334,"Who viewed what, when, under which grant."
+merchant_entries,102360,"~102k voice/IVR/assisted entries with ASR confidence, sync lag, duplicates and corrections."
+eval_lead_time,9,Measured early-warning lead time per out-of-time episode.
+eval_reason_code_accuracy,192,Top reason code vs the simulator's true mechanism.

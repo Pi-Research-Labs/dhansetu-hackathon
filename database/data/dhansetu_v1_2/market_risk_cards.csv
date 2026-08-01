@@ -1,0 +1,17 @@
+sector,risk_type,detail,severity
+DAIRY,climate,Heat stress above THI 78 cuts yield 8-14% in Apr-Jun,high
+DAIRY,margin,Fodder cost peaks exactly when yield troughs; procurement price is sticky,high
+DAIRY,counterparty,Single co-operative buyer — settlement cadence sets the cash cycle,medium
+POULTRY,cycle,42-day grow-out means no inflow for six weeks; feed is on dealer credit,high
+POULTRY,demand,Shrawan and Navratri collapse local demand by 30-40%,high
+POULTRY,disease,Avian influenza scares halt sales district-wide for weeks,high
+POULTRY,input,Maize-soya price shocks pass straight through to feed cost,medium
+HANDICRAFT,counterparty,One exporter or agent can be 70%+ of the order book,high
+HANDICRAFT,receivable,55-95 day terms; a cancelled festival order is existential,high
+HANDICRAFT,seasonality,Apr-Jun trough before the festival order cycle,medium
+FOODPROC,receivable,42-62 day retailer credit locks up working capital,high
+FOODPROC,input,Procurement is harvest-linked; cash goes out before it comes in,high
+FOODPROC,logistics,Mandi strikes and fuel spikes hit transport-heavy margins,medium
+RETAIL,receivable,Informal udhaar is invisible until it is uncollectable; ~7% written off,high
+RETAIL,visibility,Cash-dominant records mean observed inflow understates true sales,high
+RETAIL,demand,Festival concentration means one bad October compounds all year,medium

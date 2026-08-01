@@ -1,0 +1,39 @@
+table,rows,cols,bytes,sha256_16,description
+_data_dictionary,41,3,3274,76248470c2e2d24c,
+access_grants,334,8,25130,9c64e06d1134b340,Time-boxed T2 detail grants.
+actions,12,3,1112,cfbc1a91acf45e2f,"Action vocabulary, deliberately DISTINCT from mechanisms."
+alerts,955,41,394218,e5f90f867159e4b5,"AMBER/RED alerts with amount, cause, deadline and expiry. Never exported to a bureau."
+audit_log,334,9,26715,c2208f2ea6b8022b,"Who viewed what, when, under which grant."
+commodities,10,7,638,10bca75ce2553f49,"Price drivers. Joined by (commodity_id, district_id, date) — never by persona."
+consent_artifacts,252,10,35043,f71e8adc5c77c1df,"DPDP-style consent, including revocations."
+daily_ledger,276192,39,64113335,c3b48ce6004b5fef,"252 x 1096 daily rows. drv_* columns are the causal driver decomposition (ground truth, not features)."
+districts,6,7,434,80f09de44e67efd5,Six districts across six states; one per supported language.
+enterprises,252,27,57299,4649e91b44ade5ba,252 enterprises. sim_* columns are simulator metadata and must NEVER be used as model features.
+eval_lead_time,9,6,490,f7fda3efeb291a11,Measured early-warning lead time per out-of-time episode.
+eval_reason_code_accuracy,192,5,10112,3d1a334c724a8fc1,Top reason code vs the simulator's true mechanism.
+feature_snapshots,8316,76,4514316,0bdd6e8ca7247324,Monthly as_of snapshots. Every feature uses only data at or before as_of.
+forecasts,149688,10,11915132,a11940ba09fa04fb,Vintage forecasts: origin_date x horizon x quantile. is_live_forecast marks forward calls with no actual yet.
+loans,232,8,14051,6559ba9877298cba,Loan accounts including mid-panel disbursements.
+mandi_prices,65760,6,3356319,b9051980ad95ac91,Commodity x district x date price series.
+market_risk_cards,16,4,1372,5825c2e1c516a45a,Sector risk narrative cards.
+mechanisms,6,1,110,4d1d014090ec5edb,The six named stress mechanisms. Rules and reason codes share this vocabulary.
+merchant_entries,102360,15,11442313,68bf0c2e9e8bed94,"~102k voice/IVR/assisted entries with ASR confidence, sync lag, duplicates and corrections."
+officer_tasks,955,7,50082,8d1441759e67f86c,Triage queue.
+officers,6,7,292,712c1a129aad2da5,"Six officers, 42 enterprises each, one district each."
+poultry_batches,630,10,52010,180db38d46b45017,42-day grow-out batches with dealer-credit feed financing.
+receivable_settlements,25508,4,1036537,aebee2e09c9e8631,Cash actually received against invoices.
+receivables,26447,10,2607487,c4313bf98489ef7b,"Invoice-level receivables with terms, settlement and write-offs. Absent entirely from v1.1."
+recommendations,2770,9,343683,c5109481c83effdc,Up to three ranked ACTIONS per alert.
+repayment_schedule,4439,10,331675,8e7b3ca9f1709f7b,Reducing-balance amortisation. closing_balance is monotonically decreasing per loan.
+risk_assessments,8316,32,2736390,f2663f3767efad6b,"Fused score, tier, reason codes, headroom per enterprise per as_of."
+rule_evaluations,149688,6,9569130,480b122a79d48ad7,"Every rule at every as_of, with fired flag — replayable."
+rules,18,4,1085,54f66ea5efd5609b,"18 deterministic rules, three per mechanism, so any mechanism can rank first."
+schemes,6,7,984,04219c5c13013215,Government schemes; deltas are asserted to have actually landed.
+sector_seasonality,60,4,1233,a62ca34bc57dcccb,Month-of-year inflow AND outflow multipliers. Separate curves are what make the dairy squeeze expressible.
+sectors,5,3,460,d0fda41094642aae,Five cash-flow physics / failure modes.
+shock_event_scope,440,2,5745,114fe0de0880cf32,Which enterprises each shock actually touched.
+shock_events,25,14,4197,a78f0483cc2b184f,Ten shocks expanded per district; scope is validated non-empty at build time.
+stress_episodes,202,11,33376,c61cc8f9b84e310d,GROUND TRUTH. Causal onset date and true mechanism per episode.
+sub_types,9,4,389,ccd9e5bc3d38d96c,"Eight business types, mapped into the five sectors."
+visit_outcomes,697,8,50650,90be3d5cbdff7e70,Field outcome — the training label that closes the loop.
+weather_daily,6576,9,493627,84759e922fb757a8,District x date weather including THI for dairy heat stress.

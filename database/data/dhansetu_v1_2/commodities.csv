@@ -1,0 +1,11 @@
+commodity_id,commodity,unit,base_price,annual_trend_pct,seasonal_peak_month,seasonal_amplitude
+CM01,Milk procurement price,INR/litre,36.0,3.0,11,0.06
+CM02,Cattle feed / fodder index,index,100.0,5.5,5,0.14
+CM03,Broiler realisation price,INR/kg,92.0,4.0,12,0.16
+CM04,Poultry feed (maize-soya),index,100.0,6.5,6,0.12
+CM05,Cotton yarn & fabric index,index,100.0,4.0,9,0.1
+CM06,Paddy & pulses mandi index,index,100.0,3.5,4,0.13
+CM07,Vegetable mandi basket,index,100.0,5.5,7,0.26
+CM08,FMCG & staples basket,index,100.0,4.0,10,0.05
+CM09,Diesel / transport index,index,100.0,5.0,1,0.07
+CM10,"Clay, glaze & kiln fuel index",index,100.0,5.0,6,0.09
