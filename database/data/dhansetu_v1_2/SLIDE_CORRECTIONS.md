@@ -74,7 +74,7 @@ All six are now real rows on pinned IDs:
 | **ENT0031** | Lakshmiben Patel, 38 | Dairy Producer | Anand, GJ | gu | app | shared device = true; co-op settles every ~14 days |
 | **ENT0104** | Suresh Reddy, 34 | Poultry (broiler) | Nizamabad, TS | te | app | 21 batches, 42-day grow-out, feed on dealer credit |
 | **ENT0067** | Sunita Devi, 52 | Pottery / Terracotta | Bhilwara, RJ | hi | **ivr** | digital_share 0.06 → 0.09, `low_visibility = true` |
-| ENT0152 | Vaishali Patil, 41 | SHG Food Processing | Kolhapur, MH | mr | app | 45-day retailer receivables |
+| ENT0152 | Anita Patil, 41 | SHG Food Processing | Kolhapur, MH | mr | app | 45-day retailer receivables |
 | ENT0188 | Nilima Bora, 36 | Handloom Weaver | Nagaon, AS | as | app | single export agent, flood-exposed |
 | ENT0224 | Basanti Pradhan, 47 | Kirana Store | Ganjam, OD | or | assisted | heavy udhaar book, cash-dominant |
 

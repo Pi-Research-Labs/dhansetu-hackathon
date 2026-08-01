@@ -30,18 +30,29 @@ tables in dependency order.
 | `04_live_data.sql` | Real-data layer: district geo, Sarvam voice capture, Agmarknet, Open-Meteo. |
 | `05_views.sql` | 24 views — the API surface. |
 | `06_verify.sql` | Expected vs. loaded row counts. |
+| `07_auth.sql` | `merchant_accounts` table + seed logins for the 6 named demo personas. Hand-written. |
+| `08_officer_auth.sql` | `officer_accounts` table + seed logins for all 6 field officers. Hand-written. |
+| `09_app_grants.sql` | Grants `dhansetu_user` the access it actually needs to run the API. Hand-written. |
 | `demo_queries.sql` | One query per screen / per deck claim. |
 
-`load.sh` runs 01-05 and prints row counts. Run `06_verify.sql` yourself for
-the full 37-table comparison.
+`load.sh` runs 01-05, 07, 08 and 09, and prints row counts. Run `06_verify.sql`
+yourself for the full 37-table comparison.
 
 ## How the FastAPI backend should talk to this database
 
 **The backend must only ever query views, never the raw tables.** For this
 hackathon that boundary is enforced by convention/code review, not by Postgres
-roles — `dhansetu_user` currently has full read access to the raw tables too.
-That's a deliberate simplification given the timeline; see "What we skipped"
-below if that changes.
+roles — `dhansetu_user` has full `SELECT` on the raw tables too (granted by
+`09_app_grants.sql`). That's a deliberate simplification given the timeline;
+see "What we skipped" below if that changes.
+
+**Heads up:** before `09_app_grants.sql` existed, `dhansetu_user` had
+database-level `CONNECT`/`CREATE` but *no* privileges inside the `dhansetu`
+schema at all — not even on the safe views. Every query, including
+`/auth/login`, failed with `permission denied for schema dhansetu`. If you
+ever recreate this database from scratch without running `load.sh`
+end-to-end (e.g. you only ran `01-05` by hand), you'll hit the same thing —
+run `09_app_grants.sql` too.
 
 The three API endpoints are already views:
 
@@ -105,6 +116,62 @@ panel rather than replace it:
 See `data/dhansetu_v1_2/README.md` for the full commodity-mapping notes
 (`commodity_map` — which of the ten commodities aren't on Agmarknet, and why
 that gap is itself part of the pitch).
+
+## Merchant app login (`07_auth.sql`)
+
+`merchant_accounts` (phone number + bcrypt password hash) backs the mobile
+app's `POST /auth/login`, wired up in `backend/app/api/routes/auth.py`. It
+returns a JWT (`sub` = `enterprise_id`) plus the merchant's name.
+
+**This is a hackathon shortcut, not the right long-term design.** The target
+users are exactly the people the persona notes describe as low-digital-
+literacy / shared-device / IVR-preferring (see `data/dhansetu_v1_2/
+SLIDE_CORRECTIONS.md` — Sunita Devi uses IVR precisely because typing isn't
+realistic for her). Phone number + OTP is the right login for production;
+password auth was chosen here only because it needs no SMS gateway to demo.
+
+Seed accounts (the 6 named personas, `enterprises.is_named_persona`) —
+**synthetic demo data, not real people, passwords intentionally documented
+here**:
+
+| Enterprise | Persona | Phone | Password |
+|---|---|---|---|
+| ENT0031 | Lakshmiben Patel | `9000000031` | `Lakshmi@0031` |
+| ENT0104 | Suresh Reddy | `9000000104` | `Suresh@0104` |
+| ENT0067 | Sunita Devi | `9000000067` | `Sunita@0067` |
+| ENT0152 | Anita Patil | `9000000152` | `Anita@0152` |
+| ENT0188 | Nilima Bora | `9000000188` | `Nilima@0188` |
+| ENT0224 | Basanti Pradhan | `9000000224` | `Basanti@0224` |
+
+```bash
+curl -X POST http://<VM_IP>:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number":"9000000031","password":"Lakshmi@0031"}'
+```
+
+## Field officer login (`08_officer_auth.sql`)
+
+Same pattern as merchant login, separate table (`officer_accounts`) and
+endpoint (`POST /auth/officer-login`), so tokens carry a `role` claim
+(`merchant` vs `officer`) — merchant credentials are rejected on the officer
+endpoint and vice versa. Same OTP-vs-password caveat as above applies.
+
+Seed accounts for all 6 field officers:
+
+| Officer | District | Phone | Password |
+|---|---|---|---|
+| FO1 Prakash Nair | Anand | `8000000001` | `Prakash@FO1` |
+| FO2 Meena Choudhary | Bhilwara | `8000000002` | `Meena@FO2` |
+| FO3 K. Ramesh | Nizamabad | `8000000003` | `Ramesh@FO3` |
+| FO4 Sujata Kulkarni | Kolhapur | `8000000004` | `Sujata@FO4` |
+| FO5 Dhruba Saikia | Nagaon | `8000000005` | `Dhruba@FO5` |
+| FO6 Sanjay Behera | Ganjam | `8000000006` | `Sanjay@FO6` |
+
+```bash
+curl -X POST http://<VM_IP>:8000/api/v1/auth/officer-login \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number":"8000000001","password":"Prakash@FO1"}'
+```
 
 ## Gotchas already handled
 
