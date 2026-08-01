@@ -220,7 +220,7 @@ NAMED_PERSONAS = [
              "call or assisted entry alone. Needs a voice call, not an app.",
     ),
     dict(
-        enterprise_id="ENT0152", name="Vaishali Patil", age=41, sub_type="ST07",
+        enterprise_id="ENT0152", name="Anita Patil", age=41, sub_type="ST07",
         district_id=4, lang="mr", channel="app", shared_device=False,
         daily_turnover=2250, digital_start=0.55, digital_slope=0.09, literacy="medium",
         stress_script="foodproc_receivable_stretch",

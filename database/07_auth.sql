@@ -28,6 +28,6 @@ INSERT INTO merchant_accounts (enterprise_id, phone_number, password_hash) VALUE
   ('ENT0031', '9000000031', '$2b$12$VyD/ayKrTkgwBppWkSdmZ.thuAhGT/8NzOGfoqcx2xR7/F/6ePBTW'),
   ('ENT0104', '9000000104', '$2b$12$udPafrz3CN1G27GZfBkqHue0YcGGUdlpkCb71oNyluXvlPguOiI/e'),
   ('ENT0067', '9000000067', '$2b$12$lVHY94amMTKdQxezpDWtZu1g6JGvn7eMINpBiKx0e65K69b16yGZm'),
-  ('ENT0152', '9000000152', '$2b$12$63hNqPtnuBNAddQcShMvNegUGMUDknrqDOy5LsRmkFupCjg0u.4Ku'),
+  ('ENT0152', '9000000152', '$2b$12$qW/CtkuXc/PVrbJLhxtRB.kFuMEhv6auUEcOHOOng1dG0MUaXCTtC'),
   ('ENT0188', '9000000188', '$2b$12$N5GNGGZRDHj3RbCNf7pDSOoWS7C2H0JqKT9T3/S1OlmBQLCTFJZh2'),
   ('ENT0224', '9000000224', '$2b$12$U4oBnIhOeiqPCly/Cj80x.gJWrt1i2OpyV4Rjfk.zLlgZsrg9Hzem');

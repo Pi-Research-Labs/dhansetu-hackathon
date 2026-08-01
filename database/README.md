@@ -138,7 +138,7 @@ here**:
 | ENT0031 | Lakshmiben Patel | `9000000031` | `Lakshmi@0031` |
 | ENT0104 | Suresh Reddy | `9000000104` | `Suresh@0104` |
 | ENT0067 | Sunita Devi | `9000000067` | `Sunita@0067` |
-| ENT0152 | Vaishali Patil | `9000000152` | `Vaishali@0152` |
+| ENT0152 | Anita Patil | `9000000152` | `Anita@0152` |
 | ENT0188 | Nilima Bora | `9000000188` | `Nilima@0188` |
 | ENT0224 | Basanti Pradhan | `9000000224` | `Basanti@0224` |
 

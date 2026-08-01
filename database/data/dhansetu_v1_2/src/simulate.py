@@ -202,7 +202,7 @@ FIRST_F = {
     "gu": ["Lakshmiben", "Hansaben", "Jyotiben", "Rekhaben", "Nirmalaben", "Bhavnaben", "Kokilaben", "Dakshaben"],
     "hi": ["Sunita", "Kamla", "Pushpa", "Rekha", "Savitri", "Meera", "Radha", "Sarita"],
     "te": ["Lakshmi", "Padma", "Sujatha", "Vijaya", "Anitha", "Swaroopa", "Jyothi", "Sarala"],
-    "mr": ["Vaishali", "Shubhangi", "Manisha", "Anita", "Kalpana", "Sushma", "Rohini", "Archana"],
+    "mr": ["Shubhangi", "Manisha", "Anita", "Kalpana", "Sushma", "Rohini", "Archana"],
     "as": ["Nilima", "Rupali", "Bornali", "Junmoni", "Anjali", "Mridula", "Purabi", "Dipali"],
     "or": ["Basanti", "Sasmita", "Pramila", "Anjali", "Sarojini", "Namita", "Kuni", "Sabita"],
 }
