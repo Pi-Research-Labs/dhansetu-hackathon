@@ -43,7 +43,8 @@ run 03_constraints_indexes.sql
 run 04_live_data.sql
 run 05_views.sql
 run 07_auth.sql
-run 08_app_grants.sql
+run 08_officer_auth.sql
+run 09_app_grants.sql
 
 echo "==> row counts"
 psql -d "$DB" -q -c "

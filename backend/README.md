@@ -31,11 +31,15 @@ for the hackathon, not by Postgres roles, so it's on code review to catch.
 
 ## Auth
 
-`POST /api/v1/auth/login` (`phone_number` + `password`) authenticates a
-merchant against `dhansetu.merchant_accounts` and returns a JWT. Demo
-credentials for the 6 named personas are in `../database/README.md`. This is
-a hackathon shortcut — phone + OTP is the right login for the actual target
-users; see that README for why.
+- `POST /api/v1/auth/login` (`phone_number` + `password`) authenticates a
+  merchant against `dhansetu.merchant_accounts` and returns a JWT.
+- `POST /api/v1/auth/officer-login` — same shape, authenticates a field
+  officer against `dhansetu.officer_accounts`.
+
+Both JWTs carry a `role` claim (`merchant` / `officer`) so they can't be used
+interchangeably. Demo credentials for the 6 named personas and 6 officers are
+in `../database/README.md`. This is a hackathon shortcut — phone + OTP is the
+right login for the actual target users; see that README for why.
 
 ## Structure
 
@@ -48,6 +52,6 @@ app/
     routes/       # individual route modules (health, auth, ...)
   models/         # ORM / DB models
   schemas/        # Pydantic request/response schemas
-  services/       # business logic (auth.py talks to merchant_accounts)
+  services/       # business logic (auth.py talks to merchant_accounts / officer_accounts)
 tests/
 ```
