@@ -1,0 +1,26 @@
+event_id,event_code,event_type,district_id,start_date,end_date,duration_days,sectors,inflow_mult,outflow_mult,price_mult,severity,description,price_commodities
+EV01-D1,EV01,heatwave,1,2024-05-04,2024-05-19,16,DAIRY,0.82,1.09,1.12,high,Severe heat spell: milk yields fall while cooling and fodder costs rise,CM02|CM04
+EV01-D2,EV01,heatwave,2,2024-05-04,2024-05-19,16,DAIRY,0.82,1.09,1.12,high,Severe heat spell: milk yields fall while cooling and fodder costs rise,CM02|CM04
+EV02-D3,EV02,avian_influenza,3,2024-12-08,2024-12-31,24,POULTRY,0.58,0.94,0.78,high,Avian influenza scare: local broiler demand collapses for three weeks,CM03
+EV02-D6,EV02,avian_influenza,6,2024-12-08,2024-12-31,24,POULTRY,0.58,0.94,0.78,high,Avian influenza scare: local broiler demand collapses for three weeks,CM03
+EV03-D3,EV03,mandi_strike,3,2025-03-17,2025-03-23,7,FOODPROC|RETAIL,0.47,0.9,1.06,medium,Mandi logistics strike halts settlements and supply for a week,CM06|CM07
+EV03-D4,EV03,mandi_strike,4,2025-03-17,2025-03-23,7,FOODPROC|RETAIL,0.47,0.9,1.06,medium,Mandi logistics strike halts settlements and supply for a week,CM06|CM07
+EV04-D5,EV04,flood,5,2025-07-11,2025-07-22,12,DAIRY|POULTRY|HANDICRAFT|FOODPROC|RETAIL,0.64,1.02,1.14,high,Brahmaputra flooding disrupts operations and market access district-wide,CM07
+EV05-D2,EV05,export_order_cancellation,2,2025-09-02,2025-10-16,45,HANDICRAFT,0.55,0.96,1.0,high,Overseas buyer cancels festival order book; receivables stretch sharply,
+EV05-D5,EV05,export_order_cancellation,5,2025-09-02,2025-10-16,45,HANDICRAFT,0.55,0.96,1.0,high,Overseas buyer cancels festival order book; receivables stretch sharply,
+EV05-D6,EV05,export_order_cancellation,6,2025-09-02,2025-10-16,45,HANDICRAFT,0.55,0.96,1.0,high,Overseas buyer cancels festival order book; receivables stretch sharply,
+EV06-D1,EV06,fuel_spike,1,2025-11-10,2025-12-13,34,FOODPROC|RETAIL,1.0,1.11,1.09,medium,Diesel price spike raises procurement and transport costs,CM09|CM07|CM08
+EV06-D2,EV06,fuel_spike,2,2025-11-10,2025-12-13,34,FOODPROC|RETAIL,1.0,1.11,1.09,medium,Diesel price spike raises procurement and transport costs,CM09|CM07|CM08
+EV06-D3,EV06,fuel_spike,3,2025-11-10,2025-12-13,34,FOODPROC|RETAIL,1.0,1.11,1.09,medium,Diesel price spike raises procurement and transport costs,CM09|CM07|CM08
+EV06-D4,EV06,fuel_spike,4,2025-11-10,2025-12-13,34,FOODPROC|RETAIL,1.0,1.11,1.09,medium,Diesel price spike raises procurement and transport costs,CM09|CM07|CM08
+EV06-D5,EV06,fuel_spike,5,2025-11-10,2025-12-13,34,FOODPROC|RETAIL,1.0,1.11,1.09,medium,Diesel price spike raises procurement and transport costs,CM09|CM07|CM08
+EV06-D6,EV06,fuel_spike,6,2025-11-10,2025-12-13,34,FOODPROC|RETAIL,1.0,1.11,1.09,medium,Diesel price spike raises procurement and transport costs,CM09|CM07|CM08
+EV07-D6,EV07,cyclone,6,2025-10-19,2025-10-24,6,DAIRY|POULTRY|HANDICRAFT|FOODPROC|RETAIL,0.72,1.04,1.1,high,Cyclone landfall: precautionary closures and stock damage,CM07
+EV08-D1,EV08,heatwave,1,2026-05-11,2026-05-29,19,DAIRY|POULTRY,0.8,1.1,1.12,high,"Prolonged heat spell: yield and laying rates fall, cooling costs rise",CM02|CM04
+EV08-D2,EV08,heatwave,2,2026-05-11,2026-05-29,19,DAIRY|POULTRY,0.8,1.1,1.12,high,"Prolonged heat spell: yield and laying rates fall, cooling costs rise",CM02|CM04
+EV08-D3,EV08,heatwave,3,2026-05-11,2026-05-29,19,DAIRY|POULTRY,0.8,1.1,1.12,high,"Prolonged heat spell: yield and laying rates fall, cooling costs rise",CM02|CM04
+EV09-D3,EV09,feed_price_shock,3,2026-02-02,2026-04-02,60,POULTRY,0.98,1.16,1.18,high,Maize and soya shortage drives sustained feed cost escalation,CM04
+EV09-D5,EV09,feed_price_shock,5,2026-02-02,2026-04-02,60,POULTRY,0.98,1.16,1.18,high,Maize and soya shortage drives sustained feed cost escalation,CM04
+EV09-D6,EV09,feed_price_shock,6,2026-02-02,2026-04-02,60,POULTRY,0.98,1.16,1.18,high,Maize and soya shortage drives sustained feed cost escalation,CM04
+EV10-D1,EV10,milk_price_freeze,1,2025-12-01,2026-04-29,150,DAIRY,0.99,1.07,1.0,high,Co-operative holds procurement price flat through a fodder cost rise,
+EV10-D4,EV10,milk_price_freeze,4,2025-12-01,2026-04-29,150,DAIRY,0.99,1.07,1.0,high,Co-operative holds procurement price flat through a fodder cost rise,

@@ -1,0 +1,13 @@
+action_id,action_key,template
+AC01,request_bridge_loan,"Request a {days}-day SHG bridge loan of about Rs {amount} now, before the shortfall week"
+AC02,defer_capex,Defer the planned Rs {amount} equipment purchase by one quarter
+AC03,prebook_input,Pre-book {months} months of {input_name} at today's price before the seasonal rise
+AC04,renegotiate_buyer_terms,Ask {buyer} to move from {old_days}-day to {new_days}-day payment terms
+AC05,diversify_buyer,Add a second buyer — {buyer} is {pct}% of your sales
+AC06,collect_udhaar,Collect Rs {amount} of village credit older than {days} days
+AC07,stagger_batch,Delay the next batch placement by {days} days to clear the demand trough
+AC08,restructure_emi,Ask the branch to reschedule the EMI to a {months}-month longer tenor
+AC09,claim_scheme,You are eligible for {scheme} — apply through your {channel}
+AC10,reduce_drawings,Hold household drawings to Rs {amount} for the next {months} months
+AC11,sell_slow_stock,Clear Rs {amount} of stock held longer than {days} days
+AC12,on_track,No action needed — your cash position is on track for the next {months} months

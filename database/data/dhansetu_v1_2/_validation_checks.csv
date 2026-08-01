@@ -1,0 +1,34 @@
+result,check,detail
+PASS,"252 enterprises, unique IDs",
+PASS,6 districts / 6 states / 6 languages,
+PASS,42 enterprises per district,
+PASS,6 officers x 42 caseload,
+PASS,"5 sectors, 9 sub-types",
+PASS,named personas pinned,
+PASS,ledger = 252 x 1096,
+PASS,no orphan enterprise_ids,
+PASS,loan closing_balance monotonically decreasing,
+PASS,loan_outstanding actually moves,"4099 decreases, 175 disbursements"
+PASS,subvention landed,650 installments
+PASS,poultry batch gap >= 40d,median 50d
+PASS,dairy Apr-Sep revenue < cost,rev 84 vs cost 116
+PASS,receivables exist w/ write-offs,"26447 invoices, 939 written off"
+PASS,every shock has non-empty scope,10 of 10 codes scoped
+PASS,stress episodes exist w/ all 6 mechanisms,202 episodes
+PASS,episodes have causal drivers,
+PASS,features carry as_of,33 origins
+PASS,forecast vintages,33 origins x 6 horizons
+PASS,live forecasts present,13608 forward rows w/o actuals
+PASS,band ordering p10<=p50<=p90,
+FAIL,bands ordered correctly,96.9% ordered
+FAIL,continuous fused score,"2760 distinct, 3.2% zeros"
+FAIL,headroom NOT a step function of tier,86% of AMBER/RED have headroom
+PASS,bridge available in distress,90% of RED rows
+PASS,digital adoption drifts,mean +0.26
+PASS,cash-heavy cohort exists,29 enterprises
+PASS,low-visibility flag fires,957 assessments
+PASS,alerts carry amount+date+cause,
+PASS,alerts never exported to bureau,
+PASS,merchant entries multi-month & messy,"102360 entries, max sync lag 21d"
+PASS,balances realistic (no cash hoards),
+PASS,final buffer < 6 months for all,median 2.4 months

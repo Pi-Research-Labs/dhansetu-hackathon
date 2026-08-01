@@ -1,0 +1,203 @@
+episode_id,enterprise_id,onset_date,resolution_date,first_missed_repayment,duration_days,mechanism,severity,min_buffer_days,causal_drivers,label_source
+EP0001,ENT0001,2024-05-26,,2025-06-14,796,climate_shock,high,-4.3,"{""climate_shock"": 1.252, ""margin_squeeze"": 0.809, ""demand_trough"": 0.52, ""working_capital_erosion"": 0.377, ""debt_overhang"": 0.064}",simulator
+EP0002,ENT0001,2025-05-14,,2025-06-14,443,margin_squeeze,high,-3.0,"{""margin_squeeze"": 0.302, ""working_capital_erosion"": 0.204, ""demand_trough"": 0.197, ""climate_shock"": 0.17}",simulator
+EP0003,ENT0001,2026-04-29,,,93,margin_squeeze,high,-3.3,"{""margin_squeeze"": 1.548, ""demand_trough"": 0.339, ""climate_shock"": 0.13, ""working_capital_erosion"": 0.116}",simulator
+EP0004,ENT0003,2024-03-11,2024-09-12,,185,demand_trough,high,2.1,"{""demand_trough"": 0.442}",simulator
+EP0005,ENT0006,2024-05-21,,2024-07-21,801,margin_squeeze,high,-3.4,"{""margin_squeeze"": 0.56, ""climate_shock"": 0.394, ""working_capital_erosion"": 0.353}",simulator
+EP0006,ENT0006,2025-04-03,,2025-06-21,484,margin_squeeze,high,-3.5,"{""margin_squeeze"": 0.083}",simulator
+EP0007,ENT0006,2026-05-01,,,91,margin_squeeze,high,-3.2,"{""margin_squeeze"": 0.518, ""climate_shock"": 0.201, ""working_capital_erosion"": 0.126}",simulator
+EP0008,ENT0007,2024-05-16,2025-12-02,,565,margin_squeeze,medium,7.0,"{""margin_squeeze"": 0.5, ""climate_shock"": 0.175, ""working_capital_erosion"": 0.147, ""debt_overhang"": 0.078}",simulator
+EP0009,ENT0011,2023-12-13,2024-02-20,2023-12-28,69,debt_overhang,high,-7.8,"{""debt_overhang"": 0.3}",simulator
+EP0010,ENT0014,2023-11-29,2024-03-02,,94,working_capital_erosion,high,-7.5,"{""working_capital_erosion"": 0.962}",simulator
+EP0011,ENT0015,2024-03-18,2024-09-02,,168,demand_trough,low,8.2,"{""demand_trough"": 0.45, ""climate_shock"": 0.239}",simulator
+EP0012,ENT0016,2024-05-06,2025-03-19,,317,debt_overhang,high,-6.0,"{""debt_overhang"": 0.722, ""demand_trough"": 0.582, ""working_capital_erosion"": 0.491, ""receivable_stretch"": 0.14}",simulator
+EP0013,ENT0016,2024-09-25,2025-03-19,,175,receivable_stretch,high,-5.6,"{""receivable_stretch"": 1.33, ""working_capital_erosion"": 0.487, ""debt_overhang"": 0.289, ""demand_trough"": 0.068}",simulator
+EP0014,ENT0020,2024-03-06,2024-07-17,,133,climate_shock,high,1.3,"{""climate_shock"": 0.256, ""working_capital_erosion"": 0.055}",simulator
+EP0015,ENT0022,2024-06-10,2024-11-25,,168,climate_shock,high,3.0,"{""climate_shock"": 1.257, ""margin_squeeze"": 0.848, ""working_capital_erosion"": 0.675}",simulator
+EP0016,ENT0022,2026-05-22,,,70,margin_squeeze,high,-3.2,"{""margin_squeeze"": 1.652, ""climate_shock"": 1.115, ""working_capital_erosion"": 0.349}",simulator
+EP0017,ENT0028,2024-05-23,2024-12-26,,217,climate_shock,high,-0.2,"{""climate_shock"": 1.201, ""margin_squeeze"": 0.47, ""working_capital_erosion"": 0.363, ""debt_overhang"": 0.314, ""demand_trough"": 0.12}",simulator
+EP0018,ENT0028,2025-06-06,2025-12-15,,192,margin_squeeze,high,-3.1,"{""margin_squeeze"": 0.523, ""working_capital_erosion"": 0.32, ""climate_shock"": 0.239}",simulator
+EP0019,ENT0028,2026-05-26,,,66,climate_shock,high,-2.8,"{""climate_shock"": 1.101, ""margin_squeeze"": 0.385, ""working_capital_erosion"": 0.279, ""demand_trough"": 0.263}",simulator
+EP0020,ENT0030,2024-06-07,2024-11-24,,170,climate_shock,medium,3.5,"{""climate_shock"": 1.261, ""margin_squeeze"": 0.844, ""working_capital_erosion"": 0.523, ""debt_overhang"": 0.188}",simulator
+EP0021,ENT0031,2024-07-07,2024-12-23,,169,climate_shock,high,2.8,"{""climate_shock"": 1.159, ""margin_squeeze"": 0.87, ""working_capital_erosion"": 0.564}",simulator
+EP0022,ENT0031,2025-06-08,,,418,margin_squeeze,high,-2.5,"{""margin_squeeze"": 0.636, ""working_capital_erosion"": 0.324, ""climate_shock"": 0.228}",simulator
+EP0023,ENT0031,2026-02-24,,,157,margin_squeeze,high,-3.1,"{""margin_squeeze"": 1.489, ""demand_trough"": 0.193, ""working_capital_erosion"": 0.094}",simulator
+EP0024,ENT0033,2025-07-13,2026-01-13,,184,margin_squeeze,low,8.9,"{""margin_squeeze"": 1.014, ""demand_trough"": 0.3, ""working_capital_erosion"": 0.299, ""climate_shock"": 0.082}",simulator
+EP0025,ENT0034,2023-12-09,2025-08-31,,631,working_capital_erosion,high,-4.4,"{""working_capital_erosion"": 0.822, ""demand_trough"": 0.07, ""climate_shock"": 0.065}",simulator
+EP0026,ENT0034,2024-08-19,2025-08-31,,377,working_capital_erosion,medium,6.9,"{""working_capital_erosion"": 0.389}",simulator
+EP0027,ENT0035,2024-01-02,2025-02-15,,410,working_capital_erosion,high,-7.1,"{""working_capital_erosion"": 0.127, ""climate_shock"": 0.083}",simulator
+EP0028,ENT0035,2024-09-18,2025-02-15,,150,receivable_stretch,high,-6.9,"{""receivable_stretch"": 0.969, ""demand_trough"": 0.327}",simulator
+EP0029,ENT0036,2024-07-31,2024-12-30,,152,receivable_stretch,high,-5.8,"{""receivable_stretch"": 1.154, ""demand_trough"": 0.347, ""working_capital_erosion"": 0.335}",simulator
+EP0030,ENT0036,2025-09-27,2026-01-30,,125,receivable_stretch,medium,3.0,"{""receivable_stretch"": 1.431, ""demand_trough"": 0.534, ""working_capital_erosion"": 0.371}",simulator
+EP0031,ENT0037,2024-10-06,2024-12-06,,61,receivable_stretch,high,1.8,"{""receivable_stretch"": 1.142, ""working_capital_erosion"": 0.386, ""debt_overhang"": 0.128}",simulator
+EP0032,ENT0038,2024-05-27,2025-03-19,,296,margin_squeeze,high,0.9,"{""margin_squeeze"": 0.626, ""working_capital_erosion"": 0.382, ""climate_shock"": 0.221}",simulator
+EP0033,ENT0038,2025-06-25,2025-12-07,,165,working_capital_erosion,high,-3.8,"{""working_capital_erosion"": 0.356, ""margin_squeeze"": 0.263, ""climate_shock"": 0.14}",simulator
+EP0034,ENT0038,2026-04-29,,,93,margin_squeeze,high,-3.1,"{""margin_squeeze"": 1.578, ""receivable_stretch"": 1.401, ""debt_overhang"": 1.056, ""climate_shock"": 0.148, ""working_capital_erosion"": 0.116, ""demand_trough"": 0.088}",simulator
+EP0035,ENT0039,2024-09-03,2025-05-01,2024-09-28,240,working_capital_erosion,high,-6.1,"{""working_capital_erosion"": 0.312, ""demand_trough"": 0.101}",simulator
+EP0036,ENT0040,2024-04-06,2024-07-28,,113,climate_shock,medium,3.6,"{""climate_shock"": 0.232}",simulator
+EP0037,ENT0048,2023-12-03,2024-03-22,2024-01-01,110,debt_overhang,high,-6.5,"{""debt_overhang"": 0.3}",simulator
+EP0038,ENT0048,2024-09-01,2024-12-09,2024-10-01,99,receivable_stretch,high,-5.4,"{""receivable_stretch"": 1.722, ""working_capital_erosion"": 0.056}",simulator
+EP0039,ENT0049,2023-12-03,2024-03-08,,96,working_capital_erosion,high,-7.7,"{""working_capital_erosion"": 0.443}",simulator
+EP0040,ENT0049,2024-10-30,2024-12-29,,60,receivable_stretch,high,-7.8,"{""receivable_stretch"": 1.399, ""working_capital_erosion"": 0.159}",simulator
+EP0041,ENT0050,2024-03-24,2024-08-27,,156,demand_trough,high,2.2,"{""demand_trough"": 0.582, ""climate_shock"": 0.076}",simulator
+EP0042,ENT0054,2024-06-03,2024-11-18,,168,margin_squeeze,high,-3.1,"{""margin_squeeze"": 0.644, ""working_capital_erosion"": 0.531, ""climate_shock"": 0.222}",simulator
+EP0043,ENT0055,2024-01-01,2024-02-17,,47,debt_overhang,high,-6.6,"{""debt_overhang"": 0.3, ""working_capital_erosion"": 0.123}",simulator
+EP0044,ENT0065,2024-05-01,2025-07-21,,446,demand_trough,high,1.6,"{""demand_trough"": 0.337}",simulator
+EP0045,ENT0066,2024-05-28,2024-12-25,,211,climate_shock,medium,3.6,"{""climate_shock"": 1.258, ""margin_squeeze"": 0.82, ""working_capital_erosion"": 0.62, ""debt_overhang"": 0.113}",simulator
+EP0046,ENT0066,2025-06-23,2025-12-09,,169,working_capital_erosion,high,-0.0,"{""working_capital_erosion"": 0.416, ""margin_squeeze"": 0.402, ""climate_shock"": 0.242}",simulator
+EP0047,ENT0066,2026-05-05,,,87,margin_squeeze,high,-2.8,"{""margin_squeeze"": 1.576, ""demand_trough"": 0.327, ""climate_shock"": 0.154, ""working_capital_erosion"": 0.149}",simulator
+EP0048,ENT0067,2023-11-29,2026-04-13,2023-12-19,866,working_capital_erosion,high,-7.6,{},simulator
+EP0049,ENT0067,2024-07-09,2026-04-13,,643,demand_trough,high,-6.4,"{""demand_trough"": 0.557, ""working_capital_erosion"": 0.45}",simulator
+EP0050,ENT0067,2025-02-23,2026-04-13,,414,demand_trough,high,-5.0,"{""demand_trough"": 0.784, ""climate_shock"": 0.099}",simulator
+EP0051,ENT0067,2025-08-14,2026-04-13,,242,receivable_stretch,high,-5.9,"{""receivable_stretch"": 1.436, ""working_capital_erosion"": 0.201}",simulator
+EP0052,ENT0067,2026-02-26,2026-04-13,,46,demand_trough,high,-8.1,"{""demand_trough"": 0.18, ""climate_shock"": 0.09}",simulator
+EP0053,ENT0069,2023-12-08,2024-02-05,,59,working_capital_erosion,high,-7.1,"{""working_capital_erosion"": 0.065}",simulator
+EP0054,ENT0072,2023-12-02,2024-03-09,,98,debt_overhang,high,-6.8,"{""debt_overhang"": 0.3}",simulator
+EP0055,ENT0073,2024-01-27,2024-06-28,,153,working_capital_erosion,high,-3.0,{},simulator
+EP0056,ENT0075,2025-07-14,2026-02-17,,218,margin_squeeze,high,-0.9,"{""margin_squeeze"": 1.012, ""receivable_stretch"": 0.36, ""working_capital_erosion"": 0.289, ""climate_shock"": 0.083}",simulator
+EP0057,ENT0076,2024-04-25,2025-03-06,,315,working_capital_erosion,high,-5.7,"{""working_capital_erosion"": 0.454, ""demand_trough"": 0.305}",simulator
+EP0058,ENT0080,2024-05-30,,2024-07-06,792,margin_squeeze,high,-4.7,"{""margin_squeeze"": 0.588, ""climate_shock"": 0.429, ""working_capital_erosion"": 0.417, ""debt_overhang"": 0.166}",simulator
+EP0059,ENT0080,2025-04-14,,2025-06-06,473,demand_trough,high,-4.1,"{""demand_trough"": 0.234, ""margin_squeeze"": 0.189, ""climate_shock"": 0.08}",simulator
+EP0060,ENT0080,2026-04-15,,,107,margin_squeeze,high,-3.5,"{""margin_squeeze"": 0.423, ""working_capital_erosion"": 0.224, ""climate_shock"": 0.089}",simulator
+EP0061,ENT0081,2024-07-07,2024-12-03,,149,working_capital_erosion,medium,5.2,"{""working_capital_erosion"": 0.794, ""margin_squeeze"": 0.588, ""demand_trough"": 0.428, ""debt_overhang"": 0.209, ""climate_shock"": 0.113}",simulator
+EP0062,ENT0081,2026-05-31,,,61,margin_squeeze,high,-3.1,"{""margin_squeeze"": 1.747, ""working_capital_erosion"": 0.515, ""climate_shock"": 0.217, ""debt_overhang"": 0.112, ""demand_trough"": 0.051}",simulator
+EP0063,ENT0083,2024-03-21,2025-06-09,2024-04-05,445,demand_trough,high,-4.1,"{""demand_trough"": 0.358, ""working_capital_erosion"": 0.318}",simulator
+EP0064,ENT0085,2025-05-22,,,435,margin_squeeze,low,10.8,"{""margin_squeeze"": 0.716, ""working_capital_erosion"": 0.238, ""climate_shock"": 0.052}",simulator
+EP0065,ENT0085,2026-06-14,,,47,margin_squeeze,high,-6.7,"{""margin_squeeze"": 1.121, ""climate_shock"": 0.097, ""working_capital_erosion"": 0.057}",simulator
+EP0066,ENT0086,2024-06-07,2024-11-21,,167,climate_shock,medium,3.6,"{""climate_shock"": 1.261, ""margin_squeeze"": 0.844, ""working_capital_erosion"": 0.405, ""receivable_stretch"": 0.362, ""demand_trough"": 0.087}",simulator
+EP0067,ENT0087,2024-05-24,2024-11-27,2024-08-22,187,climate_shock,high,-3.0,"{""climate_shock"": 1.239, ""margin_squeeze"": 0.798, ""working_capital_erosion"": 0.568, ""demand_trough"": 0.125, ""debt_overhang"": 0.089}",simulator
+EP0068,ENT0087,2026-05-24,,,68,margin_squeeze,high,-2.9,"{""margin_squeeze"": 1.668, ""climate_shock"": 1.125, ""demand_trough"": 0.283, ""working_capital_erosion"": 0.266}",simulator
+EP0069,ENT0089,2024-05-12,2025-02-21,,285,climate_shock,high,-4.0,"{""climate_shock"": 1.128, ""margin_squeeze"": 0.383, ""working_capital_erosion"": 0.358, ""debt_overhang"": 0.091}",simulator
+EP0070,ENT0089,2025-05-28,2026-01-28,,245,margin_squeeze,high,-3.1,"{""margin_squeeze"": 0.499, ""working_capital_erosion"": 0.291, ""climate_shock"": 0.198}",simulator
+EP0071,ENT0089,2026-05-15,,,77,climate_shock,high,-2.7,"{""climate_shock"": 1.016, ""demand_trough"": 0.492, ""margin_squeeze"": 0.281, ""working_capital_erosion"": 0.21}",simulator
+EP0072,ENT0091,2024-05-05,2024-12-25,2024-06-27,234,margin_squeeze,high,0.6,"{""margin_squeeze"": 0.578, ""working_capital_erosion"": 0.425, ""climate_shock"": 0.204, ""debt_overhang"": 0.103}",simulator
+EP0073,ENT0091,2025-05-21,2025-12-30,2026-07-30,223,receivable_stretch,high,-3.6,"{""receivable_stretch"": 0.266, ""working_capital_erosion"": 0.248, ""margin_squeeze"": 0.208, ""climate_shock"": 0.199}",simulator
+EP0074,ENT0091,2026-05-25,,2026-07-30,67,margin_squeeze,high,-3.7,"{""margin_squeeze"": 1.724, ""working_capital_erosion"": 0.272, ""climate_shock"": 0.206}",simulator
+EP0075,ENT0094,2024-04-20,2025-06-18,,424,demand_trough,medium,5.2,"{""demand_trough"": 0.293, ""climate_shock"": 0.15}",simulator
+EP0076,ENT0100,2024-03-13,2025-02-06,,330,climate_shock,low,8.5,"{""climate_shock"": 0.251}",simulator
+EP0077,ENT0104,2024-10-09,,2024-10-21,660,working_capital_erosion,high,-13.5,"{""working_capital_erosion"": 0.773, ""demand_trough"": 0.647, ""debt_overhang"": 0.613, ""margin_squeeze"": 0.238}",simulator
+EP0078,ENT0104,2025-05-26,,2025-08-21,431,margin_squeeze,medium,4.8,"{""margin_squeeze"": 0.956, ""working_capital_erosion"": 0.283, ""climate_shock"": 0.23, ""demand_trough"": 0.06}",simulator
+EP0079,ENT0104,2026-04-17,,,105,margin_squeeze,high,-11.3,"{""margin_squeeze"": 1.614, ""climate_shock"": 0.057}",simulator
+EP0080,ENT0107,2024-05-12,,,810,climate_shock,high,-4.3,"{""climate_shock"": 1.194, ""margin_squeeze"": 0.719, ""working_capital_erosion"": 0.311, ""demand_trough"": 0.238, ""debt_overhang"": 0.147}",simulator
+EP0081,ENT0107,2025-04-21,,,466,demand_trough,high,-4.3,"{""demand_trough"": 0.149, ""margin_squeeze"": 0.08, ""working_capital_erosion"": 0.065}",simulator
+EP0082,ENT0107,2026-04-20,,,102,margin_squeeze,high,-3.1,"{""margin_squeeze"": 1.485, ""demand_trough"": 0.073, ""climate_shock"": 0.072, ""working_capital_erosion"": 0.058}",simulator
+EP0083,ENT0108,2026-05-30,,,62,climate_shock,high,-3.2,"{""climate_shock"": 1.264, ""margin_squeeze"": 0.627, ""working_capital_erosion"": 0.303}",simulator
+EP0084,ENT0109,2024-02-27,2025-06-11,,470,demand_trough,high,-3.4,"{""demand_trough"": 0.427, ""working_capital_erosion"": 0.093}",simulator
+EP0085,ENT0111,2024-01-12,2025-04-10,2024-02-05,454,working_capital_erosion,high,-8.3,"{""working_capital_erosion"": 0.169}",simulator
+EP0086,ENT0111,2024-07-10,2025-04-10,2024-08-05,274,demand_trough,high,-6.3,"{""demand_trough"": 0.636, ""working_capital_erosion"": 0.444}",simulator
+EP0087,ENT0113,2024-07-19,2025-03-20,2024-11-06,244,margin_squeeze,high,-2.1,"{""margin_squeeze"": 1.383, ""debt_overhang"": 0.188, ""working_capital_erosion"": 0.186, ""climate_shock"": 0.108}",simulator
+EP0088,ENT0113,2025-02-05,2025-03-20,2025-07-06,43,working_capital_erosion,high,-1.1,"{""working_capital_erosion"": 0.09}",simulator
+EP0089,ENT0113,2025-07-14,2026-01-18,,188,margin_squeeze,medium,7.2,"{""margin_squeeze"": 0.884, ""working_capital_erosion"": 0.467, ""debt_overhang"": 0.3, ""climate_shock"": 0.099}",simulator
+EP0090,ENT0113,2026-06-23,,,38,receivable_stretch,high,2.3,"{""receivable_stretch"": 2.711, ""climate_shock"": 1.057, ""margin_squeeze"": 0.993, ""debt_overhang"": 0.587, ""working_capital_erosion"": 0.067}",simulator
+EP0091,ENT0115,2024-05-22,2025-01-25,,248,margin_squeeze,high,2.9,"{""margin_squeeze"": 0.61, ""working_capital_erosion"": 0.358, ""climate_shock"": 0.224, ""demand_trough"": 0.174, ""debt_overhang"": 0.137}",simulator
+EP0092,ENT0115,2025-06-02,2025-12-10,,191,working_capital_erosion,high,-3.8,"{""working_capital_erosion"": 0.322, ""margin_squeeze"": 0.247, ""climate_shock"": 0.213, ""debt_overhang"": 0.147}",simulator
+EP0093,ENT0115,2026-05-22,,,70,margin_squeeze,medium,3.8,"{""margin_squeeze"": 1.709, ""working_capital_erosion"": 0.254, ""receivable_stretch"": 0.225, ""climate_shock"": 0.203, ""demand_trough"": 0.158}",simulator
+EP0094,ENT0121,2026-05-27,,,65,margin_squeeze,high,-2.8,"{""margin_squeeze"": 1.695, ""climate_shock"": 1.139, ""working_capital_erosion"": 0.364, ""debt_overhang"": 0.137}",simulator
+EP0095,ENT0123,2023-11-29,2025-07-02,,581,working_capital_erosion,high,-4.9,"{""working_capital_erosion"": 1.011, ""climate_shock"": 0.06}",simulator
+EP0096,ENT0124,2026-06-10,,,51,margin_squeeze,medium,5.3,"{""margin_squeeze"": 1.745, ""climate_shock"": 1.177, ""working_capital_erosion"": 0.427, ""demand_trough"": 0.217}",simulator
+EP0097,ENT0130,2026-07-02,,,29,receivable_stretch,low,11.6,"{""receivable_stretch"": 1.327, ""margin_squeeze"": 1.292, ""climate_shock"": 1.122, ""working_capital_erosion"": 0.534}",simulator
+EP0098,ENT0131,2025-07-16,2026-01-18,,186,margin_squeeze,low,10.1,"{""margin_squeeze"": 1.294, ""working_capital_erosion"": 0.352, ""climate_shock"": 0.133}",simulator
+EP0099,ENT0131,2025-12-03,2026-01-18,,46,working_capital_erosion,high,-2.0,"{""working_capital_erosion"": 0.639, ""receivable_stretch"": 0.631}",simulator
+EP0100,ENT0134,2024-02-22,2024-08-12,,172,demand_trough,high,1.4,"{""demand_trough"": 0.257, ""climate_shock"": 0.103, ""working_capital_erosion"": 0.085}",simulator
+EP0101,ENT0137,2024-06-18,2024-12-10,,175,climate_shock,high,-2.8,"{""climate_shock"": 1.302, ""margin_squeeze"": 0.633, ""working_capital_erosion"": 0.522, ""demand_trough"": 0.067}",simulator
+EP0102,ENT0137,2025-06-09,2026-01-12,,217,margin_squeeze,high,-0.9,"{""margin_squeeze"": 0.523, ""working_capital_erosion"": 0.326, ""climate_shock"": 0.251}",simulator
+EP0103,ENT0137,2026-05-29,,,63,climate_shock,high,-3.2,"{""climate_shock"": 1.122, ""margin_squeeze"": 0.421, ""working_capital_erosion"": 0.297}",simulator
+EP0104,ENT0138,2024-04-15,2026-05-18,2024-05-14,763,demand_trough,high,-8.7,"{""demand_trough"": 0.448, ""working_capital_erosion"": 0.409}",simulator
+EP0105,ENT0138,2025-06-21,2026-05-18,,331,working_capital_erosion,high,-7.0,"{""working_capital_erosion"": 0.445, ""demand_trough"": 0.192}",simulator
+EP0106,ENT0140,2023-12-29,,2024-01-10,945,debt_overhang,high,-7.3,"{""debt_overhang"": 0.3, ""working_capital_erosion"": 0.103, ""climate_shock"": 0.059}",simulator
+EP0107,ENT0140,2024-05-26,,2024-06-10,796,demand_trough,high,-7.5,"{""demand_trough"": 0.667, ""working_capital_erosion"": 0.542}",simulator
+EP0108,ENT0140,2025-03-20,,2025-06-10,498,demand_trough,high,-6.4,"{""demand_trough"": 0.406, ""working_capital_erosion"": 0.078}",simulator
+EP0109,ENT0140,2025-09-05,,2025-10-10,329,receivable_stretch,high,-5.0,"{""receivable_stretch"": 3.059, ""working_capital_erosion"": 0.529, ""debt_overhang"": 0.427}",simulator
+EP0110,ENT0140,2026-07-08,,,23,working_capital_erosion,high,-6.2,"{""working_capital_erosion"": 0.408, ""demand_trough"": 0.057}",simulator
+EP0111,ENT0141,2023-11-29,2024-03-24,2024-03-01,116,debt_overhang,high,-6.6,"{""debt_overhang"": 0.3}",simulator
+EP0112,ENT0144,2024-05-25,2025-11-10,2024-07-29,534,climate_shock,high,-3.1,"{""climate_shock"": 1.244, ""margin_squeeze"": 0.804, ""working_capital_erosion"": 0.512, ""debt_overhang"": 0.508, ""demand_trough"": 0.459}",simulator
+EP0113,ENT0144,2025-07-18,2025-11-10,,115,working_capital_erosion,medium,4.9,"{""working_capital_erosion"": 0.319, ""margin_squeeze"": 0.296, ""receivable_stretch"": 0.22, ""climate_shock"": 0.151}",simulator
+EP0114,ENT0150,2024-03-18,2024-08-02,,137,working_capital_erosion,high,-2.8,{},simulator
+EP0115,ENT0151,2023-12-08,2024-02-10,2023-12-30,64,working_capital_erosion,high,-7.5,"{""working_capital_erosion"": 0.798, ""debt_overhang"": 0.3}",simulator
+EP0116,ENT0152,2024-04-20,2025-01-06,,261,demand_trough,high,3.0,"{""demand_trough"": 0.137, ""climate_shock"": 0.06}",simulator
+EP0117,ENT0155,2026-06-08,,,53,climate_shock,high,-2.7,"{""climate_shock"": 1.154, ""margin_squeeze"": 0.48, ""working_capital_erosion"": 0.362, ""demand_trough"": 0.214, ""debt_overhang"": 0.112}",simulator
+EP0118,ENT0157,2024-04-18,2025-06-20,2024-05-08,428,demand_trough,high,-3.1,"{""demand_trough"": 0.189}",simulator
+EP0119,ENT0159,2023-11-30,2024-03-02,,93,working_capital_erosion,medium,7.9,"{""working_capital_erosion"": 0.281}",simulator
+EP0120,ENT0160,2024-03-13,2025-07-18,,492,climate_shock,high,2.0,"{""climate_shock"": 0.251}",simulator
+EP0121,ENT0160,2024-11-01,2025-07-18,,259,receivable_stretch,high,0.3,"{""receivable_stretch"": 0.5, ""demand_trough"": 0.097, ""debt_overhang"": 0.094}",simulator
+EP0122,ENT0161,2024-03-03,2026-07-24,2024-12-25,873,climate_shock,high,1.7,"{""climate_shock"": 0.255, ""demand_trough"": 0.158, ""working_capital_erosion"": 0.081}",simulator
+EP0123,ENT0161,2024-09-29,2026-07-24,2024-12-25,663,working_capital_erosion,high,-1.8,"{""working_capital_erosion"": 0.312, ""demand_trough"": 0.189, ""debt_overhang"": 0.065}",simulator
+EP0124,ENT0161,2025-09-25,2026-07-24,,302,working_capital_erosion,medium,5.9,"{""working_capital_erosion"": 0.321, ""demand_trough"": 0.217, ""receivable_stretch"": 0.076}",simulator
+EP0125,ENT0162,2024-07-01,2025-01-07,,190,margin_squeeze,high,1.9,"{""margin_squeeze"": 0.636, ""demand_trough"": 0.435, ""working_capital_erosion"": 0.417, ""climate_shock"": 0.141, ""debt_overhang"": 0.111}",simulator
+EP0126,ENT0162,2026-06-15,,,46,margin_squeeze,high,2.5,"{""margin_squeeze"": 1.757, ""working_capital_erosion"": 0.534, ""climate_shock"": 0.168, ""debt_overhang"": 0.061}",simulator
+EP0127,ENT0166,2023-11-29,2025-02-23,2023-11-29,452,working_capital_erosion,high,-6.8,"{""working_capital_erosion"": 0.912, ""debt_overhang"": 0.3}",simulator
+EP0128,ENT0166,2024-07-16,2025-02-23,2024-09-29,222,working_capital_erosion,high,-5.6,"{""working_capital_erosion"": 0.413}",simulator
+EP0129,ENT0174,2023-12-17,2024-10-09,,297,working_capital_erosion,high,-2.0,"{""working_capital_erosion"": 0.295}",simulator
+EP0130,ENT0174,2024-07-13,2024-10-09,,88,margin_squeeze,high,-3.4,"{""margin_squeeze"": 1.325, ""working_capital_erosion"": 0.383, ""climate_shock"": 0.238}",simulator
+EP0131,ENT0174,2025-05-11,,,446,debt_overhang,high,-6.4,"{""debt_overhang"": 2.621, ""receivable_stretch"": 1.847, ""margin_squeeze"": 0.592}",simulator
+EP0132,ENT0174,2026-06-03,,,58,climate_shock,high,-10.6,"{""climate_shock"": 1.046, ""margin_squeeze"": 0.957, ""demand_trough"": 0.212}",simulator
+EP0133,ENT0177,2024-09-02,2025-01-02,,122,margin_squeeze,high,-1.7,"{""margin_squeeze"": 0.995, ""working_capital_erosion"": 0.769, ""debt_overhang"": 0.597, ""demand_trough"": 0.569}",simulator
+EP0134,ENT0178,2024-12-22,,,586,demand_trough,low,10.2,"{""demand_trough"": 0.9, ""receivable_stretch"": 0.766, ""working_capital_erosion"": 0.491}",simulator
+EP0135,ENT0178,2025-05-21,,,436,margin_squeeze,medium,5.1,"{""margin_squeeze"": 0.874, ""receivable_stretch"": 0.601, ""working_capital_erosion"": 0.308, ""climate_shock"": 0.21}",simulator
+EP0136,ENT0178,2026-04-25,,,97,margin_squeeze,high,-10.9,"{""margin_squeeze"": 1.417, ""climate_shock"": 0.096}",simulator
+EP0137,ENT0181,2023-11-29,2024-03-10,2023-11-30,102,working_capital_erosion,high,-7.3,"{""working_capital_erosion"": 0.935, ""debt_overhang"": 0.3}",simulator
+EP0138,ENT0182,2024-05-30,,2024-08-21,792,climate_shock,high,-3.5,"{""climate_shock"": 1.258, ""margin_squeeze"": 0.525, ""working_capital_erosion"": 0.396}",simulator
+EP0139,ENT0182,2025-05-06,,,451,margin_squeeze,high,-4.0,"{""margin_squeeze"": 0.395, ""working_capital_erosion"": 0.154, ""demand_trough"": 0.098}",simulator
+EP0140,ENT0182,2026-05-09,,,83,margin_squeeze,high,-3.8,"{""margin_squeeze"": 0.25, ""working_capital_erosion"": 0.173, ""climate_shock"": 0.073}",simulator
+EP0141,ENT0184,2024-04-05,2025-11-14,,588,margin_squeeze,high,-2.6,"{""margin_squeeze"": 0.572, ""demand_trough"": 0.151, ""working_capital_erosion"": 0.126, ""climate_shock"": 0.071}",simulator
+EP0142,ENT0184,2025-06-04,2025-11-14,,163,margin_squeeze,high,-4.1,"{""margin_squeeze"": 0.433, ""working_capital_erosion"": 0.316, ""climate_shock"": 0.231}",simulator
+EP0143,ENT0184,2026-05-28,,,64,margin_squeeze,high,-3.3,"{""margin_squeeze"": 1.705, ""climate_shock"": 1.145, ""demand_trough"": 0.421, ""working_capital_erosion"": 0.291}",simulator
+EP0144,ENT0186,2024-06-06,2024-11-11,,158,climate_shock,medium,6.8,"{""climate_shock"": 1.267, ""margin_squeeze"": 0.843, ""working_capital_erosion"": 0.404}",simulator
+EP0145,ENT0186,2026-06-05,,,56,margin_squeeze,high,-2.6,"{""margin_squeeze"": 1.742, ""climate_shock"": 1.177, ""working_capital_erosion"": 0.653}",simulator
+EP0146,ENT0188,2023-11-29,,2024-06-20,975,working_capital_erosion,high,-7.2,"{""working_capital_erosion"": 1.736, ""debt_overhang"": 0.6}",simulator
+EP0147,ENT0188,2024-05-28,,2024-06-20,794,working_capital_erosion,high,-7.3,"{""working_capital_erosion"": 0.547, ""demand_trough"": 0.107}",simulator
+EP0148,ENT0188,2024-10-24,,2025-01-20,645,receivable_stretch,high,-6.0,"{""receivable_stretch"": 1.232, ""debt_overhang"": 0.3, ""working_capital_erosion"": 0.252}",simulator
+EP0149,ENT0188,2025-06-20,,2025-08-20,406,working_capital_erosion,high,-5.9,"{""working_capital_erosion"": 0.445}",simulator
+EP0150,ENT0188,2025-11-21,,2026-01-20,252,receivable_stretch,high,-6.1,"{""receivable_stretch"": 2.764}",simulator
+EP0151,ENT0188,2026-05-23,,,69,working_capital_erosion,high,-7.9,"{""working_capital_erosion"": 0.423, ""demand_trough"": 0.115}",simulator
+EP0152,ENT0189,2024-04-24,,2024-09-11,828,margin_squeeze,high,-3.5,"{""margin_squeeze"": 0.531, ""working_capital_erosion"": 0.226, ""climate_shock"": 0.187, ""demand_trough"": 0.105}",simulator
+EP0153,ENT0189,2025-05-11,,,446,working_capital_erosion,high,-4.0,"{""working_capital_erosion"": 0.186, ""climate_shock"": 0.181, ""margin_squeeze"": 0.163}",simulator
+EP0154,ENT0189,2026-04-20,,,102,margin_squeeze,high,-4.0,"{""margin_squeeze"": 1.474, ""receivable_stretch"": 0.288, ""demand_trough"": 0.2, ""climate_shock"": 0.105, ""working_capital_erosion"": 0.058}",simulator
+EP0155,ENT0192,2024-02-15,2025-12-19,,673,margin_squeeze,high,1.3,"{""margin_squeeze"": 0.068}",simulator
+EP0156,ENT0192,2024-07-06,2025-12-19,,531,working_capital_erosion,high,-4.8,"{""working_capital_erosion"": 1.269, ""margin_squeeze"": 0.597, ""demand_trough"": 0.411, ""receivable_stretch"": 0.307, ""climate_shock"": 0.118}",simulator
+EP0157,ENT0192,2025-05-11,2025-12-19,,222,working_capital_erosion,high,-4.3,"{""working_capital_erosion"": 0.186, ""climate_shock"": 0.181, ""margin_squeeze"": 0.163}",simulator
+EP0158,ENT0192,2026-05-14,,,78,margin_squeeze,high,-3.4,"{""margin_squeeze"": 1.661, ""working_capital_erosion"": 0.204, ""climate_shock"": 0.176, ""demand_trough"": 0.154}",simulator
+EP0159,ENT0198,2024-05-16,,2024-10-31,806,climate_shock,high,-3.5,"{""climate_shock"": 1.21, ""margin_squeeze"": 0.743, ""working_capital_erosion"": 0.33, ""demand_trough"": 0.151, ""debt_overhang"": 0.149}",simulator
+EP0160,ENT0198,2025-04-21,,2025-04-30,466,receivable_stretch,high,-3.8,"{""receivable_stretch"": 0.497, ""working_capital_erosion"": 0.278, ""demand_trough"": 0.144, ""margin_squeeze"": 0.08}",simulator
+EP0161,ENT0198,2026-04-16,,,106,margin_squeeze,high,-3.5,"{""margin_squeeze"": 1.458}",simulator
+EP0162,ENT0199,2024-05-25,2025-03-03,,282,climate_shock,high,-3.2,"{""climate_shock"": 1.244, ""margin_squeeze"": 0.804, ""working_capital_erosion"": 0.372, ""demand_trough"": 0.09}",simulator
+EP0163,ENT0199,2025-05-21,2026-01-23,,247,margin_squeeze,high,-3.1,"{""margin_squeeze"": 0.358, ""working_capital_erosion"": 0.248, ""climate_shock"": 0.199}",simulator
+EP0164,ENT0199,2026-05-05,,,87,margin_squeeze,high,-3.6,"{""margin_squeeze"": 1.576, ""demand_trough"": 0.311, ""climate_shock"": 0.154, ""working_capital_erosion"": 0.149}",simulator
+EP0165,ENT0200,2024-01-27,2024-11-04,,282,demand_trough,high,-6.6,"{""demand_trough"": 0.309, ""working_capital_erosion"": 0.233, ""climate_shock"": 0.062}",simulator
+EP0166,ENT0202,2024-08-31,2025-02-23,,176,margin_squeeze,high,-0.9,"{""margin_squeeze"": 0.85, ""debt_overhang"": 0.575, ""demand_trough"": 0.55, ""working_capital_erosion"": 0.327}",simulator
+EP0167,ENT0202,2025-08-21,2025-12-18,,119,margin_squeeze,high,-1.9,"{""margin_squeeze"": 1.146, ""receivable_stretch"": 0.565, ""demand_trough"": 0.552, ""working_capital_erosion"": 0.287}",simulator
+EP0168,ENT0203,2024-08-31,,2025-07-04,699,margin_squeeze,high,0.0,"{""margin_squeeze"": 0.666, ""debt_overhang"": 0.598, ""working_capital_erosion"": 0.549, ""demand_trough"": 0.525}",simulator
+EP0169,ENT0203,2025-01-27,,2025-07-04,550,demand_trough,high,-6.7,"{""demand_trough"": 1.355, ""receivable_stretch"": 0.83, ""working_capital_erosion"": 0.725, ""debt_overhang"": 0.55}",simulator
+EP0170,ENT0203,2025-06-19,,2025-07-04,407,margin_squeeze,high,-7.8,"{""margin_squeeze"": 0.929, ""working_capital_erosion"": 0.584, ""debt_overhang"": 0.527, ""climate_shock"": 0.098}",simulator
+EP0171,ENT0203,2026-02-24,,,157,margin_squeeze,high,-7.5,"{""margin_squeeze"": 1.1}",simulator
+EP0172,ENT0205,2024-06-17,2024-12-15,,181,climate_shock,high,-1.6,"{""climate_shock"": 1.234, ""margin_squeeze"": 0.859, ""working_capital_erosion"": 0.612, ""debt_overhang"": 0.151}",simulator
+EP0173,ENT0205,2026-05-28,,,64,margin_squeeze,high,-3.5,"{""margin_squeeze"": 1.705, ""climate_shock"": 1.145, ""working_capital_erosion"": 0.291, ""debt_overhang"": 0.064}",simulator
+EP0174,ENT0206,2024-05-21,,,801,climate_shock,high,-4.1,"{""climate_shock"": 1.228, ""margin_squeeze"": 0.782, ""working_capital_erosion"": 0.353, ""demand_trough"": 0.162}",simulator
+EP0175,ENT0206,2025-05-06,,,451,demand_trough,high,-3.4,"{""demand_trough"": 0.394, ""margin_squeeze"": 0.235, ""working_capital_erosion"": 0.154, ""climate_shock"": 0.13}",simulator
+EP0176,ENT0206,2026-04-18,,,104,margin_squeeze,high,-3.2,"{""margin_squeeze"": 1.471, ""climate_shock"": 0.056}",simulator
+EP0177,ENT0222,2023-12-02,2024-03-12,,101,working_capital_erosion,high,-3.7,"{""working_capital_erosion"": 0.676}",simulator
+EP0178,ENT0223,2024-05-13,,2024-06-25,809,margin_squeeze,high,-4.3,"{""margin_squeeze"": 0.604, ""working_capital_erosion"": 0.316, ""demand_trough"": 0.287, ""climate_shock"": 0.152, ""debt_overhang"": 0.07}",simulator
+EP0179,ENT0223,2025-04-12,,,475,receivable_stretch,high,-5.3,"{""receivable_stretch"": 0.512, ""margin_squeeze"": 0.275}",simulator
+EP0180,ENT0223,2026-04-21,,,101,demand_trough,high,-3.6,"{""demand_trough"": 0.258, ""margin_squeeze"": 0.204, ""working_capital_erosion"": 0.065}",simulator
+EP0181,ENT0226,2023-12-13,2025-01-27,,411,working_capital_erosion,high,-7.7,{},simulator
+EP0182,ENT0226,2024-08-11,2025-01-27,,169,receivable_stretch,high,-5.5,"{""receivable_stretch"": 1.466, ""working_capital_erosion"": 0.241, ""demand_trough"": 0.192}",simulator
+EP0183,ENT0231,2025-12-02,2026-02-05,,65,receivable_stretch,high,-16.1,"{""receivable_stretch"": 0.996, ""working_capital_erosion"": 0.445}",simulator
+EP0184,ENT0232,2024-09-02,2024-12-02,2025-08-19,91,demand_trough,high,-2.6,"{""demand_trough"": 0.909, ""margin_squeeze"": 0.83, ""working_capital_erosion"": 0.638}",simulator
+EP0185,ENT0232,2025-07-03,,2025-08-19,393,receivable_stretch,high,-1.6,"{""receivable_stretch"": 1.852, ""margin_squeeze"": 1.31, ""debt_overhang"": 0.78, ""working_capital_erosion"": 0.275, ""climate_shock"": 0.218}",simulator
+EP0186,ENT0232,2026-02-27,,2026-06-19,154,margin_squeeze,high,-2.8,"{""margin_squeeze"": 1.1, ""working_capital_erosion"": 0.524}",simulator
+EP0187,ENT0233,2024-02-08,2025-09-24,2024-04-05,594,working_capital_erosion,high,-5.6,{},simulator
+EP0188,ENT0233,2024-08-21,2025-09-24,2024-09-05,399,margin_squeeze,high,-7.5,"{""margin_squeeze"": 0.853, ""working_capital_erosion"": 0.851, ""debt_overhang"": 0.53, ""demand_trough"": 0.194}",simulator
+EP0189,ENT0236,2024-02-21,2025-07-22,,517,demand_trough,medium,4.5,"{""demand_trough"": 0.195, ""working_capital_erosion"": 0.084}",simulator
+EP0190,ENT0236,2025-03-15,2025-07-22,,129,receivable_stretch,medium,5.3,"{""receivable_stretch"": 0.619, ""climate_shock"": 0.053}",simulator
+EP0191,ENT0239,2024-05-26,2024-12-25,,213,margin_squeeze,high,0.2,"{""margin_squeeze"": 0.621, ""working_capital_erosion"": 0.377, ""demand_trough"": 0.262, ""climate_shock"": 0.226}",simulator
+EP0192,ENT0241,2025-08-21,2026-02-03,,166,margin_squeeze,high,-3.0,"{""margin_squeeze"": 0.844, ""working_capital_erosion"": 0.6, ""receivable_stretch"": 0.468, ""demand_trough"": 0.337}",simulator
+EP0193,ENT0241,2026-05-12,,,80,margin_squeeze,low,11.6,"{""margin_squeeze"": 1.955, ""climate_shock"": 0.058}",simulator
+EP0194,ENT0243,2026-06-03,,,58,margin_squeeze,high,-1.9,"{""margin_squeeze"": 1.74, ""climate_shock"": 1.177, ""working_capital_erosion"": 0.494, ""demand_trough"": 0.176}",simulator
+EP0195,ENT0244,2024-08-25,2026-02-07,,531,debt_overhang,high,-8.4,"{""debt_overhang"": 1.166, ""working_capital_erosion"": 1.009, ""margin_squeeze"": 0.902, ""demand_trough"": 0.206}",simulator
+EP0196,ENT0244,2025-07-12,2026-02-07,,210,margin_squeeze,low,8.1,"{""margin_squeeze"": 1.297, ""demand_trough"": 0.246, ""working_capital_erosion"": 0.187, ""climate_shock"": 0.157}",simulator
+EP0197,ENT0244,2026-07-04,,,27,margin_squeeze,medium,7.7,"{""margin_squeeze"": 1.296, ""climate_shock"": 1.109, ""working_capital_erosion"": 0.085}",simulator
+EP0198,ENT0245,2023-11-29,2024-04-28,,151,working_capital_erosion,high,-7.8,"{""working_capital_erosion"": 0.172}",simulator
+EP0199,ENT0247,2023-11-29,2024-03-20,,112,working_capital_erosion,high,-7.2,{},simulator
+EP0200,ENT0249,2024-02-11,2025-01-31,2024-03-02,355,demand_trough,high,-3.7,"{""demand_trough"": 0.517, ""working_capital_erosion"": 0.254}",simulator
+EP0201,ENT0249,2024-08-02,2025-01-31,,182,working_capital_erosion,high,-4.3,"{""working_capital_erosion"": 0.322, ""demand_trough"": 0.059}",simulator
+EP0202,ENT0251,2024-03-02,2024-09-14,,196,working_capital_erosion,high,2.2,"{""working_capital_erosion"": 0.09}",simulator

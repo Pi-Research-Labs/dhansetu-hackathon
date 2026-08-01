@@ -1,0 +1,66 @@
+-- Foreign keys and indexes. Run AFTER 02_load.sql.
+-- Kept separate so a single bad row cannot abort the whole load.
+SET search_path TO dhansetu, public;
+
+ALTER TABLE dhansetu.enterprises ADD CONSTRAINT fk_enterprises_district_id FOREIGN KEY ("district_id") REFERENCES dhansetu.districts(district_id);
+ALTER TABLE dhansetu.enterprises ADD CONSTRAINT fk_enterprises_sector FOREIGN KEY ("sector") REFERENCES dhansetu.sectors(sector);
+ALTER TABLE dhansetu.enterprises ADD CONSTRAINT fk_enterprises_sub_type_id FOREIGN KEY ("sub_type_id") REFERENCES dhansetu.sub_types(sub_type_id);
+ALTER TABLE dhansetu.enterprises ADD CONSTRAINT fk_enterprises_officer_id FOREIGN KEY ("officer_id") REFERENCES dhansetu.officers(officer_id);
+ALTER TABLE dhansetu.sub_types ADD CONSTRAINT fk_sub_types_sector FOREIGN KEY ("sector") REFERENCES dhansetu.sectors(sector);
+ALTER TABLE dhansetu.sector_seasonality ADD CONSTRAINT fk_sector_seasonality_sector FOREIGN KEY ("sector") REFERENCES dhansetu.sectors(sector);
+ALTER TABLE dhansetu.officers ADD CONSTRAINT fk_officers_district_id FOREIGN KEY ("district_id") REFERENCES dhansetu.districts(district_id);
+ALTER TABLE dhansetu.rules ADD CONSTRAINT fk_rules_mechanism FOREIGN KEY ("mechanism") REFERENCES dhansetu.mechanisms(mechanism);
+ALTER TABLE dhansetu.market_risk_cards ADD CONSTRAINT fk_market_risk_cards_sector FOREIGN KEY ("sector") REFERENCES dhansetu.sectors(sector);
+ALTER TABLE dhansetu.daily_ledger ADD CONSTRAINT fk_daily_ledger_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.receivables ADD CONSTRAINT fk_receivables_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.receivable_settlements ADD CONSTRAINT fk_receivable_settlements_receivable_id FOREIGN KEY ("receivable_id") REFERENCES dhansetu.receivables(receivable_id);
+ALTER TABLE dhansetu.poultry_batches ADD CONSTRAINT fk_poultry_batches_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.loans ADD CONSTRAINT fk_loans_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.repayment_schedule ADD CONSTRAINT fk_repayment_schedule_loan_id FOREIGN KEY ("loan_id") REFERENCES dhansetu.loans(loan_id);
+ALTER TABLE dhansetu.mandi_prices ADD CONSTRAINT fk_mandi_prices_commodity_id FOREIGN KEY ("commodity_id") REFERENCES dhansetu.commodities(commodity_id);
+ALTER TABLE dhansetu.mandi_prices ADD CONSTRAINT fk_mandi_prices_district_id FOREIGN KEY ("district_id") REFERENCES dhansetu.districts(district_id);
+ALTER TABLE dhansetu.weather_daily ADD CONSTRAINT fk_weather_daily_district_id FOREIGN KEY ("district_id") REFERENCES dhansetu.districts(district_id);
+ALTER TABLE dhansetu.shock_events ADD CONSTRAINT fk_shock_events_district_id FOREIGN KEY ("district_id") REFERENCES dhansetu.districts(district_id);
+ALTER TABLE dhansetu.shock_event_scope ADD CONSTRAINT fk_shock_event_scope_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.feature_snapshots ADD CONSTRAINT fk_feature_snapshots_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.stress_episodes ADD CONSTRAINT fk_stress_episodes_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.stress_episodes ADD CONSTRAINT fk_stress_episodes_mechanism FOREIGN KEY ("mechanism") REFERENCES dhansetu.mechanisms(mechanism);
+ALTER TABLE dhansetu.rule_evaluations ADD CONSTRAINT fk_rule_evaluations_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.rule_evaluations ADD CONSTRAINT fk_rule_evaluations_rule_key FOREIGN KEY ("rule_key") REFERENCES dhansetu.rules(rule_key);
+ALTER TABLE dhansetu.rule_evaluations ADD CONSTRAINT fk_rule_evaluations_mechanism FOREIGN KEY ("mechanism") REFERENCES dhansetu.mechanisms(mechanism);
+ALTER TABLE dhansetu.risk_assessments ADD CONSTRAINT fk_risk_assessments_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.forecasts ADD CONSTRAINT fk_forecasts_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.alerts ADD CONSTRAINT fk_alerts_assessment_id FOREIGN KEY ("assessment_id") REFERENCES dhansetu.risk_assessments(assessment_id);
+ALTER TABLE dhansetu.alerts ADD CONSTRAINT fk_alerts_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.recommendations ADD CONSTRAINT fk_recommendations_alert_id FOREIGN KEY ("alert_id") REFERENCES dhansetu.alerts(alert_id);
+ALTER TABLE dhansetu.recommendations ADD CONSTRAINT fk_recommendations_mechanism FOREIGN KEY ("mechanism") REFERENCES dhansetu.mechanisms(mechanism);
+ALTER TABLE dhansetu.officer_tasks ADD CONSTRAINT fk_officer_tasks_alert_id FOREIGN KEY ("alert_id") REFERENCES dhansetu.alerts(alert_id);
+ALTER TABLE dhansetu.officer_tasks ADD CONSTRAINT fk_officer_tasks_officer_id FOREIGN KEY ("officer_id") REFERENCES dhansetu.officers(officer_id);
+ALTER TABLE dhansetu.visit_outcomes ADD CONSTRAINT fk_visit_outcomes_task_id FOREIGN KEY ("task_id") REFERENCES dhansetu.officer_tasks(task_id);
+ALTER TABLE dhansetu.consent_artifacts ADD CONSTRAINT fk_consent_artifacts_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.access_grants ADD CONSTRAINT fk_access_grants_consent_id FOREIGN KEY ("consent_id") REFERENCES dhansetu.consent_artifacts(consent_id);
+ALTER TABLE dhansetu.access_grants ADD CONSTRAINT fk_access_grants_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.audit_log ADD CONSTRAINT fk_audit_log_grant_id FOREIGN KEY ("grant_id") REFERENCES dhansetu.access_grants(grant_id);
+ALTER TABLE dhansetu.merchant_entries ADD CONSTRAINT fk_merchant_entries_enterprise_id FOREIGN KEY ("enterprise_id") REFERENCES dhansetu.enterprises(enterprise_id);
+ALTER TABLE dhansetu.eval_lead_time ADD CONSTRAINT fk_eval_lead_time_episode_id FOREIGN KEY ("episode_id") REFERENCES dhansetu.stress_episodes(episode_id);
+ALTER TABLE dhansetu.eval_reason_code_accuracy ADD CONSTRAINT fk_eval_reason_code_accuracy_episode_id FOREIGN KEY ("episode_id") REFERENCES dhansetu.stress_episodes(episode_id);
+
+CREATE INDEX IF NOT EXISTS ix_daily_ledger_0 ON dhansetu.daily_ledger ("enterprise_id", "event_date");
+CREATE INDEX IF NOT EXISTS ix_daily_ledger_1 ON dhansetu.daily_ledger ("event_date");
+CREATE INDEX IF NOT EXISTS ix_daily_ledger_2 ON dhansetu.daily_ledger ("district_id", "event_date");
+CREATE INDEX IF NOT EXISTS ix_feature_snapshots_3 ON dhansetu.feature_snapshots ("as_of");
+CREATE INDEX IF NOT EXISTS ix_risk_assessments_4 ON dhansetu.risk_assessments ("as_of", "risk_tier");
+CREATE INDEX IF NOT EXISTS ix_risk_assessments_5 ON dhansetu.risk_assessments ("enterprise_id", "as_of" DESC);
+CREATE INDEX IF NOT EXISTS ix_forecasts_6 ON dhansetu.forecasts ("enterprise_id", "origin_date", "horizon_days");
+CREATE INDEX IF NOT EXISTS ix_forecasts_7 ON dhansetu.forecasts ("origin_date") WHERE "is_live_forecast";
+CREATE INDEX IF NOT EXISTS ix_alerts_8 ON dhansetu.alerts ("enterprise_id", "raised_at" DESC);
+CREATE INDEX IF NOT EXISTS ix_alerts_9 ON dhansetu.alerts ("risk_tier", "raised_at" DESC);
+CREATE INDEX IF NOT EXISTS ix_recommendations_10 ON dhansetu.recommendations ("alert_id", "rank");
+CREATE INDEX IF NOT EXISTS ix_officer_tasks_11 ON dhansetu.officer_tasks ("officer_id", "status");
+CREATE INDEX IF NOT EXISTS ix_rule_evaluations_12 ON dhansetu.rule_evaluations ("enterprise_id", "as_of") WHERE "fired";
+CREATE INDEX IF NOT EXISTS ix_receivables_13 ON dhansetu.receivables ("enterprise_id", "due_date");
+CREATE INDEX IF NOT EXISTS ix_merchant_entries_14 ON dhansetu.merchant_entries ("enterprise_id", "entry_date");
+CREATE INDEX IF NOT EXISTS ix_stress_episodes_15 ON dhansetu.stress_episodes ("enterprise_id", "onset_date");
+CREATE INDEX IF NOT EXISTS ix_mandi_prices_16 ON dhansetu.mandi_prices ("commodity_id", "district_id", "price_date" DESC);
+
+ANALYZE;

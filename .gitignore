@@ -16,3 +16,6 @@ venv/
 
 # Claude Code
 .claude/
+
+# Raw/scratch DB download staging — superseded by database/
+dhansetu_postgres_details/

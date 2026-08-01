@@ -1,0 +1,7 @@
+scheme_id,scheme,sectors,delta_type,delta_value,effective_from,description
+SB01,Dairy Entrepreneurship Development — interest subvention,DAIRY,emi_relief_pct,0.2,2024-11-01,Interest subvention reduces effective EMI by ~20% for eligible dairy loans
+SB02,Handloom yarn supply subsidy,HANDICRAFT,outflow_mult,0.94,2025-04-01,Subsidised yarn under the National Handloom Development Programme lowers input cost ~6%
+SB03,PMFME micro food-processing margin support,FOODPROC,inflow_mult,1.05,2025-01-01,Branding and packaging support lifts realisation ~5%
+SB04,FPO credit guarantee (SFAC),FOODPROC,emi_relief_pct,0.12,2025-07-01,Credit guarantee lowers borrowing cost; effective EMI ~12% lighter
+SB05,National Livestock Mission — poultry support,POULTRY,outflow_mult,0.96,2025-10-01,Feed and infrastructure support trims outflows ~4%
+SB06,SHG revolving fund top-up (DAY-NRLM),RETAIL|HANDICRAFT,inflow_mult,1.03,2026-01-01,"Revolving fund allows larger stock cycles, lifting turnover ~3%"
