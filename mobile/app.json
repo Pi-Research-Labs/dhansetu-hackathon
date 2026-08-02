@@ -24,7 +24,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiUrl": "http://34.100.152.235:8000/api/v1"
+      "apiUrl": "https://dhansetu-api.payintelli.com/api/v1"
     }
   }
 }

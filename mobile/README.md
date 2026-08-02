@@ -24,7 +24,7 @@ Then press `i` (iOS simulator), `a` (Android emulator), or `w` (web) — or scan
 ## Pointing at the backend
 
 `app.json` sets `expo.extra.apiUrl` to the live backend on the GCP VM
-(`http://34.100.152.235:8000/api/v1`, up 9AM–9PM daily) — works from any
+(`https://dhansetu-api.payintelli.com/api/v1`, up 9AM–9PM daily) — works from any
 device (simulator, physical phone, emulator) with no LAN setup needed. Full
 endpoint docs: [`../API.md`](../API.md).
 

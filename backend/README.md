@@ -85,9 +85,25 @@ journalctl -u dhansetu-backend -f         # tail logs
 `Restart=always` + `WantedBy=multi-user.target`, so it survives crashes and
 the VM's 9AM/9PM auto stop-start schedule. `DATABASE_URL` on the VM points at
 `localhost` (backend and Postgres are colocated there), not the public IP —
-faster and one less thing exposed over the public interface. Port 8000 is
-open in the `dhansetu-backend-firewall` rule, same open-to-internet tradeoff
-already made for Postgres on 5432.
+faster and one less thing exposed over the public interface.
+
+**HTTPS via nginx + Let's Encrypt**: the backend is only reachable directly
+on `localhost:8000` now — port 8000 is *not* open to the internet anymore
+(`dhansetu-backend-firewall` was deleted once this was in place). nginx
+terminates TLS for `dhansetu-api.payintelli.com` (cert via `certbot`,
+auto-renews, DNS is an A record in Route53 pointing at the static IP) and
+reverse-proxies to `127.0.0.1:8000`; HTTP requests get a 301 to HTTPS. Config
+is at `/etc/nginx/sites-available/dhansetu-api` on the VM. Only ports 80/443
+are open now (`dhansetu-web-firewall`) instead of 8000 directly.
+
+The external IP (`34.47.227.201`) is reserved as a **static** address
+(`dhansetu-static-ip`) — it doesn't change across stop/start cycles. It
+wasn't static originally, and did in fact change on the first restart after
+this doc was written (`34.100.152.235` → `34.47.227.201`), breaking every
+reference to it at the time. If you ever see a different IP than what's in
+this repo, check `gcloud compute addresses describe dhansetu-static-ip`
+before assuming docs are wrong — though now that DNS points at
+`dhansetu-api.payintelli.com` rather than the raw IP, this matters less.
 
 To redeploy after code changes: copy the updated `backend/` to
 `~/dhansetu-backend` on the VM (excluding `.venv`/`.env`), reinstall
