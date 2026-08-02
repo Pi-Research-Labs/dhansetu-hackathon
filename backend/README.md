@@ -41,6 +41,59 @@ interchangeably. Demo credentials for the 6 named personas and 6 officers are
 in `../database/README.md`. This is a hackathon shortcut — phone + OTP is the
 right login for the actual target users; see that README for why.
 
+- `GET /api/v1/auth/me` — works with either token type, returns the caller's
+  own identity. Use this on app start to restore a session from a stored
+  token without re-prompting for a password.
+
+## API
+
+All routes below require `Authorization: Bearer <token>` from one of the
+login endpoints above.
+
+| Route | Access | Backed by |
+|---|---|---|
+| `GET /api/v1/worklist` | officer only | `v_officer_worklist`, filtered to the caller's own `officer_id` |
+| `GET /api/v1/enterprise/{enterprise_id}` | officer (any), merchant (own enterprise only) | `v_enterprise_card` + `v_live_forecast` + latest `v_alert_actions` |
+| `POST /api/v1/outcome` | officer only | `dhansetu.record_outcome()` — closes the task and writes a `visit_outcomes` row |
+
+A merchant token requesting another enterprise's detail gets `403`; an
+officer token can view any enterprise (needed for cross-district visibility
+during shock events — see `v_district_event_watch` in `../database/README.md`).
+
+**Found and fixed while wiring this up:** `record_outcome()` referenced bare
+table names that only resolved via `search_path`, which doesn't carry into a
+function body from a fresh connection — every call failed with
+`relation "officer_tasks" does not exist` until the function was altered to
+`SET search_path = dhansetu, public` (see `../database/05_views.sql` and
+`../database/09_app_grants.sql`, which also had to grant `INSERT` on
+`visit_outcomes` and `UPDATE (status)` on `officer_tasks` — neither was
+covered by the original grants).
+
+## Deployment
+
+Running live on the GCP VM (`instance-20260801-123322`) as a systemd service
+— see [`../API.md`](../API.md) for the base URL and full endpoint docs
+consumed by `mobile`/`web`.
+
+```bash
+# on the VM
+sudo systemctl status dhansetu-backend    # check it's up
+sudo systemctl restart dhansetu-backend   # after redeploying code
+journalctl -u dhansetu-backend -f         # tail logs
+```
+
+`Restart=always` + `WantedBy=multi-user.target`, so it survives crashes and
+the VM's 9AM/9PM auto stop-start schedule. `DATABASE_URL` on the VM points at
+`localhost` (backend and Postgres are colocated there), not the public IP —
+faster and one less thing exposed over the public interface. Port 8000 is
+open in the `dhansetu-backend-firewall` rule, same open-to-internet tradeoff
+already made for Postgres on 5432.
+
+To redeploy after code changes: copy the updated `backend/` to
+`~/dhansetu-backend` on the VM (excluding `.venv`/`.env`), reinstall
+requirements if `requirements.txt` changed, then `sudo systemctl restart
+dhansetu-backend`.
+
 ## Structure
 
 ```

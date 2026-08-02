@@ -23,4 +23,12 @@ Then press `i` (iOS simulator), `a` (Android emulator), or `w` (web) — or scan
 
 ## Pointing at the backend
 
-`app.json` sets `expo.extra.apiUrl` to `http://localhost:8000/api/v1`. `localhost` only resolves to your machine from the iOS simulator and web. For a physical device or Android emulator, change it to your machine's LAN IP (or `10.0.2.2` for the Android emulator).
+`app.json` sets `expo.extra.apiUrl` to the live backend on the GCP VM
+(`http://34.100.152.235:8000/api/v1`, up 9AM–9PM daily) — works from any
+device (simulator, physical phone, emulator) with no LAN setup needed. Full
+endpoint docs: [`../API.md`](../API.md).
+
+To point at a backend running on your own machine instead (`backend/README.md`),
+change `apiUrl` to your machine's LAN IP (`localhost` only resolves to your
+machine from the iOS simulator and web; use `10.0.2.2` for the Android
+emulator, or your LAN IP for a physical device).

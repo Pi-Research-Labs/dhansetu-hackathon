@@ -1,3 +1,8 @@
+# DhanSetu Website
+
+Backend API docs (base URL, auth, every endpoint): [`../API.md`](../API.md).
+Live backend: `http://34.100.152.235:8000/api/v1` (up 9AM–9PM daily).
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

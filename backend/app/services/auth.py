@@ -48,3 +48,23 @@ async def authenticate_officer(phone_number: str, password: str) -> dict | None:
             "officer_name": row["officer_name"],
             "district_id": row["district_id"],
         }
+
+
+async def get_merchant_identity(enterprise_id: str) -> dict | None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT enterprise_id, proprietor_name FROM dhansetu.v_enterprises_safe WHERE enterprise_id = $1",
+            enterprise_id,
+        )
+        return dict(row) if row else None
+
+
+async def get_officer_identity(officer_id: str) -> dict | None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT officer_id, officer_name, district_id FROM dhansetu.officers WHERE officer_id = $1",
+            officer_id,
+        )
+        return dict(row) if row else None
