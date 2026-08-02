@@ -1,14 +1,15 @@
 [Unit]
-Description=DhanSetu FastAPI Backend Service
+Description=DhanSetu FastAPI backend
 After=network.target postgresql.service
 
 [Service]
-User=tarun_kesavan
-WorkingDirectory=/home/tarun_kesavan/dhansetu-hackathon/backend
-ExecStart=/home/tarun_kesavan/dhansetu-hackathon/backend/venv/bin/python3 -m fastapi run app/main.py --host 0.0.0.0 --port 8000
+Type=simple
+User=tarunmenon
+WorkingDirectory=/home/tarunmenon/dhansetu-backend
+EnvironmentFile=/home/tarunmenon/dhansetu-backend/.env
+ExecStart=/home/tarunmenon/dhansetu-backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
 Restart=always
-RestartSec=5
-EnvironmentFile=/home/tarun_kesavan/dhansetu-hackathon/backend/.env
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target

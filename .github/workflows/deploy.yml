@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - main
-      - master
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 jobs:
@@ -16,7 +18,24 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v7.0.1
 
-      - name: SSH and Deploy to GCP VM
+      # The VM's copy of backend/ is a plain directory (not a git clone), kept
+      # in sync by copying files over — not `git fetch`/`reset --hard` on the
+      # VM itself, which would require the VM to have its own GitHub
+      # credentials. .venv/.env aren't in the repo (gitignored), so they're
+      # never touched by this copy.
+      - name: Copy backend/ to the VM
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.GCP_VM_HOST }}
+          username: ${{ secrets.GCP_VM_USERNAME }}
+          key: ${{ secrets.GCP_VM_SSH_KEY }}
+          port: 22
+          source: "backend/"
+          target: "~/dhansetu-backend"
+          strip_components: 1
+          overwrite: true
+
+      - name: Install dependencies and restart service
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.GCP_VM_HOST }}
@@ -25,48 +44,22 @@ jobs:
           port: 22
           script: |
             set -e
-            echo "🚀 Navigating to repository on GCP VM..."
-            # Finds repository folder in common home or app directories
-            if [ -d "$HOME/dhansetu-hackathon" ]; then
-              cd "$HOME/dhansetu-hackathon"
-            elif [ -d "/var/www/dhansetu-hackathon" ]; then
-              cd "/var/www/dhansetu-hackathon"
+            cd ~/dhansetu-backend
+
+            echo "🐍 Installing backend requirements..."
+            source .venv/bin/activate
+            pip install -q -r requirements.txt
+
+            echo "🔄 Restarting dhansetu-backend..."
+            sudo systemctl restart dhansetu-backend
+            sleep 2
+
+            if sudo systemctl is-active --quiet dhansetu-backend; then
+              echo "✅ dhansetu-backend restarted successfully."
             else
-              echo "Error: Repository folder not found on VM!"
+              echo "❌ dhansetu-backend failed to start."
+              sudo systemctl status dhansetu-backend --no-pager
               exit 1
-            fi
-
-            echo "📥 Fetching latest changes from git..."
-            git fetch --all
-            git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
-
-            echo "🐍 Setting up Python environment..."
-            cd backend
-            if [ -d "venv" ]; then
-              source venv/bin/activate
-            elif [ -d ".venv" ]; then
-              source .venv/bin/activate
-            else
-              python3 -m venv venv
-              source venv/bin/activate
-            fi
-
-            echo "📦 Installing backend requirements..."
-            pip install --upgrade pip
-            pip install -r requirements.txt
-
-            echo "🔄 Restarting FastAPI service..."
-            if systemctl is-active --quiet dhansetu-backend; then
-              sudo systemctl restart dhansetu-backend
-              echo "✅ systemd service 'dhansetu-backend' restarted."
-            elif command -v pm2 >/dev/null 2>&1 && pm2 list | grep -q "dhansetu-backend"; then
-              pm2 restart dhansetu-backend
-              echo "✅ PM2 process 'dhansetu-backend' restarted."
-            else
-              echo "⚡ Reloading FastAPI process..."
-              pkill -f "fastapi" || pkill -f "uvicorn" || true
-              nohup python3 -m fastapi run app/main.py --host 0.0.0.0 --port 8000 > app.log 2>&1 &
-              echo "✅ Backend restarted in background with nohup."
             fi
 
             echo "🎉 Deployment successful!"
