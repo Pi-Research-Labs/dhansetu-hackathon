@@ -3,6 +3,27 @@
 Backend API docs (base URL, auth, every endpoint): [`../API.md`](../API.md).
 Live backend: `http://34.47.227.201:8000/api/v1` (up 9AM–9PM daily).
 
+## Deployment
+
+Live at **https://dhansetu-19e56.web.app** (Firebase Hosting, separate GCP
+project from the VM — Hosting doesn't need to share infra with the backend).
+Auto-deploys on push to `main` when `web/**` changes
+(`.github/workflows/deploy-web.yml`).
+
+Auth uses Workload Identity Federation, not a service account key — this
+org has `constraints/iam.managed.disableServiceAccountKeyCreation` enforced,
+so GitHub's own OIDC token is exchanged for short-lived GCP credentials
+instead, scoped to just this repo (`Pi-Research-Labs/dhansetu-hackathon`) via
+the workload identity pool's `attribute-condition`.
+
+Manual deploy (needs `firebase-tools` and Google credentials with
+`roles/firebasehosting.admin` or better on the `dhansetu-19e56` project):
+```bash
+cd web
+npm run build
+firebase deploy --only hosting --project=dhansetu-19e56
+```
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
