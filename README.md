@@ -10,5 +10,5 @@ Each folder has its own README with setup instructions.
 
 **API docs for `mobile`/`web` to consume the backend: [`API.md`](API.md)** —
 base URL, auth flow, every endpoint with example requests/responses. The
-backend is live on the GCP VM at `http://34.47.227.201:8000/api/v1`
+backend is live on the GCP VM at `https://dhansetu-api.payintelli.com/api/v1`
 (9AM–9PM daily; see `API.md` for local dev alternative).
