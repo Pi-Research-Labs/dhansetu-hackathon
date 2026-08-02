@@ -12,10 +12,3 @@ Each folder has its own README with setup instructions.
 base URL, auth flow, every endpoint with example requests/responses. The
 backend is live on the GCP VM at `http://34.47.227.201:8000/api/v1`
 (9AM–9PM daily; see `API.md` for local dev alternative).
-
-**Website**: live at https://dhansetu-19e56.web.app (Firebase Hosting),
-auto-deploys on push to `main` — see `web/README.md`.
-
-All three (`backend`, `web`, and soon `mobile` via `eas update`) deploy
-automatically via GitHub Actions on push to `main`, each scoped to its own
-folder (`.github/workflows/`).
