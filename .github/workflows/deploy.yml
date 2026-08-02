@@ -1,0 +1,65 @@
+name: Deploy Backend to GCP VM
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to GCP Compute Engine
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7.0.1
+
+      # The VM's copy of backend/ is a plain directory (not a git clone), kept
+      # in sync by copying files over — not `git fetch`/`reset --hard` on the
+      # VM itself, which would require the VM to have its own GitHub
+      # credentials. .venv/.env aren't in the repo (gitignored), so they're
+      # never touched by this copy.
+      - name: Copy backend/ to the VM
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.GCP_VM_HOST }}
+          username: ${{ secrets.GCP_VM_USERNAME }}
+          key: ${{ secrets.GCP_VM_SSH_KEY }}
+          port: 22
+          source: "backend/"
+          target: "~/dhansetu-backend"
+          strip_components: 1
+          overwrite: true
+
+      - name: Install dependencies and restart service
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.GCP_VM_HOST }}
+          username: ${{ secrets.GCP_VM_USERNAME }}
+          key: ${{ secrets.GCP_VM_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd ~/dhansetu-backend
+
+            echo "🐍 Installing backend requirements..."
+            source .venv/bin/activate
+            pip install -q -r requirements.txt
+
+            echo "🔄 Restarting dhansetu-backend..."
+            sudo systemctl restart dhansetu-backend
+            sleep 2
+
+            if sudo systemctl is-active --quiet dhansetu-backend; then
+              echo "✅ dhansetu-backend restarted successfully."
+            else
+              echo "❌ dhansetu-backend failed to start."
+              sudo systemctl status dhansetu-backend --no-pager
+              exit 1
+            fi
+
+            echo "🎉 Deployment successful!"
