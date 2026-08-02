@@ -89,6 +89,14 @@ faster and one less thing exposed over the public interface. Port 8000 is
 open in the `dhansetu-backend-firewall` rule, same open-to-internet tradeoff
 already made for Postgres on 5432.
 
+The external IP (`34.47.227.201`) is reserved as a **static** address
+(`dhansetu-static-ip`) — it doesn't change across stop/start cycles. It
+wasn't static originally, and did in fact change on the first restart after
+this doc was written (`34.100.152.235` → `34.47.227.201`), breaking every
+reference to it. If you ever see a different IP than what's in this repo,
+check `gcloud compute addresses describe dhansetu-static-ip` before assuming
+docs are wrong.
+
 To redeploy after code changes: copy the updated `backend/` to
 `~/dhansetu-backend` on the VM (excluding `.venv`/`.env`), reinstall
 requirements if `requirements.txt` changed, then `sudo systemctl restart
