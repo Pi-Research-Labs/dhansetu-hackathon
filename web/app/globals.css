@@ -1,26 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #F4F5F0;
+  --foreground: #1A2016;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #F4F5F0;
+  color: #1A2016;
+  font-family: 'Inter', 'Noto Sans', system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Flowline & Pulse Animations from Reference Dashboard */
+.flowline {
+  stroke-dasharray: 6 8;
+  animation: dashmove 2.6s linear infinite;
+}
+
+@keyframes dashmove {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.floaty {
+  animation: floaty 5.5s ease-in-out infinite;
+}
+
+@keyframes floaty {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulsea 2.6s ease-out infinite;
+}
+
+.pulse2 {
+  animation-delay: 1.3s;
+}
+
+@keyframes pulsea {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
 }

@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
+import languageReducer from "./slices/languageSlice";
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       auth: authReducer,
+      language: languageReducer,
     },
     devTools: process.env.NODE_ENV !== "production",
   });
