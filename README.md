@@ -12,3 +12,8 @@ Each folder has its own README with setup instructions.
 base URL, auth flow, every endpoint with example requests/responses. The
 backend is live on the GCP VM at `https://dhansetu-api.payintelli.com/api/v1`
 (9AM–9PM daily; see `API.md` for local dev alternative).
+
+**What the product actually does, end-to-end: [`STORY.md`](STORY.md)** —
+the merchant's and field officer's journeys through the real demo data, and
+the value delivered at each step. Schema reference (tables, views, login
+credentials): [`database/SCHEMA.md`](database/SCHEMA.md).
