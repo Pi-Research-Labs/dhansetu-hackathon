@@ -55,10 +55,30 @@ login endpoints above.
 | `GET /api/v1/worklist` | officer only | `v_officer_worklist`, filtered to the caller's own `officer_id` |
 | `GET /api/v1/enterprise/{enterprise_id}` | officer (any), merchant (own enterprise only) | `v_enterprise_card` + `v_live_forecast` + latest `v_alert_actions` |
 | `POST /api/v1/outcome` | officer only | `dhansetu.record_outcome()` — closes the task and writes a `visit_outcomes` row |
+| `GET /api/v1/risk/{enterprise_id}/predict` | officer (any), merchant (own only) | `app/services/risk_model.py` — serving stub, reads `risk_assessments`/`feature_snapshots`, not live inference |
+| `GET /api/v1/enterprise/{enterprise_id}/map-tile` | officer (any), merchant (own only) | Google Maps Static API (`app/services/maps.py`), proxied server-side — returns `image/png` bytes, key never reaches the frontend |
+| `POST /api/v1/voice/entries` | merchant only | Sarvam speech-to-text (`app/services/voice.py`) → `voice_entries` + `voice_extractions` |
+| `GET /api/v1/voice/review-queue` | officer only | `v_voice_review_queue`, filtered to the caller's own `officer_id` |
+| `POST /api/v1/voice/review/{extraction_id}` | officer only | Confirms the amount → writes `ledger_entries_live` (`source='voice'`) |
 
 A merchant token requesting another enterprise's detail gets `403`; an
 officer token can view any enterprise (needed for cross-district visibility
 during shock events — see `v_district_event_watch` in `../database/README.md`).
+
+**The risk endpoint is a serving stub, not a trained model.** There is no
+model artifact anywhere in this repo — `predict_risk()` reads the
+enterprise's latest precomputed `risk_assessments` row and returns it in
+the shape a real model's output would take (`"source":
+"precomputed_snapshot"` in the response says so explicitly). The interface
+(auth, request/response shape) is meant to be stable so a trained model can
+replace the body of `score()` later without any caller changing.
+
+**The voice endpoints are a real integration, not a stub** — audio is
+actually sent to Sarvam AI and transcribed. What's *not* real yet is amount
+extraction: it's a plain regex heuristic capped at `confidence = 0.5`,
+always below the DB's 0.70 auto-accept threshold, so every voice entry
+lands in an officer's review queue rather than silently becoming a ledger
+fact. See `API.md` for the full request/response shapes.
 
 **Found and fixed while wiring this up:** `record_outcome()` referenced bare
 table names that only resolved via `search_path`, which doesn't carry into a

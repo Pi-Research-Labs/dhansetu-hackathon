@@ -230,8 +230,9 @@ GROUP BY enterprise_id, event_date;
 -- What a human still has to check.
 CREATE OR REPLACE VIEW v_voice_review_queue AS
 SELECT v.voice_id, v.enterprise_id, e.proprietor_name, e.preferred_lang,
-       v.spoken_at, v.channel, v.detected_lang, v.language_probability,
-       v.transcript, x.amount, x.direction, x.category, x.confidence
+       e.officer_id, v.spoken_at, v.channel, v.detected_lang,
+       v.language_probability, v.transcript, x.extraction_id, x.extractor,
+       x.amount, x.direction, x.category, x.confidence
 FROM voice_entries v
 JOIN voice_extractions x USING (voice_id)
 LEFT JOIN enterprises e USING (enterprise_id)

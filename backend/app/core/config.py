@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24
 
     sarvam_api_key: str = ""
-    mappls_static_key: str = ""
+    google_maps_static_key: str = ""
 
     class Config:
         env_file = ".env"
