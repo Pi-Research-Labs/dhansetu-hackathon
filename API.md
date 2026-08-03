@@ -81,6 +81,25 @@ Authorization: Bearer <access_token>
 ```
 Missing token → `403`. Invalid/expired token → `401`.
 
+## Quick reference
+
+| Method & path | Who can call it | Returns | Notes |
+|---|---|---|---|
+| `POST /auth/login` | anyone (merchant creds) | JWT + identity | |
+| `POST /auth/officer-login` | anyone (officer creds) | JWT + identity | |
+| `GET /auth/me` | either role | caller's own identity | |
+| `GET /worklist` | officer only | array of JSON | officer's own ranked shortlist |
+| `GET /enterprise/{id}` | officer any, merchant own | JSON | full risk/forecast/alert card |
+| `GET /enterprise/{id}/map-tile` | officer any, merchant own | **raw `image/png` bytes**, not JSON | needs a fetch+blob dance, see below |
+| `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
+| `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
+| `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
+| `POST /voice/review/{extraction_id}` | officer only | JSON | confirms an amount → writes ledger |
+| `POST /outcome` | officer only | JSON | closes a field-visit task |
+
+The two rows in **bold** are the ones that don't behave like a normal JSON
+`fetch()` call — jump to their sections below for exact client code.
+
 ## `GET /worklist` — officer only
 
 Returns the calling officer's own ranked shortlist (AMBER/RED enterprises
@@ -165,6 +184,214 @@ Unknown `enterprise_id` → `404`.
 }
 ```
 `latest_alert` is `null` if the enterprise currently has no active alert.
+
+## `GET /enterprise/{enterprise_id}/map-tile` — officer (any) or merchant (own only)
+
+Same access rule as `GET /enterprise/{id}`. Returns a static map PNG
+(`image/png`, raw bytes — not JSON) centered on the enterprise's shop
+location, via the Google Maps Static API. The API key is never sent to the
+frontend — the backend calls Google server-side and streams the image
+bytes back; the key is also IP-restricted (GCP `payintelli` project) to
+this backend's VM, so it wouldn't work from anywhere else even if it leaked.
+
+```
+GET /api/v1/enterprise/ENT0031/map-tile?zoom=15&size=400x400
+```
+`zoom` (1–20, default 15) and `size` (`WxH`, default `400x400`, clamped to
+640×640 — Google's free-tier cap) are optional query params. Sample output
+for ENT0031: [`backend/sample_map_tile.png`](backend/sample_map_tile.png).
+
+**`enterprises.lat`/`lon` are not absolute coordinates** — they're small
+degree offsets from the enterprise's district centroid (`district_geo`),
+the same convention `v_officer_worklist.km_from_centre` already relies on.
+`app/services/maps.py` adds the offset to the centroid before calling
+Google — using the raw column value directly points at the Gulf of Guinea,
+not Gujarat, which is exactly what happened while building this endpoint.
+`404` if the enterprise is unknown or has no recorded location.
+
+**Displaying this image is the one non-obvious part of this whole API.**
+This route needs an `Authorization` header, and neither a plain HTML
+`<img src="...">` nor React Native's `<Image source={{uri: "..."}}>` can
+attach a custom header to the underlying request — you have to `fetch()`
+the bytes yourself and hand the *result* to the image element, not the URL.
+
+Web (React):
+```ts
+const res = await fetch(`${BASE_URL}/enterprise/${enterpriseId}/map-tile`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+const blob = await res.blob();
+const imageUrl = URL.createObjectURL(blob);
+// <img src={imageUrl} /> — call URL.revokeObjectURL(imageUrl) on unmount
+```
+
+Mobile (Expo / React Native) — `Image` can't take a blob URL either, and
+there's no `Buffer` by default, so download to a local file instead
+(`expo-file-system`'s `downloadAsync` does support a `headers` option):
+```ts
+import * as FileSystem from 'expo-file-system';
+
+const { uri } = await FileSystem.downloadAsync(
+  `${BASE_URL}/enterprise/${enterpriseId}/map-tile`,
+  FileSystem.cacheDirectory + `map-${enterpriseId}.png`,
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+// <Image source={{ uri }} />
+```
+
+## `GET /risk/{enterprise_id}/predict` — officer (any) or merchant (own only)
+
+Same access rule as `GET /enterprise/{id}`: a merchant token may only
+request their own `enterprise_id`; an officer token can request any.
+Unknown `enterprise_id` → `404`.
+
+This is a **serving stub**, not live model inference — see
+`backend/app/services/risk_model.py`. It reads the enterprise's latest
+`risk_assessments`/`feature_snapshots` row and returns it in the shape a
+trained model's output would take, so the endpoint contract (auth, request
+shape, response shape) is stable and ready for a real model to be dropped in
+behind `score()` later without any caller having to change. `"source":
+"precomputed_snapshot"` is the tell — it becomes `"live_model"` the day
+that swap happens.
+
+```json
+// Response 200
+{
+  "enterprise_id": "ENT0031",
+  "as_of": "2026-07-31",
+  "risk_tier": "AMBER",
+  "prob_stress": 0.1242,
+  "prob_missed_repayment": 0.0004,
+  "fused_score": 0.4148,
+  "forecast_net_90d_p10": null,
+  "forecast_net_90d_p50": null,
+  "forecast_net_90d_p90": null,
+  "reason_1": "margin_squeeze",
+  "reason_2": "working_capital_erosion",
+  "reason_3": "debt_overhang",
+  "model_id": "hgb_stress_v1.2",
+  "rule_version": "rules_v1.2_18rules",
+  "features": {
+    "net_buffer_days": -57.4,
+    "dscr_annual": null,
+    "margin_gap_90d": 0.2171,
+    "...": "see backend/app/schemas/risk.py for the full field list"
+  },
+  "source": "precomputed_snapshot"
+}
+```
+The `forecast_net_90d_*` fields are `null` on the most recent `as_of` for
+many enterprises — the forward forecast for the current month end hasn't
+been populated yet in the dataset; earlier months carry real values. This
+is a data characteristic, not a bug in this endpoint.
+
+## `POST /voice/entries` — merchant only
+
+Multipart upload: a merchant records a voice note (app), an IVR call is
+captured, or an assisted-channel worker records on the merchant's behalf.
+Backend forwards the audio to Sarvam AI's speech-to-text, stores the
+transcript, and runs a best-effort regex amount/direction extraction —
+**never auto-posted to the ledger**; every entry lands in the officer's
+review queue below until a human confirms it (see
+`database/04_live_data.sql`'s comment on why: spoken Indian-language
+amounts are the top failure mode).
+
+```
+Content-Type: multipart/form-data
+file: <audio blob, wav/mp3/aac/flac/ogg, ≤30s, 8kHz or 16kHz mono>
+channel: "app" | "ivr" | "assisted"   (default "app")
+device_id: string, optional
+spoken_at: ISO datetime, optional (defaults to now)
+audio_sample_rate: int, optional (defaults 8000 for ivr, 16000 otherwise)
+```
+
+```json
+// Response 200
+{
+  "voice_id": "f6f20f15-f0bf-4b3b-b6e8-7cc9f9bd5976",
+  "enterprise_id": "ENT0031",
+  "channel": "app",
+  "detected_lang": "gu-IN",
+  "transcript": "aaje doodh vechine ek hajar rupiya malya",
+  "request_id": "20260803_...",
+  "api_latency_ms": 538,
+  "error": null,
+  "spoken_at": "2026-08-03T08:04:27Z",
+  "amount": 1000.00,
+  "direction": "inflow",
+  "confidence": 0.5,
+  "needs_review": true
+}
+```
+`error` is non-null (and the route returns `502`) if the Sarvam call itself
+fails — the row is still written so there's a trace of the attempt.
+`confidence` is always `0.5` when an amount is found by the regex
+heuristic (never higher) — it is not a trained extractor, so it can never
+clear `voice_extractions`'s 0.70 auto-accept threshold; `needs_review` is
+therefore always `true` today. `language_probability` and
+`diarised_speaker` are always `null` — Sarvam's synchronous API (the one
+used here) doesn't return either; both require the batch API, not wired up
+yet.
+
+**Uploading the recording** — this is a normal multipart form, not JSON;
+don't set `Content-Type` yourself, let the browser/RN runtime add the
+`boundary=...` parameter for you (setting it manually is the most common
+way this kind of upload silently breaks).
+
+Web (`MediaRecorder`):
+```ts
+// after recording: const blob = new Blob(chunks, { type: 'audio/webm' })
+const form = new FormData();
+form.append('file', blob, 'note.webm');
+form.append('channel', 'app');
+
+const res = await fetch(`${BASE_URL}/voice/entries`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` }, // no Content-Type — fetch sets it
+  body: form,
+});
+```
+
+Mobile (Expo `expo-av`):
+```ts
+// after Audio.Recording finishes: const uri = recording.getURI()
+const form = new FormData();
+form.append('file', { uri, name: 'note.m4a', type: 'audio/m4a' } as any);
+form.append('channel', 'app');
+
+const res = await fetch(`${BASE_URL}/voice/entries`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  body: form,
+});
+```
+Sarvam accepts WAV/MP3/AAC/FLAC/OGG, so `expo-av`'s default `.m4a` (AAC)
+output works as-is — no client-side transcoding needed. Keep recordings
+**under 30 seconds**; that's Sarvam's sync-API hard limit, not a
+choice made here — anything longer needs the batch API (not wired up).
+
+## `GET /voice/review-queue` — officer only
+
+The calling officer's own pending voice entries (their enterprises only),
+backed by `v_voice_review_queue`. Same array-of-rows shape as `/worklist`.
+
+## `POST /voice/review/{extraction_id}` — officer only
+
+Officer confirms (or corrects) the amount, closing the loop into a real
+ledger row.
+
+```json
+// Request
+{ "reviewed_amount": 1500.00, "direction": "inflow", "category": "milk_sale", "is_household": false, "tender": "cash" }
+
+// Response 200
+{ "entry_id": "bad5a37c-...", "enterprise_id": "ENT0031", "event_date": "2026-08-03", "direction": "inflow", "amount": 1500.00 }
+```
+Writes `voice_extractions.reviewed_by`/`reviewed_amount` and a new
+`ledger_entries_live` row (`source = 'voice'`, `confidence = 1.0` since a
+human just confirmed it) — this is what feeds `v_daily_from_voice` and,
+from there, the same pipeline `daily_ledger` already feeds. Unknown
+`extraction_id` → `404`.
 
 ## `POST /outcome` — officer only
 
