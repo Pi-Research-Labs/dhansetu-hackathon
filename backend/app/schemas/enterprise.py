@@ -100,3 +100,31 @@ class EnterpriseDetail(BaseModel):
     card: EnterpriseCard
     live_forecast: list[ForecastPoint]
     latest_alert: AlertActions | None
+
+
+class ReceivablesAgeing(BaseModel):
+    enterprise_id: str
+    proprietor_name: str | None
+    sector: str | None
+    counterparty_type: str | None
+    invoices: int
+    total: Decimal | None
+    outstanding: Decimal | None
+    written_off: Decimal | None
+    avg_days_to_cash: Decimal | None
+    worst_days_to_cash: int | None
+    write_off_pct: Decimal | None
+
+
+class PaymentMix(BaseModel):
+    enterprise_id: str
+    proprietor_name: str | None
+    sector: str | None
+    district: str | None
+    preferred_channel: str | None
+    avg_upi_share: Decimal | None
+    avg_wallet_share: Decimal | None
+    avg_digital_share: Decimal | None
+    avg_cash_share: Decimal | None
+    recent_90d_digital_share: Decimal | None
+    recent_90d_cash_share: Decimal | None

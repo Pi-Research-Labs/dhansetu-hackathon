@@ -21,6 +21,26 @@ async def get_live_forecast(enterprise_id: str) -> list[dict]:
         return [dict(row) for row in rows]
 
 
+async def get_receivables_ageing(enterprise_id: str) -> list[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM dhansetu.v_receivables_ageing WHERE enterprise_id = $1",
+            enterprise_id,
+        )
+        return [dict(row) for row in rows]
+
+
+async def get_payment_mix(enterprise_id: str) -> dict | None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM dhansetu.v_merchant_payment_mix WHERE enterprise_id = $1",
+            enterprise_id,
+        )
+        return dict(row) if row else None
+
+
 async def get_latest_alert(enterprise_id: str) -> dict | None:
     pool = get_pool()
     async with pool.acquire() as conn:

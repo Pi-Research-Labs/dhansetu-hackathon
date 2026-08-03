@@ -91,11 +91,20 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /worklist` | officer only | array of JSON | officer's own ranked shortlist |
 | `GET /enterprise/{id}` | officer any, merchant own | JSON | full risk/forecast/alert card |
 | `GET /enterprise/{id}/map-tile` | officer any, merchant own | **raw `image/png` bytes**, not JSON | needs a fetch+blob dance, see below |
+| `GET /enterprise/{id}/receivables` | officer any, merchant own | array of JSON | the "udhaar book" — outstanding/written-off by counterparty |
+| `GET /enterprise/{id}/payment-mix` | officer any, merchant own | JSON | UPI/wallet/cash share, full-panel and trailing-90d |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
 | `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
 | `POST /voice/review/{extraction_id}` | officer only | JSON | confirms an amount → writes ledger |
 | `POST /outcome` | officer only | JSON | closes a field-visit task |
+| `GET /evidence/district-events` | officer only | array of JSON | shocks hitting ≥30% of a district×sector cohort |
+| `GET /evidence/alert-precision` | officer only | array of JSON | confirmation rate by tier, book-wide |
+| `GET /evidence/reason-code-scorecard` | officer only | array of JSON | predicted vs. true mechanism accuracy |
+| `GET /evidence/lead-time` | officer only | JSON | early-warning lead time across stress episodes |
+| `GET /evidence/forecast-accuracy` | officer only | array of JSON | MAE + band coverage by horizon |
+| `GET /evidence/headroom-by-tier` | officer only | array of JSON | proof headroom isn't just the tier restated |
+| `GET /evidence/data-provenance` | officer only | array of JSON | real vs. simulated data share per enterprise |
 
 The two rows in **bold** are the ones that don't behave like a normal JSON
 `fetch()` call — jump to their sections below for exact client code.
@@ -184,6 +193,59 @@ Unknown `enterprise_id` → `404`.
 }
 ```
 `latest_alert` is `null` if the enterprise currently has no active alert.
+
+## `GET /enterprise/{enterprise_id}/receivables` — officer (any) or merchant (own only)
+
+The "udhaar book" — one row per counterparty type the enterprise deals
+with, backed by `v_receivables_ageing`. Empty array (not `404`) if the
+enterprise has no receivables at all — that's a legitimate state, not an
+error.
+
+```json
+// Response 200
+[
+  {
+    "enterprise_id": "ENT0224",
+    "proprietor_name": "Basanti Pradhan",
+    "sector": "RETAIL",
+    "counterparty_type": "village_credit",
+    "invoices": 157,
+    "total": 1637039.00,
+    "outstanding": null,
+    "written_off": 214085.00,
+    "avg_days_to_cash": 48.2,
+    "worst_days_to_cash": 84,
+    "write_off_pct": 13.1
+  }
+]
+```
+This is the view that catches the case a risk tier alone misses — Basanti
+can be **GREEN** on `risk_tier` while quietly bleeding money to bad udhaar
+(13.1% written off here). Show this alongside the tier, not instead of it.
+
+## `GET /enterprise/{enterprise_id}/payment-mix` — officer (any) or merchant (own only)
+
+One row: average UPI/wallet/cash share over the full panel, plus the same
+three over just the trailing 90 days (`recent_90d_*`) so a shift in
+progress is visible. Backed by `v_merchant_payment_mix`. `404` if the
+enterprise has no ledger data at all.
+
+```json
+// Response 200
+{
+  "enterprise_id": "ENT0031",
+  "proprietor_name": "Lakshmiben Patel",
+  "sector": "DAIRY",
+  "district": "Anand",
+  "preferred_channel": "app",
+  "avg_upi_share": 0.490,
+  "avg_wallet_share": 0.033,
+  "avg_digital_share": 0.524,
+  "avg_cash_share": 0.476,
+  "recent_90d_digital_share": 0.671,
+  "recent_90d_cash_share": 0.329
+}
+```
 
 ## `GET /enterprise/{enterprise_id}/map-tile` — officer (any) or merchant (own only)
 
@@ -392,6 +454,53 @@ Writes `voice_extractions.reviewed_by`/`reviewed_amount` and a new
 human just confirmed it) — this is what feeds `v_daily_from_voice` and,
 from there, the same pipeline `daily_ledger` already feeds. Unknown
 `extraction_id` → `404`.
+
+## `/evidence/*` — officer only, book-wide (not scoped to the caller)
+
+Seven read-only endpoints, each a thin wrapper around one evaluation view —
+see [`database/SCHEMA.md`](database/SCHEMA.md) for what each view computes.
+These answer "is this system any good," not "what should I do about this
+merchant" — expect a dashboard/ops screen to use these, not a per-merchant
+detail screen. None of them take path/query params; they return the whole
+book every time (small enough tables that this is fine at hackathon scale).
+
+```
+GET /evidence/district-events        → array, only currently-active district events
+GET /evidence/alert-precision        → array, one row per risk tier
+GET /evidence/reason-code-scorecard  → array, one row per mechanism + an "ALL" row
+GET /evidence/lead-time              → single object
+GET /evidence/forecast-accuracy      → array, one row per forecast horizon
+GET /evidence/headroom-by-tier       → array, one row per risk tier
+GET /evidence/data-provenance        → array, one row per enterprise
+```
+
+```json
+// GET /evidence/district-events — response 200 (one element)
+{
+  "as_of": "2026-07-31",
+  "district": "Ganjam",
+  "sector": "POULTRY",
+  "mechanism": "margin_squeeze",
+  "flagged": 4,
+  "total_in_cohort": 6,
+  "pct_of_cohort": 67,
+  "no_buffer": 2,
+  "visit_these_three": ["ENT0203", "ENT0085", "ENT0033"],
+  "is_district_event": true
+}
+```
+```json
+// GET /evidence/lead-time — response 200
+{ "episodes": 9, "caught": 9, "median_lead_days": 121, "min_lead_days": 111, "max_lead_days": 355 }
+```
+Small n's are real, not a display bug — e.g. `lead-time` is measured on
+only 9 out-of-time episodes. Show the n alongside the number; don't quote
+`median_lead_days` bare.
+
+`alert-precision` is **book-wide across all officers**, not scoped to the
+calling officer — there's no `officer_id` on the underlying view yet, so a
+per-officer breakdown isn't available without extending it first (see
+`KPIS.md`'s "Gaps worth naming").
 
 ## `POST /outcome` — officer only
 
