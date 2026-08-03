@@ -5,6 +5,9 @@ prototype: 37 tables, 831,723 rows, 24 views, generated from the CSVs in
 `data/dhansetu_v1_2/`. The DDL is generated from those CSVs (`gen_schema.py`),
 so column names, order and types can't drift from the data.
 
+**For a full table-by-table / view-by-view reference plus both sides'
+demo login credentials, see [`SCHEMA.md`](SCHEMA.md).**
+
 Already loaded and verified on the hackathon GCP VM (`dhansetu` database).
 This folder is what you need to reproduce that locally, or reload it.
 

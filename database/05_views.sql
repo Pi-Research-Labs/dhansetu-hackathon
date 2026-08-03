@@ -225,6 +225,32 @@ JOIN enterprises e USING (enterprise_id)
 GROUP BY 1,2,3,4;
 
 -- ===========================================================================
+-- 7B. PAYMENT MIX — UPI vs wallet vs cash, per merchant
+-- daily_ledger carries upi_share/wallet_share/digital_share per day; nothing
+-- rolled these up to one row per enterprise until now. cash_share is derived
+-- (1 - digital_share), not stored, since digital_share is already
+-- upi_share + wallet_share in the simulator.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_merchant_payment_mix AS
+SELECT
+    e.enterprise_id, e.proprietor_name, e.sector, e.district, e.preferred_channel,
+    ROUND(AVG(l.upi_share)::numeric, 3)                        AS avg_upi_share,
+    ROUND(AVG(l.wallet_share)::numeric, 3)                     AS avg_wallet_share,
+    ROUND(AVG(l.digital_share)::numeric, 3)                    AS avg_digital_share,
+    ROUND((1 - AVG(l.digital_share))::numeric, 3)              AS avg_cash_share,
+    ROUND(AVG(l.digital_share) FILTER (
+        WHERE l.event_date > (SELECT MAX(event_date) FROM daily_ledger) - 90
+    )::numeric, 3)                                             AS recent_90d_digital_share,
+    ROUND((1 - AVG(l.digital_share) FILTER (
+        WHERE l.event_date > (SELECT MAX(event_date) FROM daily_ledger) - 90
+    ))::numeric, 3)                                            AS recent_90d_cash_share
+FROM enterprises e
+JOIN daily_ledger l USING (enterprise_id)
+GROUP BY e.enterprise_id, e.proprietor_name, e.sector, e.district, e.preferred_channel
+ORDER BY e.enterprise_id;
+
+-- ===========================================================================
 -- 8. Evidence views — the deck's numbers as live queries
 -- ===========================================================================
 
