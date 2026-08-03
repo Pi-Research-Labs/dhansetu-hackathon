@@ -122,7 +122,7 @@ async def create_voice_entry(
         result = {"request_id": None, "transcript": None, "language_code": None, "api_latency_ms": None}
         error = str(exc)
 
-    async with pool.acquire() as conn:
+    async with pool.acquire() as conn, conn.transaction():
         voice_row = await conn.fetchrow(
             """
             INSERT INTO dhansetu.voice_entries

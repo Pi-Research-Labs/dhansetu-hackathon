@@ -54,12 +54,15 @@ login endpoints above.
 |---|---|---|
 | `GET /api/v1/worklist` | officer only | `v_officer_worklist`, filtered to the caller's own `officer_id` |
 | `GET /api/v1/enterprise/{enterprise_id}` | officer (any), merchant (own enterprise only) | `v_enterprise_card` + `v_live_forecast` + latest `v_alert_actions` |
+| `GET /api/v1/enterprise/{enterprise_id}/receivables` | officer (any), merchant (own only) | `v_receivables_ageing` — the udhaar book by counterparty |
+| `GET /api/v1/enterprise/{enterprise_id}/payment-mix` | officer (any), merchant (own only) | `v_merchant_payment_mix` — UPI/wallet/cash share |
 | `POST /api/v1/outcome` | officer only | `dhansetu.record_outcome()` — closes the task and writes a `visit_outcomes` row |
 | `GET /api/v1/risk/{enterprise_id}/predict` | officer (any), merchant (own only) | `app/services/risk_model.py` — serving stub, reads `risk_assessments`/`feature_snapshots`, not live inference |
 | `GET /api/v1/enterprise/{enterprise_id}/map-tile` | officer (any), merchant (own only) | Google Maps Static API (`app/services/maps.py`), proxied server-side — returns `image/png` bytes, key never reaches the frontend |
 | `POST /api/v1/voice/entries` | merchant only | Sarvam speech-to-text (`app/services/voice.py`) → `voice_entries` + `voice_extractions` |
 | `GET /api/v1/voice/review-queue` | officer only | `v_voice_review_queue`, filtered to the caller's own `officer_id` |
 | `POST /api/v1/voice/review/{extraction_id}` | officer only | Confirms the amount → writes `ledger_entries_live` (`source='voice'`) |
+| `GET /api/v1/evidence/*` (7 routes) | officer only, book-wide | Evaluation views — district events, alert precision, reason-code accuracy, lead time, forecast accuracy, headroom-by-tier, data provenance. See `API.md` for the full list. |
 
 A merchant token requesting another enterprise's detail gets `403`; an
 officer token can view any enterprise (needed for cross-district visibility

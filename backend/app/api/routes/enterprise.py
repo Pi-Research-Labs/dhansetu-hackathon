@@ -1,18 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.deps import get_token_claims
-from app.schemas.enterprise import EnterpriseDetail
-from app.services.enterprise import get_enterprise_card, get_latest_alert, get_live_forecast
+from app.schemas.enterprise import EnterpriseDetail, PaymentMix, ReceivablesAgeing
+from app.services.enterprise import (
+    get_enterprise_card,
+    get_latest_alert,
+    get_live_forecast,
+    get_payment_mix,
+    get_receivables_ageing,
+)
 
 router = APIRouter(tags=["enterprise"])
+
+
+def _check_access(claims: dict, enterprise_id: str) -> None:
+    if claims.get("role") == "merchant" and claims["sub"] != enterprise_id:
+        raise HTTPException(status_code=403, detail="Cannot view another enterprise")
 
 
 @router.get("/enterprise/{enterprise_id}", response_model=EnterpriseDetail)
 async def enterprise_detail(
     enterprise_id: str, claims: dict = Depends(get_token_claims)
 ) -> dict:
-    if claims.get("role") == "merchant" and claims["sub"] != enterprise_id:
-        raise HTTPException(status_code=403, detail="Cannot view another enterprise")
+    _check_access(claims, enterprise_id)
 
     card = await get_enterprise_card(enterprise_id)
     if card is None:
@@ -21,3 +31,22 @@ async def enterprise_detail(
     live_forecast = await get_live_forecast(enterprise_id)
     latest_alert = await get_latest_alert(enterprise_id)
     return {"card": card, "live_forecast": live_forecast, "latest_alert": latest_alert}
+
+
+@router.get("/enterprise/{enterprise_id}/receivables", response_model=list[ReceivablesAgeing])
+async def enterprise_receivables(
+    enterprise_id: str, claims: dict = Depends(get_token_claims)
+) -> list[dict]:
+    _check_access(claims, enterprise_id)
+    return await get_receivables_ageing(enterprise_id)
+
+
+@router.get("/enterprise/{enterprise_id}/payment-mix", response_model=PaymentMix)
+async def enterprise_payment_mix(
+    enterprise_id: str, claims: dict = Depends(get_token_claims)
+) -> dict:
+    _check_access(claims, enterprise_id)
+    mix = await get_payment_mix(enterprise_id)
+    if mix is None:
+        raise HTTPException(status_code=404, detail="No ledger data for this enterprise")
+    return mix
