@@ -1,7 +1,7 @@
 # DhanSetu Website
 
 Backend API docs (base URL, auth, every endpoint): [`../API.md`](../API.md).
-Live backend: `https://dhansetu-api.payintelli.com/api/v1` (up 9AM–9PM daily).
+Live backend: `https://dhansetu-api.piresearchlabs.com/api/v1` (up 9AM–9PM daily).
 
 # React + TypeScript + Vite
 
