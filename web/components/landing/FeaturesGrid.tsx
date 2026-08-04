@@ -1,9 +1,10 @@
 "use client";
 
 import { TrendingUp, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 
 interface FeaturesGridProps {
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function FeaturesGrid({ t }: FeaturesGridProps) {

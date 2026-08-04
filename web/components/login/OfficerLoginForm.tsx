@@ -70,8 +70,9 @@ export default function OfficerLoginForm() {
 
       // Redirect to protected officer portfolio dashboard
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err?.message || "Invalid phone number or password. Please try again.");
+    } catch (err: unknown) {
+      const message = (err as Error)?.message || "Invalid phone number or password. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }

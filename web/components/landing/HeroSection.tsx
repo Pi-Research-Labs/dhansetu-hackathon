@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/redux/hooks";
 import { checkIsAuthenticated } from "@/utils/auth";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { Sparkles, ArrowRight, Lock, ShieldCheck, LayoutDashboard } from "lucide-react";
 
 function Badge({ text }: { text: string }) {
@@ -16,7 +17,7 @@ function Badge({ text }: { text: string }) {
 }
 
 interface HeroSectionProps {
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function HeroSection({ t }: HeroSectionProps) {
@@ -24,7 +25,9 @@ export default function HeroSection({ t }: HeroSectionProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(isAuthenticated || checkIsAuthenticated());
+    queueMicrotask(() => {
+      setIsLoggedIn(isAuthenticated || checkIsAuthenticated());
+    });
   }, [isAuthenticated]);
 
   const primaryTarget = isLoggedIn ? "/dashboard" : "/login";

@@ -20,7 +20,7 @@ export function isTokenValid(token: string | null): boolean {
       return payload.exp > now;
     }
     return true;
-  } catch (e) {
+  } catch {
     return true;
   }
 }

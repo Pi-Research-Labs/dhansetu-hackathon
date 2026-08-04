@@ -1,13 +1,14 @@
 "use client";
 
 import { Enterprise, formatCurrency } from "@/utils/mockData";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { Building2 } from "lucide-react";
 
 interface EnterpriseListProps {
   enterprises: Enterprise[];
   selectedEnterpriseId: string;
   onSelect: (id: string) => void;
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function EnterpriseList({
