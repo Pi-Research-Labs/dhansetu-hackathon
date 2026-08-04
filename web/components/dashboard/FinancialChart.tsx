@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   ComposedChart,
   Bar,
@@ -13,17 +13,41 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { Enterprise, formatCurrency } from "@/utils/mockData";
+import { LiveForecastItem } from "@/utils/api-config";
+import { formatCurrency } from "@/utils/formatters";
+import { Enterprise } from "@/utils/mockData";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { TrendingUp, Clock } from "lucide-react";
 
 interface FinancialChartProps {
   enterprise: Enterprise;
+  liveForecast?: LiveForecastItem[] | null;
   t: TranslationDictionary;
 }
 
-export default function FinancialChart({ enterprise, t }: FinancialChartProps) {
+export default function FinancialChart({ enterprise, liveForecast, t }: FinancialChartProps) {
   const [activeTab, setActiveTab] = useState<"forecast" | "history">("forecast");
+
+  // Construct graph data: prioritize live_forecast from backend API if available
+  const forecastData = React.useMemo(() => {
+    if (liveForecast && liveForecast.length > 0) {
+      return liveForecast.map((item) => ({
+        month: `${item.horizon_days}D`,
+        forecast: item.p50,
+        lower: item.p10,
+        upper: item.p90,
+        endDate: item.horizon_end_date,
+      }));
+    }
+
+    return enterprise.monthlyForecast.map((val, idx) => ({
+      month: `M${idx + 1}`,
+      forecast: val,
+      lower: enterprise.forecastBand[idx]?.[0] || val * 0.7,
+      upper: enterprise.forecastBand[idx]?.[1] || val * 1.3,
+      endDate: "",
+    }));
+  }, [liveForecast, enterprise]);
 
   return (
     <div className="bg-white border border-[#E2E6D8] p-5 rounded-2xl shadow-2xs">
@@ -55,9 +79,11 @@ export default function FinancialChart({ enterprise, t }: FinancialChartProps) {
           </button>
         </div>
 
-        <div className="text-[11px] text-[#5F6656] hidden sm:block">
+        <div className="text-[11px] text-[#5F6656] hidden sm:block font-mono">
           {activeTab === "forecast"
-            ? "Projected monthly net cash flow with confidence band"
+            ? liveForecast && liveForecast.length > 0
+              ? "Live Backend Horizon Forecast (P10 / P50 / P90 Confidence Band)"
+              : "Projected monthly net cash flow with confidence band"
             : "Weekly inflows / outflows with net line"}
         </div>
       </div>
@@ -66,15 +92,7 @@ export default function FinancialChart({ enterprise, t }: FinancialChartProps) {
       <div className="h-60 w-full">
         {activeTab === "forecast" ? (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={enterprise.monthlyForecast.map((val, idx) => ({
-                month: `M${idx + 1}`,
-                forecast: val,
-                lower: enterprise.forecastBand[idx]?.[0] || val * 0.7,
-                upper: enterprise.forecastBand[idx]?.[1] || val * 1.3,
-              }))}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-            >
+            <AreaChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#5F6656" }} />
               <YAxis tick={{ fontSize: 10, fill: "#5F6656" }} tickFormatter={formatCurrency} />
               <Tooltip
@@ -84,11 +102,19 @@ export default function FinancialChart({ enterprise, t }: FinancialChartProps) {
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
-                formatter={(val: unknown) => [formatCurrency(Number(val)), "Net Forecast"]}
+                formatter={(val: unknown, name?: unknown) => [
+                  formatCurrency(Number(val)),
+                  name === "forecast"
+                    ? "P50 Expected Net"
+                    : name === "upper"
+                    ? "P90 Optimistic"
+                    : "P10 Stress Net",
+                ]}
               />
-              <Area type="monotone" dataKey="upper" stroke="none" fill="#2E7D32" fillOpacity={0.12} />
+              <ReferenceLine y={0} stroke="#C62828" strokeDasharray="3 3" />
+              <Area type="monotone" dataKey="upper" stroke="none" fill="#2E7D32" fillOpacity={0.15} />
               <Area type="monotone" dataKey="lower" stroke="none" fill="#ffffff" fillOpacity={1} />
-              <Line type="monotone" dataKey="forecast" stroke="#2E7D32" strokeWidth={2} dot={{ r: 3.5 }} />
+              <Line type="monotone" dataKey="forecast" stroke="#2E7D32" strokeWidth={2.5} dot={{ r: 4 }} />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
