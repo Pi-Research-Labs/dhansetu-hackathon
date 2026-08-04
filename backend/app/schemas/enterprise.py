@@ -58,6 +58,11 @@ class EnterpriseCard(BaseModel):
     missed_emis_90d: int | None
     thi_anomaly_90d: Decimal | None
     season_drop_3m: Decimal | None
+    savings_runway_days: Decimal | None
+    dscr_proj_180d: Decimal | None
+    forecast_net_180d_p10: Decimal | None
+    forecast_net_180d_p50: Decimal | None
+    forecast_net_180d_p90: Decimal | None
 
 
 class ForecastPoint(BaseModel):
@@ -128,3 +133,34 @@ class PaymentMix(BaseModel):
     avg_cash_share: Decimal | None
     recent_90d_digital_share: Decimal | None
     recent_90d_cash_share: Decimal | None
+
+
+class DigitalVisibilityDay(BaseModel):
+    enterprise_id: str
+    event_date: date
+    digital_share: Decimal | None
+    cash_share: Decimal | None
+    is_zero_txn_day: bool | None
+
+
+class WeeklyCashflow(BaseModel):
+    enterprise_id: str
+    week_start: date
+    week_end: date
+    inflow: Decimal | None
+    outflow: Decimal | None
+    net: Decimal | None
+    zero_txn_days: int | None
+
+
+class ForecastConfidencePoint(BaseModel):
+    enterprise_id: str
+    origin_date: date
+    horizon_days: int
+    horizon_label: str | None
+    horizon_end_date: date | None
+    p10: Decimal | None
+    p50: Decimal | None
+    p90: Decimal | None
+    confidence_score: Decimal | None
+    confidence_label: str | None

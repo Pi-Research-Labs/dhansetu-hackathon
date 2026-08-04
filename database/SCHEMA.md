@@ -178,8 +178,10 @@ important reason why.
 
 | View | Purpose |
 |---|---|
-| `v_enterprise_card` | One enterprise's full risk picture: latest assessment + matching `feature_snapshots` row (margin gap, DSO, buyer concentration, digital share, etc.) |
+| `v_enterprise_card` | One enterprise's full risk picture: latest assessment + matching `feature_snapshots` row (margin gap, DSO, buyer concentration, digital share, `savings_runway_days`, `dscr_proj_180d`, etc.) |
 | `v_fired_rules` | Which rules actually fired for an enterprise at a given `as_of`, in plain (rule/mechanism) terms, heaviest first |
+| `v_enterprise_digital_heatmap` | Daily digital/cash share for one enterprise, trailing 90 days — a flat `{date, value}` series for a calendar-heatmap UI, no grid math done server-side |
+| `v_enterprise_weekly_cashflow` | Historical inflow/outflow/net rolled up by ISO week, unbounded (the API layer windows it, default trailing 26 weeks) |
 
 ### Forecast
 
@@ -188,6 +190,7 @@ important reason why.
 | `v_forecast_band` | Pivots `forecasts` from long (one row per quantile) to wide (p10/p50/p90 columns) for charting |
 | `v_live_forecast` | The current forward-looking call per enterprise — latest origin date, no actual yet — what the officer acts on |
 | `v_projected_shortfall` | Deepest negative point of an enterprise's downside (p10) path, and which week it lands, when the enterprise ever dips below zero |
+| `v_enterprise_cashflow_forecast` | `v_live_forecast` plus a heuristic `confidence_score`/`confidence_label` per horizon (weighted from data completeness, zero-inflow days, digital-share steadiness) — explains *why* the p10/p90 band is wide, not just that it is |
 
 ### Alerts
 

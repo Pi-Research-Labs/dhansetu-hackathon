@@ -1,7 +1,7 @@
 # DHANSETU database
 
 Postgres schema and dataset for the DHANSETU rural cash-flow intelligence
-prototype: 37 tables, 831,723 rows, 24 views, generated from the CSVs in
+prototype: 37 tables, 831,723 rows, 27 views, generated from the CSVs in
 `data/dhansetu_v1_2/`. The DDL is generated from those CSVs (`gen_schema.py`),
 so column names, order and types can't drift from the data.
 
@@ -31,7 +31,7 @@ tables in dependency order.
 | `02_load.sql` | `\copy` for every table with explicit column lists. Generated. |
 | `03_constraints_indexes.sql` | 42 foreign keys + 17 indexes. Separate on purpose — a single bad row can't abort the load. |
 | `04_live_data.sql` | Real-data layer: district geo, Sarvam voice capture, Agmarknet, Open-Meteo. |
-| `05_views.sql` | 24 views — the API surface. |
+| `05_views.sql` | 22 views — the API surface. |
 | `06_verify.sql` | Expected vs. loaded row counts. |
 | `07_auth.sql` | `merchant_accounts` table + seed logins for the 6 named demo personas. Hand-written. |
 | `08_officer_auth.sql` | `officer_accounts` table + seed logins for all 6 field officers. Hand-written. |

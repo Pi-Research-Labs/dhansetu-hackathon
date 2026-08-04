@@ -41,6 +41,45 @@ async def get_payment_mix(enterprise_id: str) -> dict | None:
         return dict(row) if row else None
 
 
+async def get_digital_heatmap(enterprise_id: str) -> list[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM dhansetu.v_enterprise_digital_heatmap WHERE enterprise_id = $1",
+            enterprise_id,
+        )
+        return [dict(row) for row in rows]
+
+
+async def get_weekly_cashflow(enterprise_id: str, weeks: int = 26) -> list[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT * FROM (
+                SELECT * FROM dhansetu.v_enterprise_weekly_cashflow
+                WHERE enterprise_id = $1
+                ORDER BY week_start DESC
+                LIMIT $2
+            ) recent
+            ORDER BY week_start ASC
+            """,
+            enterprise_id,
+            weeks,
+        )
+        return [dict(row) for row in rows]
+
+
+async def get_cashflow_forecast(enterprise_id: str) -> list[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM dhansetu.v_enterprise_cashflow_forecast WHERE enterprise_id = $1",
+            enterprise_id,
+        )
+        return [dict(row) for row in rows]
+
+
 async def get_latest_alert(enterprise_id: str) -> dict | None:
     pool = get_pool()
     async with pool.acquire() as conn:

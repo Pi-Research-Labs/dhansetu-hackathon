@@ -1,13 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.deps import get_token_claims
-from app.schemas.enterprise import EnterpriseDetail, PaymentMix, ReceivablesAgeing
+from app.schemas.enterprise import (
+    DigitalVisibilityDay,
+    EnterpriseDetail,
+    ForecastConfidencePoint,
+    PaymentMix,
+    ReceivablesAgeing,
+    WeeklyCashflow,
+)
 from app.services.enterprise import (
+    get_cashflow_forecast,
+    get_digital_heatmap,
     get_enterprise_card,
     get_latest_alert,
     get_live_forecast,
     get_payment_mix,
     get_receivables_ageing,
+    get_weekly_cashflow,
 )
 
 router = APIRouter(tags=["enterprise"])
@@ -50,3 +60,41 @@ async def enterprise_payment_mix(
     if mix is None:
         raise HTTPException(status_code=404, detail="No ledger data for this enterprise")
     return mix
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/digital-heatmap",
+    response_model=list[DigitalVisibilityDay],
+)
+async def enterprise_digital_heatmap(
+    enterprise_id: str, claims: dict = Depends(get_token_claims)
+) -> list[dict]:
+    _check_access(claims, enterprise_id)
+    return await get_digital_heatmap(enterprise_id)
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/weekly-cashflow",
+    response_model=list[WeeklyCashflow],
+)
+async def enterprise_weekly_cashflow(
+    enterprise_id: str,
+    weeks: int = Query(26, ge=1, le=156),
+    claims: dict = Depends(get_token_claims),
+) -> list[dict]:
+    _check_access(claims, enterprise_id)
+    return await get_weekly_cashflow(enterprise_id, weeks)
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/cashflow-forecast",
+    response_model=list[ForecastConfidencePoint],
+)
+async def enterprise_cashflow_forecast(
+    enterprise_id: str, claims: dict = Depends(get_token_claims)
+) -> list[dict]:
+    _check_access(claims, enterprise_id)
+    rows = await get_cashflow_forecast(enterprise_id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="No live forecast for this enterprise")
+    return rows
