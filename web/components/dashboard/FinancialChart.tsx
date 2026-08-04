@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { LiveForecastItem } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
-import { Enterprise } from "@/utils/mockData";
+import { Enterprise } from "@/types/enterprise";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { TrendingUp, Clock } from "lucide-react";
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { EnterpriseCard, fetchMapTileBlobUrl } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
-import { Enterprise } from "@/utils/mockData";
+import { Enterprise } from "@/types/enterprise";
 import {
   Building2,
   MapPin,

@@ -1,5 +1,5 @@
 import { WorklistItem, EnterpriseDetailsResponse, EnterpriseCard } from "./api-config";
-import { Enterprise } from "./mockData";
+import { Enterprise } from "@/types/enterprise";
 
 /**
  * Converts a WorklistItem returned from GET /worklist into the Enterprise format

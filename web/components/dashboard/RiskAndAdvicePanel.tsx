@@ -3,7 +3,7 @@
 import React from "react";
 import { LatestAlert, RiskPredictionResponse } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
-import { Enterprise } from "@/utils/mockData";
+import { Enterprise } from "@/types/enterprise";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 

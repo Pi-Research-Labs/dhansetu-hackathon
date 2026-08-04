@@ -18,7 +18,7 @@ import {
   RiskPredictionResponse,
 } from "@/utils/api-config";
 import { worklistItemToEnterprise, enterpriseDetailsToEnterprise } from "@/utils/worklistAdapter";
-import { Enterprise } from "@/utils/mockData";
+import { Enterprise } from "@/types/enterprise";
 import PortfolioMetrics from "@/components/dashboard/PortfolioMetrics";
 import SearchAndFilters from "@/components/dashboard/SearchAndFilters";
 import WorklistList from "@/components/dashboard/WorklistList";

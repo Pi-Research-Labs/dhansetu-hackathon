@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { LatestAlert, postTaskOutcome } from "@/utils/api-config";
-import { Enterprise } from "@/utils/mockData";
+import { Enterprise } from "@/types/enterprise";
 import { Send, CheckCircle2, ClipboardCheck, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 interface OfficerVisitOutcomeBarProps {

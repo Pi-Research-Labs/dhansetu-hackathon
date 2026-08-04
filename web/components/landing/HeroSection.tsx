@@ -70,7 +70,7 @@ export default function HeroSection({ t }: HeroSectionProps) {
           <span>{t.land.cta}</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
-        <Link
+        {/* <Link
           href={primaryTarget}
           className="px-6 py-3.5 rounded-xl font-semibold text-sm text-[#1A2016] bg-white border border-[#E2E6D8] hover:bg-[#FAFBF6] transition-all cursor-pointer inline-flex items-center gap-2"
         >
@@ -85,7 +85,7 @@ export default function HeroSection({ t }: HeroSectionProps) {
               <span>{t.land.signin}</span>
             </>
           )}
-        </Link>
+        </Link> */}
       </div>
 
       <div className="flex flex-wrap gap-2.5 mt-8">
