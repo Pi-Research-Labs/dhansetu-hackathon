@@ -113,11 +113,24 @@ faster and one less thing exposed over the public interface.
 **HTTPS via nginx + Let's Encrypt**: the backend is only reachable directly
 on `localhost:8000` now — port 8000 is *not* open to the internet anymore
 (`dhansetu-backend-firewall` was deleted once this was in place). nginx
-terminates TLS for `dhansetu-api.payintelli.com` (cert via `certbot`,
+terminates TLS for `dhansetu-api.piresearchlabs.com` (cert via `certbot`,
 auto-renews, DNS is an A record in Route53 pointing at the static IP) and
 reverse-proxies to `127.0.0.1:8000`; HTTP requests get a 301 to HTTPS. Config
 is at `/etc/nginx/sites-available/dhansetu-api` on the VM. Only ports 80/443
 are open now (`dhansetu-web-firewall`) instead of 8000 directly.
+
+**Domain moved from `dhansetu-api.payintelli.com` to
+`dhansetu-api.piresearchlabs.com`** — the DNS A record now lives in
+`piresearchlabs.com`'s Route53 hosted zone (`Z08495342XBYXFL04BQ1O`), not
+`payintelli.com`'s. The old record was deleted, not just left stale — don't
+go looking for it. The TLS cert (`certbot certificates` on the VM, cert
+name `dhansetu-api.payintelli.com`) still carries **both** hostnames as
+SANs — it was expanded to cover the new domain during a zero-downtime
+cutover and was never narrowed back down. Harmless (nothing resolves the
+old hostname anymore, so nobody can complete a handshake against that SAN
+regardless), but if you want it fully clean, reissue with `certbot --nginx
+-d dhansetu-api.piresearchlabs.com --cert-name dhansetu-api.piresearchlabs.com`
+and delete the old cert name afterward.
 
 The external IP (`34.47.227.201`) is reserved as a **static** address
 (`dhansetu-static-ip`) — it doesn't change across stop/start cycles. It
@@ -126,7 +139,7 @@ this doc was written (`34.100.152.235` → `34.47.227.201`), breaking every
 reference to it at the time. If you ever see a different IP than what's in
 this repo, check `gcloud compute addresses describe dhansetu-static-ip`
 before assuming docs are wrong — though now that DNS points at
-`dhansetu-api.payintelli.com` rather than the raw IP, this matters less.
+`dhansetu-api.piresearchlabs.com` rather than the raw IP, this matters less.
 
 To redeploy after code changes: copy the updated `backend/` to
 `~/dhansetu-backend` on the VM (excluding `.venv`/`.env`), reinstall

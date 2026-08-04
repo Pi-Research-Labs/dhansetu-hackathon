@@ -6,7 +6,7 @@ For the mobile app (`mobile/`) and website (`web/`) to consume the FastAPI backe
 
 **Production (live on the GCP VM):**
 ```
-https://dhansetu-api.payintelli.com/api/v1
+https://dhansetu-api.piresearchlabs.com/api/v1
 ```
 Running as a systemd service (`dhansetu-backend`), auto-restarts on crash, starts
 automatically when the VM boots (matches the 9AM–9PM daily schedule — the API is
@@ -16,7 +16,7 @@ only reachable during that window, same as the database).
 database): `http://localhost:8000/api/v1` — see `backend/README.md` for setup.
 
 Interactive docs (Swagger UI) are always available at `<base>/docs`, e.g.
-https://dhansetu-api.payintelli.com/docs — useful for trying requests by hand.
+https://dhansetu-api.piresearchlabs.com/docs — useful for trying requests by hand.
 
 ## Auth
 
