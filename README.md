@@ -17,6 +17,4 @@ backend is live on the GCP VM at `https://dhansetu-api.piresearchlabs.com/api/v1
 the merchant's and field officer's journeys through the real demo data, and
 the value delivered at each step. Schema reference (tables, views, login
 credentials): [`database/SCHEMA.md`](database/SCHEMA.md). KPIs for both
-sides and their DB source: [`KPIS.md`](KPIS.md) — or, for a plain-language,
-board/investor-facing version of the same KPIs:
-[`EXECUTIVE_BRIEF.md`](EXECUTIVE_BRIEF.md).
+sides and their DB source: [`KPIS.md`](KPIS.md).
