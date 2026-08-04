@@ -36,10 +36,23 @@ tables in dependency order.
 | `07_auth.sql` | `merchant_accounts` table + seed logins for the 6 named demo personas. Hand-written. |
 | `08_officer_auth.sql` | `officer_accounts` table + seed logins for all 6 field officers. Hand-written. |
 | `09_app_grants.sql` | Grants `dhansetu_user` the access it actually needs to run the API. Hand-written. |
+| `10_dedupe_names.sql` | Renames the ~40 enterprises whose `proprietor_name` (and ~130 whose `business_name`) collided with another enterprise's. Hand-written. |
 | `demo_queries.sql` | One query per screen / per deck claim. |
 
-`load.sh` runs 01-05, 07, 08 and 09, and prints row counts. Run `06_verify.sql`
-yourself for the full 37-table comparison.
+`load.sh` runs 01-05, 07, 08, 09 and 10, and prints row counts. Run
+`06_verify.sql` yourself for the full 37-table comparison.
+
+**Why `10_dedupe_names.sql` exists:** the name generator
+(`data/dhansetu_v1_2/src/simulate.py`) draws first-name/surname pairs *with
+replacement* from a small per-language pool, independently for each of the
+~42 enterprises per district — collisions are near-guaranteed by simple
+probability, not a generator bug. Before this file, 252 enterprises had
+only 212 distinct `proprietor_name` values, including one of the 6 named
+demo personas (Sunita Devi, `ENT0067`) colliding with an unrelated
+enterprise (`ENT0213`) in the same district — exactly the kind of thing
+that confuses a live demo. Replacement names are redrawn from the same
+language/gender pool the generator uses, so they read as generated data,
+not an inserted patch; the named personas always keep their original name.
 
 ## How the FastAPI backend should talk to this database
 

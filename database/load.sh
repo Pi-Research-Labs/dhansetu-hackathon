@@ -45,6 +45,7 @@ run 05_views.sql
 run 07_auth.sql
 run 08_officer_auth.sql
 run 09_app_grants.sql
+run 10_dedupe_names.sql
 
 echo "==> row counts"
 psql -d "$DB" -q -c "
