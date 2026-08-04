@@ -1,9 +1,10 @@
 "use client";
 
 import { Sprout, Users, Building2, Store } from "lucide-react";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 
 interface NetworkIllustrationProps {
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function NetworkIllustration({ t }: NetworkIllustrationProps) {

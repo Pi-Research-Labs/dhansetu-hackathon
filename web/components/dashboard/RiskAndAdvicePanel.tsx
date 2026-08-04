@@ -1,11 +1,12 @@
 "use client";
 
 import { Enterprise } from "@/utils/mockData";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 
 interface RiskAndAdvicePanelProps {
   enterprise: Enterprise;
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function RiskAndAdvicePanel({

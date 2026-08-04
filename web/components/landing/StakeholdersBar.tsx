@@ -1,9 +1,10 @@
 "use client";
 
 import { Sprout, Users, Store, Building2 } from "lucide-react";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 
 interface StakeholdersBarProps {
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function StakeholdersBar({ t }: StakeholdersBarProps) {

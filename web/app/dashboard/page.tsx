@@ -31,7 +31,9 @@ export default function OfficerDashboard() {
     if (!isAuthenticated && !checkIsAuthenticated()) {
       router.replace("/login");
     } else {
-      setCheckingAuth(false);
+      queueMicrotask(() => {
+        setCheckingAuth(false);
+      });
     }
   }, [isAuthenticated, router]);
 

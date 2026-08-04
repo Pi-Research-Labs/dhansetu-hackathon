@@ -1,11 +1,12 @@
 "use client";
 
 import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 
 interface PortfolioMetricsProps {
   bankableCount: number;
   atRiskCount: number;
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function PortfolioMetrics({

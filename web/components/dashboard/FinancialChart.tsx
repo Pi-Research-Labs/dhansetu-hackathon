@@ -14,11 +14,12 @@ import {
   Area,
 } from "recharts";
 import { Enterprise, formatCurrency } from "@/utils/mockData";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { TrendingUp, Clock } from "lucide-react";
 
 interface FinancialChartProps {
   enterprise: Enterprise;
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function FinancialChart({ enterprise, t }: FinancialChartProps) {
@@ -83,7 +84,7 @@ export default function FinancialChart({ enterprise, t }: FinancialChartProps) {
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
-                formatter={(val: any) => [formatCurrency(Number(val)), "Net Forecast"]}
+                formatter={(val: unknown) => [formatCurrency(Number(val)), "Net Forecast"]}
               />
               <Area type="monotone" dataKey="upper" stroke="none" fill="#2E7D32" fillOpacity={0.12} />
               <Area type="monotone" dataKey="lower" stroke="none" fill="#ffffff" fillOpacity={1} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 
 interface SearchAndFiltersProps {
   search: string;
@@ -13,7 +14,7 @@ interface SearchAndFiltersProps {
   setTierFilter: (val: string) => void;
   districts: string[];
   segments: string[];
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function SearchAndFilters({

@@ -1,4 +1,8 @@
 import { STORAGE_KEYS } from "./constants";
+import { fetchAuthMe, getAuthMe, AuthMeResponse } from "./api-config";
+
+export { fetchAuthMe, getAuthMe };
+export type { AuthMeResponse };
 
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -16,7 +20,7 @@ export function isTokenValid(token: string | null): boolean {
       return payload.exp > now;
     }
     return true;
-  } catch (e) {
+  } catch {
     return true;
   }
 }

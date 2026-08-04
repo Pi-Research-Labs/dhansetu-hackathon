@@ -1,9 +1,10 @@
 "use client";
 
 import { TrendingUp } from "lucide-react";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 
 interface BacktestSectionProps {
-  t: any;
+  t: TranslationDictionary;
 }
 
 export default function BacktestSection({ t }: BacktestSectionProps) {
