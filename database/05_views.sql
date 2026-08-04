@@ -133,33 +133,32 @@ SELECT
     ra.buffer_days, ra.net_buffer_days, ra.dscr_annual,
     ra.credit_headroom, ra.suggested_max_emi, ra.bridge_headroom,
     ra.band_width, ra.low_visibility, ra.data_completeness,
-    ra.forecast_net_90d_p10, ra.forecast_net_90d_p50, ra.forecast_net_90d_p90,
+    COALESCE(ra.forecast_net_90d_p10, f90.p10)          AS forecast_net_90d_p10,
+    COALESCE(ra.forecast_net_90d_p50, f90.p50)          AS forecast_net_90d_p50,
+    COALESCE(ra.forecast_net_90d_p90, f90.p90)          AS forecast_net_90d_p90,
     ra.reason_1, ra.reason_2, ra.reason_3,
     ra.tier_cutoffs, ra.fusion_weights, ra.model_id, ra.rule_version,
     f.margin_gap_90d, f.cost_index_chg_90d, f.rev_index_chg_90d,
     f.dso_days, f.overdue_share, f.buyer_concentration,
     f.zero_inflow_days_30d, f.digital_share, f.informal_debt,
     f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m,
-    -- New columns appended at the end on purpose: CREATE OR REPLACE VIEW
-    -- can only add columns after the existing ones, never reorder/rename -
-    -- found live when this first attempt errored with "cannot change name
-    -- of view column dscr_annual to savings_runway_days".
+    -- New columns appended at the end on purpose for CREATE OR REPLACE VIEW compatibility
     ra.net_buffer_days                                  AS savings_runway_days,
-    ROUND((emi180.forecast_180d_p50 / NULLIF(emi180.trailing_180d_emi, 0))::numeric, 2) AS dscr_proj_180d
+    ROUND((emi180.forecast_180d_p50 / NULLIF(emi180.trailing_180d_emi, 0))::numeric, 2) AS dscr_proj_180d,
+    f180.p10                                            AS forecast_net_180d_p10,
+    f180.p50                                            AS forecast_net_180d_p50,
+    f180.p90                                            AS forecast_net_180d_p90
 FROM v_latest_assessment ra
 JOIN enterprises e USING (enterprise_id)
 LEFT JOIN feature_snapshots f
        ON f.enterprise_id = ra.enterprise_id AND f.as_of = ra.as_of
+LEFT JOIN v_live_forecast f90
+       ON f90.enterprise_id = ra.enterprise_id AND f90.horizon_days = 90
+LEFT JOIN v_live_forecast f180
+       ON f180.enterprise_id = ra.enterprise_id AND f180.horizon_days = 180
 LEFT JOIN LATERAL (
     -- Projected DSCR pairs a forward-looking 6-month forecast numerator
-    -- (from v_live_forecast -- not itself exposed as a field here, that
-    -- surface is left for other developers to design) with the SAME
-    -- trailing-EMI-burden convention dscr_annual already uses. There is no
-    -- future-dated repayment_schedule beyond the panel's last day, so a
-    -- "forecast / future scheduled EMI" formula would be NULL for 100% of
-    -- rows -- verified live before writing this. NULL here means "no
-    -- current EMI burden in the trailing 180d," which is correct/honest,
-    -- not broken -- dscr_annual has the same NaN-when-no-EMI behavior.
+    -- (from v_live_forecast) with the SAME trailing-EMI-burden convention dscr_annual uses.
     SELECT lf.p50 AS forecast_180d_p50,
            (SELECT SUM(d.emi_amount) FROM daily_ledger d
             WHERE d.enterprise_id = ra.enterprise_id AND d.emi_due

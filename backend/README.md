@@ -93,11 +93,8 @@ be unbuildable: `repayment_schedule` has zero rows past the panel's last
 day, so that formula is `null` for 100% of enterprises (verified live
 before shipping this). Reused the trailing-EMI-burden convention
 `dscr_annual` already uses instead, with a forward-looking numerator —
-`null` still means "no current EMI burden," not "broken." Deliberately no
-`forecast_net_180d_*` scalar field was added anywhere in this round — that
-surface (and any redesign of the 3-month one) is left for whoever picks it
-up next; the 6-month series itself is already fully queryable via
-`cashflow-forecast`. `cashflow-forecast`'s `confidence_score` is a
+`null` still means "no current EMI burden," not "broken." Both
+`forecast_net_90d_*` (p10, p50, p90) and `forecast_net_180d_*` (p10, p50, p90) scalar convenience fields are exposed directly on `v_enterprise_card` (falling back to `v_live_forecast` when snapshot fields are null). `cashflow-forecast`'s `confidence_score` is a
 hand-weighted heuristic (0.5 data completeness / 0.3 zero-inflow-days /
 0.2 digital-share steadiness), not a trained model — verified it correctly
 ranks the low-visibility demo persona (Sunita Devi) below a normal one

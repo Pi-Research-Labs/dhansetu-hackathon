@@ -172,6 +172,9 @@ Unknown `enterprise_id` → `404`.
     "forecast_net_90d_p10": -46739.00,
     "forecast_net_90d_p50": 5200.00,
     "forecast_net_90d_p90": 61000.00,
+    "forecast_net_180d_p10": -92100.00,
+    "forecast_net_180d_p50": 11400.00,
+    "forecast_net_180d_p90": 128000.00,
     "savings_runway_days": -12,
     "dscr_proj_180d": null,
     "reason_1": "margin_squeeze",
@@ -197,17 +200,9 @@ Unknown `enterprise_id` → `404`.
 `latest_alert` is `null` if the enterprise currently has no active alert.
 
 `savings_runway_days` is a plain alias of `net_buffer_days` — same number,
-clearer name for a merchant-facing screen. `dscr_proj_180d` is a genuinely
-new metric: forecast net cash flow (180-day horizon) ÷ trailing 180-day EMI
-burden — it's `null` whenever an enterprise has no EMI due in that trailing
-window (matches `dscr_annual`'s existing NaN-when-no-EMI behavior — most of
-the panel gets `null` here, which means "no current debt to service," not
-"broken"). Note there's deliberately no `forecast_net_180d_*` scalar field
-on this card — the 3-month figures already here (`forecast_net_90d_p10/50/90`)
-stay as they are; a 6-month equivalent and any other new projection-scalar
-surface is left for whoever builds that next (the 6-month series itself is
-already fully queryable via `GET /enterprise/{id}/cashflow-forecast` below,
-this is just about whether it also gets a scalar convenience field here).
+clearer name for a merchant-facing screen. `dscr_proj_180d` is a metric pairing
+forecast net cash flow (180-day horizon) ÷ trailing 180-day EMI burden. Both
+`forecast_net_90d_p10/p50/p90` and `forecast_net_180d_p10/p50/p90` are exposed directly as scalar convenience fields on the enterprise card (automatically falling back to `v_live_forecast` when snapshot fields are null).
 
 ## `GET /enterprise/{enterprise_id}/receivables` — officer (any) or merchant (own only)
 

@@ -60,6 +60,9 @@ class EnterpriseCard(BaseModel):
     season_drop_3m: Decimal | None
     savings_runway_days: Decimal | None
     dscr_proj_180d: Decimal | None
+    forecast_net_180d_p10: Decimal | None
+    forecast_net_180d_p50: Decimal | None
+    forecast_net_180d_p90: Decimal | None
 
 
 class ForecastPoint(BaseModel):
