@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials, OfficerUser } from "@/redux/slices/authSlice";
 import { useTranslation } from "@/utils/translations/useTranslation";
-import { apiClient } from "@/utils/api";
+import { officerLogin } from "@/utils/api-config";
 import { STORAGE_KEYS } from "@/utils/constants";
 import {
   UserCheck,
@@ -16,14 +16,6 @@ import {
   Sparkles,
   AlertCircle,
 } from "lucide-react";
-
-interface OfficerLoginResponse {
-  access_token: string;
-  token_type?: string;
-  officer_id: string;
-  officer_name: string;
-  district_id?: number | string;
-}
 
 export default function OfficerLoginForm() {
   const router = useRouter();
@@ -52,8 +44,8 @@ export default function OfficerLoginForm() {
         password: password,
       };
 
-      // Call API POST /auth/officer-login
-      const data = await apiClient.post<OfficerLoginResponse>("/auth/officer-login", payload);
+      // Call central API function officerLogin
+      const data = await officerLogin(payload);
 
       if (!data || !data.access_token) {
         throw new Error("Invalid login response from server");

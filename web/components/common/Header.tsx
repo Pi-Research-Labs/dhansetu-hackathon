@@ -2,17 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { logout, setCredentials } from "@/redux/slices/authSlice";
+import { logout, setCredentials, OfficerUser } from "@/redux/slices/authSlice";
 import { useTranslation } from "@/utils/translations/useTranslation";
 import { LanguageCode } from "@/redux/slices/languageSlice";
 import { STORAGE_KEYS } from "@/utils/constants";
 import { isTokenValid } from "@/utils/auth";
+import { fetchAuthMe } from "@/utils/api-config";
 import { Globe, LogOut, UserCheck, ChevronDown, Check } from "lucide-react";
 
 export default function Header() {
-  const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
@@ -21,7 +21,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Restore session from localStorage if present
+  // Restore session from stored token using GET /auth/me on app start
   useEffect(() => {
     if (typeof window !== "undefined" && !isAuthenticated) {
       const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -30,12 +30,34 @@ export default function Header() {
         try {
           const storedUser = JSON.parse(storedUserStr);
           dispatch(setCredentials({ user: storedUser, token }));
-        } catch (e) {
+        } catch {
           // ignore invalid json
         }
+
+        // Call GET /auth/me with Authorization: Bearer <token> to restore identity from server
+        fetchAuthMe()
+          .then((meData) => {
+            const restoredUser: OfficerUser = {
+              role: meData.role || "officer",
+              officer_id: meData.officer_id || (meData.user_id as string) || "FO1",
+              officer_name: meData.officer_name || (meData.name as string) || "Prakash Nair",
+              district_id: meData.district_id ?? 1,
+            };
+            localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(restoredUser));
+            dispatch(setCredentials({ user: restoredUser, token }));
+          })
+          .catch((err: unknown) => {
+            const errStr = String(err);
+            if (errStr.includes("401") || errStr.includes("Unauthorized")) {
+              localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+              localStorage.removeItem(STORAGE_KEYS.USER_INFO);
+              dispatch(logout());
+            }
+          });
       } else if (token && !isTokenValid(token)) {
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER_INFO);
+        dispatch(logout());
       }
     }
   }, [dispatch, isAuthenticated]);
@@ -137,8 +159,8 @@ export default function Header() {
                               changeLanguage(lang.code as LanguageCode);
                             }}
                             className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left font-medium transition-all cursor-pointer ${isSelected
-                                ? "bg-[#E8F5E9] text-[#2E7D32] font-bold"
-                                : "hover:bg-[#FAFBF6] text-[#1A2016]"
+                              ? "bg-[#E8F5E9] text-[#2E7D32] font-bold"
+                              : "hover:bg-[#FAFBF6] text-[#1A2016]"
                               }`}
                           >
                             <span>{lang.name}</span>
@@ -191,8 +213,8 @@ export default function Header() {
                             setIsMenuOpen(false);
                           }}
                           className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${isSelected
-                              ? "bg-[#E8F5E9] text-[#2E7D32] font-bold"
-                              : "hover:bg-[#FAFBF6] text-[#1A2016]"
+                            ? "bg-[#E8F5E9] text-[#2E7D32] font-bold"
+                            : "hover:bg-[#FAFBF6] text-[#1A2016]"
                             }`}
                         >
                           <span>{lang.name}</span>
