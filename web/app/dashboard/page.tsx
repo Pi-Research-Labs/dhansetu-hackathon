@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/hooks";
+import { checkIsAuthenticated } from "@/utils/auth";
 import { useTranslation } from "@/utils/translations/useTranslation";
 import { DATA } from "@/utils/mockData";
 import PortfolioMetrics from "@/components/dashboard/PortfolioMetrics";
@@ -27,8 +28,7 @@ export default function OfficerDashboard() {
 
   // Route protection guard
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-    if (!isAuthenticated && !token) {
+    if (!isAuthenticated && !checkIsAuthenticated()) {
       router.replace("/login");
     } else {
       setCheckingAuth(false);

@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://dhansetu-api.piresearchlabs.com/v1";
+export const API_BASE_URL = "https://dhansetu-api.piresearchlabs.com/api/v1/";
 
 export const API_TIMEOUT = 300000;
 

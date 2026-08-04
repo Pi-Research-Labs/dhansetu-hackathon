@@ -8,7 +8,8 @@ import { logout, setCredentials } from "@/redux/slices/authSlice";
 import { useTranslation } from "@/utils/translations/useTranslation";
 import { LanguageCode } from "@/redux/slices/languageSlice";
 import { STORAGE_KEYS } from "@/utils/constants";
-import { Globe, LogOut, UserCheck, ShieldCheck, Lock, ChevronDown, Check } from "lucide-react";
+import { isTokenValid } from "@/utils/auth";
+import { Globe, LogOut, UserCheck, ChevronDown, Check } from "lucide-react";
 
 export default function Header() {
   const pathname = usePathname();
@@ -25,13 +26,16 @@ export default function Header() {
     if (typeof window !== "undefined" && !isAuthenticated) {
       const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       const storedUserStr = localStorage.getItem(STORAGE_KEYS.USER_INFO);
-      if (token && storedUserStr) {
+      if (token && isTokenValid(token) && storedUserStr) {
         try {
           const storedUser = JSON.parse(storedUserStr);
           dispatch(setCredentials({ user: storedUser, token }));
         } catch (e) {
           // ignore invalid json
         }
+      } else if (token && !isTokenValid(token)) {
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.USER_INFO);
       }
     }
   }, [dispatch, isAuthenticated]);
@@ -132,11 +136,10 @@ export default function Header() {
                             onClick={() => {
                               changeLanguage(lang.code as LanguageCode);
                             }}
-                            className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left font-medium transition-all cursor-pointer ${
-                              isSelected
+                            className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left font-medium transition-all cursor-pointer ${isSelected
                                 ? "bg-[#E8F5E9] text-[#2E7D32] font-bold"
                                 : "hover:bg-[#FAFBF6] text-[#1A2016]"
-                            }`}
+                              }`}
                           >
                             <span>{lang.name}</span>
                             {isSelected && <Check className="w-3 h-3 text-[#2E7D32]" />}
@@ -187,11 +190,10 @@ export default function Header() {
                             changeLanguage(lang.code as LanguageCode);
                             setIsMenuOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                            isSelected
+                          className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${isSelected
                               ? "bg-[#E8F5E9] text-[#2E7D32] font-bold"
                               : "hover:bg-[#FAFBF6] text-[#1A2016]"
-                          }`}
+                            }`}
                         >
                           <span>{lang.name}</span>
                           {isSelected && <Check className="w-3 h-3 text-[#2E7D32]" />}
