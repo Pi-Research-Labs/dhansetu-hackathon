@@ -172,6 +172,8 @@ Unknown `enterprise_id` → `404`.
     "forecast_net_90d_p10": -46739.00,
     "forecast_net_90d_p50": 5200.00,
     "forecast_net_90d_p90": 61000.00,
+    "savings_runway_days": -12,
+    "dscr_proj_180d": null,
     "reason_1": "margin_squeeze",
     "margin_gap_90d": 21.7,
     "...": "see backend/app/schemas/enterprise.py for the full field list"
@@ -193,6 +195,19 @@ Unknown `enterprise_id` → `404`.
 }
 ```
 `latest_alert` is `null` if the enterprise currently has no active alert.
+
+`savings_runway_days` is a plain alias of `net_buffer_days` — same number,
+clearer name for a merchant-facing screen. `dscr_proj_180d` is a genuinely
+new metric: forecast net cash flow (180-day horizon) ÷ trailing 180-day EMI
+burden — it's `null` whenever an enterprise has no EMI due in that trailing
+window (matches `dscr_annual`'s existing NaN-when-no-EMI behavior — most of
+the panel gets `null` here, which means "no current debt to service," not
+"broken"). Note there's deliberately no `forecast_net_180d_*` scalar field
+on this card — the 3-month figures already here (`forecast_net_90d_p10/50/90`)
+stay as they are; a 6-month equivalent and any other new projection-scalar
+surface is left for whoever builds that next (the 6-month series itself is
+already fully queryable via `GET /enterprise/{id}/cashflow-forecast` below,
+this is just about whether it also gets a scalar convenience field here).
 
 ## `GET /enterprise/{enterprise_id}/receivables` — officer (any) or merchant (own only)
 
@@ -246,6 +261,90 @@ enterprise has no ledger data at all.
   "recent_90d_cash_share": 0.329
 }
 ```
+
+## `GET /enterprise/{enterprise_id}/digital-heatmap` — officer (any) or merchant (own only)
+
+Daily digital-vs-cash share, trailing 90 days — one flat array element per
+day, no week/day grid math done server-side. Meant to be rendered as a
+GitHub-contributions-style calendar heatmap on the frontend: bucket by day
+of week / week number yourself. Backed by `v_enterprise_digital_heatmap`.
+Always exactly 90 rows (the trailing window, not filtered by whether the
+enterprise has real activity that day).
+
+```json
+// Response 200 — array of:
+{
+  "enterprise_id": "ENT0031",
+  "event_date": "2026-07-31",
+  "digital_share": 0.68,
+  "cash_share": 0.32,
+  "is_zero_txn_day": false
+}
+```
+
+## `GET /enterprise/{enterprise_id}/weekly-cashflow` — officer (any) or merchant (own only)
+
+Historical weekly inflow/outflow/net, ISO-week buckets (Monday-start).
+Backed by `v_enterprise_weekly_cashflow`. Defaults to the trailing 26 weeks
+(6 months, chosen to line up with the 6-month forecast graph below for a
+continuous history+forecast timeline on one chart) — override with
+`?weeks=N` (1-156; the full panel is ~156 weeks, which would be unreadable
+as bars).
+
+```
+GET /api/v1/enterprise/ENT0031/weekly-cashflow?weeks=12
+```
+
+```json
+// Response 200 — array of, oldest week first:
+{
+  "enterprise_id": "ENT0031",
+  "week_start": "2026-07-27",
+  "week_end": "2026-08-02",
+  "inflow": 33780.00,
+  "outflow": 8777.00,
+  "net": 25005.00,
+  "zero_txn_days": 0
+}
+```
+`net` may differ from `inflow - outflow` by a rupee or two on some weeks —
+harmless independent-rounding noise already present in the underlying
+`daily_ledger` data (each of `cash_inflow`/`outflow`/`net` was rounded
+separately from the same unrounded source values; never off by more than
+±1 per day, so at most a few rupees per week).
+
+## `GET /enterprise/{enterprise_id}/cashflow-forecast` — officer (any) or merchant (own only)
+
+The 6-month forecast graph: one row per horizon (30/60/90/120/150/180
+days) with a p10/p50/p90 confidence band, plus a `confidence_score`
+(0-1) and `confidence_label` (`high`/`medium`/`low`) explaining *why* the
+band is as wide as it is. Backed by `v_enterprise_cashflow_forecast`.
+`404` if the enterprise has no live forecast at all.
+
+```json
+// Response 200 — array of 6 (one per horizon), e.g. for ENT0031:
+{
+  "enterprise_id": "ENT0031",
+  "origin_date": "2026-07-31",
+  "horizon_days": 180,
+  "horizon_label": "M6",
+  "horizon_end_date": "2027-01-27",
+  "p10": -44736.00,
+  "p50": 32698.00,
+  "p90": 134551.00,
+  "confidence_score": 0.886,
+  "confidence_label": "high"
+}
+```
+`confidence_score` is a **heuristic, not a trained model** — weighted from
+`data_completeness` (50%), `zero_inflow_days_30d` (30%), and 90-day
+digital-share steadiness (20%); weights are a reasonable hackathon-scale
+guess, not tuned or validated against outcomes. It's constant across all 6
+rows of one enterprise (only `p10`/`p90` widen with horizon) — there's no
+horizon-varying uncertainty signal available to vary it by. Verified
+directionally before shipping: Sunita Devi (`ENT0067`, the low-visibility
+demo persona) scores `~0.70` ("medium"), Lakshmiben (`ENT0031`) scores
+`~0.89` ("high").
 
 ## `GET /enterprise/{enterprise_id}/map-tile` — officer (any) or merchant (own only)
 

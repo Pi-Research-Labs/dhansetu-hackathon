@@ -56,6 +56,9 @@ login endpoints above.
 | `GET /api/v1/enterprise/{enterprise_id}` | officer (any), merchant (own enterprise only) | `v_enterprise_card` + `v_live_forecast` + latest `v_alert_actions` |
 | `GET /api/v1/enterprise/{enterprise_id}/receivables` | officer (any), merchant (own only) | `v_receivables_ageing` — the udhaar book by counterparty |
 | `GET /api/v1/enterprise/{enterprise_id}/payment-mix` | officer (any), merchant (own only) | `v_merchant_payment_mix` — UPI/wallet/cash share |
+| `GET /api/v1/enterprise/{enterprise_id}/digital-heatmap` | officer (any), merchant (own only) | `v_enterprise_digital_heatmap` — daily digital/cash share, trailing 90d, for a calendar heatmap |
+| `GET /api/v1/enterprise/{enterprise_id}/weekly-cashflow` | officer (any), merchant (own only) | `v_enterprise_weekly_cashflow` — historical inflow/outflow/net by ISO week, default trailing 26 weeks |
+| `GET /api/v1/enterprise/{enterprise_id}/cashflow-forecast` | officer (any), merchant (own only) | `v_enterprise_cashflow_forecast` — `v_live_forecast` + a heuristic `confidence_score`/`confidence_label` per horizon |
 | `POST /api/v1/outcome` | officer only | `dhansetu.record_outcome()` — closes the task and writes a `visit_outcomes` row |
 | `GET /api/v1/risk/{enterprise_id}/predict` | officer (any), merchant (own only) | `app/services/risk_model.py` — serving stub, reads `risk_assessments`/`feature_snapshots`, not live inference |
 | `GET /api/v1/enterprise/{enterprise_id}/map-tile` | officer (any), merchant (own only) | Google Maps Static API (`app/services/maps.py`), proxied server-side — returns `image/png` bytes, key never reaches the frontend |
@@ -82,6 +85,23 @@ extraction: it's a plain regex heuristic capped at `confidence = 0.5`,
 always below the DB's 0.70 auto-accept threshold, so every voice entry
 lands in an officer's review queue rather than silently becoming a ledger
 fact. See `API.md` for the full request/response shapes.
+
+**`dscr_proj_180d` (on the enterprise card) pairs a real forward-looking
+number with a real trailing one, not two forward numbers.** The obvious
+design — forecast net cash flow ÷ *future scheduled* EMI — turned out to
+be unbuildable: `repayment_schedule` has zero rows past the panel's last
+day, so that formula is `null` for 100% of enterprises (verified live
+before shipping this). Reused the trailing-EMI-burden convention
+`dscr_annual` already uses instead, with a forward-looking numerator —
+`null` still means "no current EMI burden," not "broken." Deliberately no
+`forecast_net_180d_*` scalar field was added anywhere in this round — that
+surface (and any redesign of the 3-month one) is left for whoever picks it
+up next; the 6-month series itself is already fully queryable via
+`cashflow-forecast`. `cashflow-forecast`'s `confidence_score` is a
+hand-weighted heuristic (0.5 data completeness / 0.3 zero-inflow-days /
+0.2 digital-share steadiness), not a trained model — verified it correctly
+ranks the low-visibility demo persona (Sunita Devi) below a normal one
+before shipping, but the weights themselves are a hackathon-scale guess.
 
 **Found and fixed while wiring this up:** `record_outcome()` referenced bare
 table names that only resolved via `search_path`, which doesn't carry into a

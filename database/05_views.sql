@@ -81,31 +81,10 @@ ORDER BY ra.fused_score DESC;
 
 -- ===========================================================================
 -- 3. GET /enterprise/{id}  — the detail card
+-- v_enterprise_card's definition physically lives after §4 now (below
+-- v_live_forecast) — it depends on v_live_forecast for dscr_proj_180d, and
+-- Postgres resolves view dependencies at CREATE time, not forward-declared.
 -- ===========================================================================
-
-CREATE OR REPLACE VIEW v_enterprise_card AS
-SELECT
-    e.enterprise_id, e.proprietor_name, e.business_name, e.age, e.sub_type,
-    e.sector, e.district, e.state, e.block, e.preferred_lang,
-    e.preferred_channel, e.shared_device, e.literacy, e.officer_id,
-    e.baseline_turnover, e.is_named_persona,
-    ra.as_of, ra.risk_tier, ROUND(ra.fused_score::numeric, 3) AS score,
-    ROUND(ra.prob_stress::numeric, 3)  AS model_prob_stress,
-    ROUND(ra.rule_score::numeric, 3)   AS rule_score,
-    ra.buffer_days, ra.net_buffer_days, ra.dscr_annual,
-    ra.credit_headroom, ra.suggested_max_emi, ra.bridge_headroom,
-    ra.band_width, ra.low_visibility, ra.data_completeness,
-    ra.forecast_net_90d_p10, ra.forecast_net_90d_p50, ra.forecast_net_90d_p90,
-    ra.reason_1, ra.reason_2, ra.reason_3,
-    ra.tier_cutoffs, ra.fusion_weights, ra.model_id, ra.rule_version,
-    f.margin_gap_90d, f.cost_index_chg_90d, f.rev_index_chg_90d,
-    f.dso_days, f.overdue_share, f.buyer_concentration,
-    f.zero_inflow_days_30d, f.digital_share, f.informal_debt,
-    f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m
-FROM v_latest_assessment ra
-JOIN enterprises e USING (enterprise_id)
-LEFT JOIN feature_snapshots f
-       ON f.enterprise_id = ra.enterprise_id AND f.as_of = ra.as_of;
 
 -- which rules actually fired, in plain language
 CREATE OR REPLACE VIEW v_fired_rules AS
@@ -139,6 +118,55 @@ JOIN (SELECT enterprise_id, MAX(origin_date) AS origin_date
       FROM forecasts WHERE is_live_forecast GROUP BY enterprise_id) m
   USING (enterprise_id, origin_date)
 ORDER BY enterprise_id, horizon_days;
+
+-- §3's v_enterprise_card (declared here, not up in §3, because it depends
+-- on v_live_forecast just above for dscr_proj_180d).
+CREATE OR REPLACE VIEW v_enterprise_card AS
+SELECT
+    e.enterprise_id, e.proprietor_name, e.business_name, e.age, e.sub_type,
+    e.sector, e.district, e.state, e.block, e.preferred_lang,
+    e.preferred_channel, e.shared_device, e.literacy, e.officer_id,
+    e.baseline_turnover, e.is_named_persona,
+    ra.as_of, ra.risk_tier, ROUND(ra.fused_score::numeric, 3) AS score,
+    ROUND(ra.prob_stress::numeric, 3)  AS model_prob_stress,
+    ROUND(ra.rule_score::numeric, 3)   AS rule_score,
+    ra.buffer_days, ra.net_buffer_days, ra.dscr_annual,
+    ra.credit_headroom, ra.suggested_max_emi, ra.bridge_headroom,
+    ra.band_width, ra.low_visibility, ra.data_completeness,
+    ra.forecast_net_90d_p10, ra.forecast_net_90d_p50, ra.forecast_net_90d_p90,
+    ra.reason_1, ra.reason_2, ra.reason_3,
+    ra.tier_cutoffs, ra.fusion_weights, ra.model_id, ra.rule_version,
+    f.margin_gap_90d, f.cost_index_chg_90d, f.rev_index_chg_90d,
+    f.dso_days, f.overdue_share, f.buyer_concentration,
+    f.zero_inflow_days_30d, f.digital_share, f.informal_debt,
+    f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m,
+    -- New columns appended at the end on purpose: CREATE OR REPLACE VIEW
+    -- can only add columns after the existing ones, never reorder/rename -
+    -- found live when this first attempt errored with "cannot change name
+    -- of view column dscr_annual to savings_runway_days".
+    ra.net_buffer_days                                  AS savings_runway_days,
+    ROUND((emi180.forecast_180d_p50 / NULLIF(emi180.trailing_180d_emi, 0))::numeric, 2) AS dscr_proj_180d
+FROM v_latest_assessment ra
+JOIN enterprises e USING (enterprise_id)
+LEFT JOIN feature_snapshots f
+       ON f.enterprise_id = ra.enterprise_id AND f.as_of = ra.as_of
+LEFT JOIN LATERAL (
+    -- Projected DSCR pairs a forward-looking 6-month forecast numerator
+    -- (from v_live_forecast -- not itself exposed as a field here, that
+    -- surface is left for other developers to design) with the SAME
+    -- trailing-EMI-burden convention dscr_annual already uses. There is no
+    -- future-dated repayment_schedule beyond the panel's last day, so a
+    -- "forecast / future scheduled EMI" formula would be NULL for 100% of
+    -- rows -- verified live before writing this. NULL here means "no
+    -- current EMI burden in the trailing 180d," which is correct/honest,
+    -- not broken -- dscr_annual has the same NaN-when-no-EMI behavior.
+    SELECT lf.p50 AS forecast_180d_p50,
+           (SELECT SUM(d.emi_amount) FROM daily_ledger d
+            WHERE d.enterprise_id = ra.enterprise_id AND d.emi_due
+              AND d.event_date > ra.as_of - 180) AS trailing_180d_emi
+    FROM v_live_forecast lf
+    WHERE lf.enterprise_id = ra.enterprise_id AND lf.horizon_days = 180
+) emi180 ON TRUE;
 
 -- Deepest point of the downside path = the shortfall, and the week it lands.
 CREATE OR REPLACE VIEW v_projected_shortfall AS
@@ -350,3 +378,84 @@ FROM visit_outcomes vo
 JOIN officer_tasks t USING (task_id)
 JOIN alerts a ON a.alert_id = t.alert_id
 GROUP BY 1;
+
+-- ===========================================================================
+-- 10. DIGITAL VISIBILITY HEATMAP — daily digital_share, trailing 90d
+-- Calendar-heatmap cell value. Flat {date, value} array; the frontend lays
+-- it out into a grid, the server doesn't compute week/day positions. 90d
+-- matches this file's existing "recent_90d" convention
+-- (v_merchant_payment_mix, missed_emis_90d).
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_digital_heatmap AS
+SELECT
+    l.enterprise_id,
+    l.event_date,
+    l.digital_share,
+    ROUND((1 - l.digital_share)::numeric, 3)         AS cash_share,
+    (COALESCE(l.txn_count, 0) = 0)                    AS is_zero_txn_day
+FROM daily_ledger l
+WHERE l.event_date > (SELECT MAX(event_date) FROM daily_ledger) - 90
+ORDER BY l.enterprise_id, l.event_date;
+
+-- ===========================================================================
+-- 11. HISTORICAL WEEKLY CASHFLOW — inflow/outflow/net by ISO week
+-- Unbounded here; the service defaults to trailing 26 weeks (6 months, to
+-- line up with the forecast graph's own horizon for a continuous
+-- history+forecast timeline) — full panel is ~156 weeks, unreadable as bars.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_weekly_cashflow AS
+SELECT
+    l.enterprise_id,
+    date_trunc('week', l.event_date)::date            AS week_start,
+    (date_trunc('week', l.event_date)::date + 6)       AS week_end,
+    SUM(l.cash_inflow)                                 AS inflow,
+    SUM(l.outflow)                                     AS outflow,
+    SUM(l.net)                                         AS net,
+    COUNT(*) FILTER (WHERE l.cash_inflow = 0 AND l.outflow = 0) AS zero_txn_days
+FROM daily_ledger l
+GROUP BY l.enterprise_id, date_trunc('week', l.event_date)
+ORDER BY l.enterprise_id, week_start;
+
+-- ===========================================================================
+-- 12. FORECAST WITH CONFIDENCE — v_live_forecast + a heuristic score
+-- explaining WHY the p10/p90 band is wide, not just that it is. Weighted
+-- formula (0.5 data completeness / 0.3 zero-inflow days / 0.2 digital-share
+-- steadiness), not a trained model — a hackathon-scale heuristic, not
+-- tuned or validated. confidence_score is constant across all 6 horizon
+-- points of one vintage (only p10/p90 widen with horizon) since there's no
+-- horizon-varying uncertainty signal available to add.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_cashflow_forecast AS
+WITH vol AS (
+    SELECT enterprise_id, STDDEV_SAMP(digital_share) AS digital_share_stddev_90d
+    FROM daily_ledger
+    WHERE event_date > (SELECT MAX(event_date) FROM daily_ledger) - 90
+    GROUP BY enterprise_id
+),
+scored AS (
+    SELECT
+        lf.enterprise_id, lf.origin_date, lf.horizon_days, lf.horizon_label,
+        lf.horizon_end_date, lf.p10, lf.p50, lf.p90,
+        1 - LEAST(1, GREATEST(0,
+              0.5 * (1 - COALESCE(f.data_completeness, 0))
+            + 0.3 * (COALESCE(f.zero_inflow_days_30d, 0) / 30.0)
+            + 0.2 * LEAST(1, COALESCE(v.digital_share_stddev_90d, 0) * 5)
+        )) AS confidence_raw
+    FROM v_live_forecast lf
+    JOIN v_latest_assessment ra USING (enterprise_id)
+    LEFT JOIN feature_snapshots f
+           ON f.enterprise_id = ra.enterprise_id AND f.as_of = ra.as_of
+    LEFT JOIN vol v ON v.enterprise_id = lf.enterprise_id
+)
+SELECT
+    enterprise_id, origin_date, horizon_days, horizon_label, horizon_end_date,
+    p10, p50, p90,
+    ROUND(confidence_raw::numeric, 3)                                    AS confidence_score,
+    CASE WHEN confidence_raw >= 0.7 THEN 'high'
+         WHEN confidence_raw >= 0.4 THEN 'medium'
+         ELSE 'low' END                                                  AS confidence_label
+FROM scored
+ORDER BY enterprise_id, horizon_days;
