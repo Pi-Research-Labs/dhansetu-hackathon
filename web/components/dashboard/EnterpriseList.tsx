@@ -1,6 +1,5 @@
-"use client";
-
-import { Enterprise, formatCurrency } from "@/utils/mockData";
+import { formatCurrency } from "@/utils/formatters";
+import { Enterprise } from "@/types/enterprise";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { Building2 } from "lucide-react";
 
