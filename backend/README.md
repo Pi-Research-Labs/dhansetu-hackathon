@@ -59,6 +59,7 @@ login endpoints above.
 | `GET /api/v1/enterprise/{enterprise_id}/digital-heatmap` | officer (any), merchant (own only) | `v_enterprise_digital_heatmap` — daily digital/cash share, trailing 90d, for a calendar heatmap |
 | `GET /api/v1/enterprise/{enterprise_id}/weekly-cashflow` | officer (any), merchant (own only) | `v_enterprise_weekly_cashflow` — historical inflow/outflow/net by ISO week, default trailing 26 weeks |
 | `GET /api/v1/enterprise/{enterprise_id}/cashflow-forecast` | officer (any), merchant (own only) | `v_enterprise_cashflow_forecast` — `v_live_forecast` + a heuristic `confidence_score`/`confidence_label` per horizon |
+| `GET /api/v1/enterprise/{enterprise_id}/net-inflow-heatmap` | officer (any), merchant (own only) | `v_enterprise_net_inflow_heatmap` — net cash flow per week, fixed trailing 7 weeks |
 | `POST /api/v1/outcome` | officer only | `dhansetu.record_outcome()` — closes the task and writes a `visit_outcomes` row |
 | `GET /api/v1/risk/{enterprise_id}/predict` | officer (any), merchant (own only) | `app/services/risk_model.py` — serving stub, reads `risk_assessments`/`feature_snapshots`, not live inference |
 | `GET /api/v1/enterprise/{enterprise_id}/map-tile` | officer (any), merchant (own only) | Google Maps Static API (`app/services/maps.py`), proxied server-side — returns `image/png` bytes, key never reaches the frontend |
@@ -99,6 +100,19 @@ hand-weighted heuristic (0.5 data completeness / 0.3 zero-inflow-days /
 0.2 digital-share steadiness), not a trained model — verified it correctly
 ranks the low-visibility demo persona (Sunita Devi) below a normal one
 before shipping, but the weights themselves are a hackathon-scale guess.
+
+**`digital-heatmap` returns percentages (0-100), not fractions.** It
+originally returned raw 0-1 `digital_share`/`cash_share` values; renamed to
+`digital_share_pct`/`cash_share_pct` when switched to a 0-100 scale, rather
+than keep the old field names holding a different scale silently — matches
+the `_pct` suffix convention `write_off_pct` already established on
+`/receivables`. Required a `DROP VIEW` + recreate rather than
+`CREATE OR REPLACE`, since the view had already been deployed live with
+the old column names and Postgres rejects renaming columns via `REPLACE`
+(nothing else depends on this view, checked before dropping).
+`net-inflow-heatmap` is new: net cash flow per week, always exactly 7
+rows — a fixed, purpose-built window rather than `weekly-cashflow`'s
+caller-configurable one.
 
 **Found and fixed while wiring this up:** `record_outcome()` referenced bare
 table names that only resolved via `search_path`, which doesn't carry into a

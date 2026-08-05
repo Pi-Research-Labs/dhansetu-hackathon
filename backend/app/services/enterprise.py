@@ -80,6 +80,16 @@ async def get_cashflow_forecast(enterprise_id: str) -> list[dict]:
         return [dict(row) for row in rows]
 
 
+async def get_net_inflow_heatmap(enterprise_id: str) -> list[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM dhansetu.v_enterprise_net_inflow_heatmap WHERE enterprise_id = $1",
+            enterprise_id,
+        )
+        return [dict(row) for row in rows]
+
+
 async def get_latest_alert(enterprise_id: str) -> dict | None:
     pool = get_pool()
     async with pool.acquire() as conn:
