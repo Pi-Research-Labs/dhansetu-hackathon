@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   getVoiceReviewQueue,
   postVoiceReview,
@@ -8,25 +8,19 @@ import {
   PostVoiceReviewPayload,
 } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
-import { TranslationDictionary } from "@/utils/translations/dictionary";
 import {
   Mic,
   Calendar,
   Globe,
   Loader2,
   CheckCircle2,
-  AlertCircle,
   Play,
   Check,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
 
-interface VoiceReviewTabProps {
-  t: TranslationDictionary;
-}
-
-export default function VoiceReviewTab({ t }: VoiceReviewTabProps) {
+export default function VoiceReviewTab() {
   const [queue, setQueue] = useState<VoiceReviewQueueItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +39,24 @@ export default function VoiceReviewTab({ t }: VoiceReviewTabProps) {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Load review queue
-  const loadQueue = () => {
-    setLoading(true);
-    setError(null);
+  // selectItem callback (defined before useEffect to avoid hoisting issues)
+  const selectItem = useCallback((item: VoiceReviewQueueItem) => {
+    const id = item.extraction_id || item.voice_id || "";
+    setSelectedId(id);
+    setReviewedAmount(item.amount ? String(item.amount) : "");
+    setDirection(item.direction || "inflow");
+    setCategory("milk_sale");
+    setIsHousehold(false);
+    setTender("cash");
+    setSuccessMsg(null);
+  }, []);
+
+  // Load review queue on mount
+  useEffect(() => {
+    let isMounted = true;
     getVoiceReviewQueue()
       .then((data) => {
+        if (!isMounted) return;
         const activeQueue = (data || []).filter((item) => item.needs_review !== false);
         setQueue(activeQueue);
         if (activeQueue.length > 0) {
@@ -61,27 +67,15 @@ export default function VoiceReviewTab({ t }: VoiceReviewTabProps) {
         setLoading(false);
       })
       .catch((err) => {
+        if (!isMounted) return;
         setError(err instanceof Error ? err.message : "Failed to load voice review queue");
         setLoading(false);
       });
-  };
 
-  useEffect(() => {
-    loadQueue();
-  }, []);
-
-  const selectItem = (item: VoiceReviewQueueItem) => {
-    const id = item.extraction_id || item.voice_id || "";
-    setSelectedId(id);
-    setReviewedAmount(item.amount ? String(item.amount) : "");
-    setDirection(item.direction || "inflow");
-    
-    // Guess a default category based on business sector if available
-    setCategory("milk_sale");
-    setIsHousehold(false);
-    setTender("cash");
-    setSuccessMsg(null);
-  };
+    return () => {
+      isMounted = false;
+    };
+  }, [selectItem]);
 
   const selectedItem = queue.find(
     (item) => (item.extraction_id || item.voice_id) === selectedId
@@ -159,6 +153,12 @@ export default function VoiceReviewTab({ t }: VoiceReviewTabProps) {
           </span>
         </div>
 
+        {error && (
+          <div className="bg-[#FFEBEE] border border-[#C62828]/30 px-3.5 py-2 rounded-xl text-[10px] font-mono font-bold text-[#C62828]">
+            Error: {error}
+          </div>
+        )}
+
         {queue.length === 0 ? (
           <div className="flex-1 bg-white border border-[#E2E6D8] rounded-xl flex flex-col items-center justify-center p-6 text-center text-xs text-[#5F6656] space-y-1.5 shadow-3xs">
             <CheckCircle2 className="w-8 h-8 text-[#2E7D32]" />
@@ -190,7 +190,7 @@ export default function VoiceReviewTab({ t }: VoiceReviewTabProps) {
                       {item.proprietor_name || `Merchant ID: ${item.enterprise_id}`}
                     </div>
                     <div className="text-[10px] text-[#5F6656] truncate italic font-serif">
-                      "{item.transcript}"
+                      &quot;{item.transcript}&quot;
                     </div>
                     <div className="flex items-center gap-2 text-[9px] font-mono text-[#757575] pt-0.5">
                       <span className="flex items-center gap-0.5">
@@ -261,7 +261,7 @@ export default function VoiceReviewTab({ t }: VoiceReviewTabProps) {
                 <div className="space-y-1 flex-1 min-w-0">
                   <span className="text-[9px] font-bold text-[#2E7D32] uppercase tracking-wider block">Spoken Transcript</span>
                   <p className="text-sm font-serif italic font-medium text-[#1A2016] leading-snug break-words">
-                    "{selectedItem.transcript}"
+                    &quot;{selectedItem.transcript}&quot;
                   </p>
                 </div>
               </div>

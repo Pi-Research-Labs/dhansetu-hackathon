@@ -155,7 +155,9 @@ export default function EnterpriseDetailCard({
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
-    setIsLoadingHeatmap(true);
+    queueMicrotask(() => {
+      if (isMounted) setIsLoadingHeatmap(true);
+    });
 
     getDigitalHeatmap(id)
       .then((data) => {

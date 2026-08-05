@@ -22,7 +22,7 @@ import { Enterprise } from "@/types/enterprise";
 import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
 import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
 import VoiceReviewTab from "@/components/dashboard/VoiceReviewTab";
-import { Lock, TrendingUp, Loader2 } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export default function OfficerDashboard() {
   const router = useRouter();
@@ -288,7 +288,7 @@ export default function OfficerDashboard() {
       </div>
 
       {/* Tab Render Switch */}
-      <div className="w-full max-w-7xl mx-auto flex-1 min-h-0 overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto flex-1 min-h-0 overflow-hidden flex flex-col">
         {activeTab === "portfolio" ? (
           <MyPortfolioTab
             filteredWorklistItems={filteredWorklistItems}
@@ -318,9 +318,9 @@ export default function OfficerDashboard() {
             t={t}
           />
         ) : activeTab === "market" ? (
-          <MarketIntelligenceTab t={t} />
+          <MarketIntelligenceTab />
         ) : (
-          <VoiceReviewTab t={t} />
+          <VoiceReviewTab />
         )}
       </div>
     </div>

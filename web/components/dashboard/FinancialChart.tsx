@@ -47,8 +47,12 @@ export default function FinancialChart({ enterprise, liveForecast, t }: Financia
     if (!enterpriseId) return;
 
     let isMounted = true;
-    setIsLoadingHistory(true);
-    setIsLoadingForecast(true);
+    queueMicrotask(() => {
+      if (isMounted) {
+        setIsLoadingHistory(true);
+        setIsLoadingForecast(true);
+      }
+    });
 
     // 1. GET /enterprise/{id}/weekly-cashflow (trailing 26 weeks)
     getWeeklyCashflow(enterpriseId, 26)

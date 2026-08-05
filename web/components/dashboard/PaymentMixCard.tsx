@@ -3,7 +3,7 @@
 import React from "react";
 import { PaymentMixResponse } from "@/utils/api-config";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
-import { Wallet, Smartphone, Banknote, ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
+import { Wallet, ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
 
 interface PaymentMixCardProps {
   data?: PaymentMixResponse | null;

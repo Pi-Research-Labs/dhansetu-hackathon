@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAppSelector } from "@/redux/hooks";
 import { checkIsAuthenticated } from "@/utils/auth";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
-import { Sparkles, ArrowRight, Lock, ShieldCheck, LayoutDashboard } from "lucide-react";
+import { Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 
 function Badge({ text }: { text: string }) {
   return (

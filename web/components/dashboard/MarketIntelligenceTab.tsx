@@ -15,11 +15,9 @@ import {
   EvidenceForecastAccuracyItem,
   EvidenceHeadroomByTierItem,
 } from "@/utils/api-config";
-import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { formatCurrency } from "@/utils/formatters";
 import {
   Activity,
-  AlertTriangle,
   TrendingUp,
   MapPin,
   Clock,
@@ -28,11 +26,7 @@ import {
   Database,
 } from "lucide-react";
 
-interface MarketIntelligenceTabProps {
-  t: TranslationDictionary;
-}
-
-export default function MarketIntelligenceTab({ t }: MarketIntelligenceTabProps) {
+export default function MarketIntelligenceTab() {
   const [loading, setLoading] = useState<boolean>(true);
   const [leadTime, setLeadTime] = useState<EvidenceLeadTimeResponse | null>(null);
   const [districtEvents, setDistrictEvents] = useState<EvidenceDistrictEvent[]>([]);
@@ -43,7 +37,6 @@ export default function MarketIntelligenceTab({ t }: MarketIntelligenceTabProps)
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
 
     Promise.all([
       getEvidenceLeadTime().catch(() => null),
@@ -86,7 +79,7 @@ export default function MarketIntelligenceTab({ t }: MarketIntelligenceTabProps)
   }
 
   return (
-    <div className="w-full flex-1 min-h-0 overflow-y-auto pr-1 space-y-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
+    <div className="w-full h-full flex flex-col min-h-0 overflow-hidden space-y-5 pb-1">
       {/* Top row: Performance efficacy stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch shrink-0">
         {/* Lead warning time */}
@@ -155,10 +148,10 @@ export default function MarketIntelligenceTab({ t }: MarketIntelligenceTabProps)
       </div>
 
       {/* Main Grid Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch flex-1 min-h-0 overflow-hidden">
         {/* District Cohort Events */}
-        <div className="lg:col-span-7 bg-white border border-[#E2E6D8] p-4 rounded-xl space-y-3 shadow-3xs flex flex-col justify-between min-h-[300px]">
-          <div className="flex items-center gap-2 border-b border-[#E2E6D8] pb-2">
+        <div className="lg:col-span-7 bg-white border border-[#E2E6D8] p-4 rounded-xl space-y-3 shadow-3xs flex flex-col min-h-0 h-full overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-[#E2E6D8] pb-2 shrink-0">
             <MapPin className="w-4 h-4 text-[#2E7D32]" />
             <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
               Active District Cohort Events
@@ -170,7 +163,7 @@ export default function MarketIntelligenceTab({ t }: MarketIntelligenceTabProps)
               No active district-wide stress trends detected.
             </div>
           ) : (
-            <div className="overflow-x-auto flex-1 mt-2">
+            <div className="overflow-auto flex-1 min-h-0 mt-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
               <table className="w-full text-left border-collapse text-[11px]">
                 <thead>
                   <tr className="bg-[#FAFBF6] border-y border-[#E2E6D8] text-[#5F6656] font-semibold font-mono">
@@ -208,15 +201,15 @@ export default function MarketIntelligenceTab({ t }: MarketIntelligenceTabProps)
         </div>
 
         {/* Efficacy Scorecard */}
-        <div className="lg:col-span-5 bg-white border border-[#E2E6D8] p-4 rounded-xl space-y-3 shadow-3xs flex flex-col justify-between min-h-[300px]">
-          <div className="flex items-center gap-2 border-b border-[#E2E6D8] pb-2">
+        <div className="lg:col-span-5 bg-white border border-[#E2E6D8] p-4 rounded-xl space-y-3 shadow-3xs flex flex-col min-h-0 h-full overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-[#E2E6D8] pb-2 shrink-0">
             <Activity className="w-4 h-4 text-[#2E7D32]" />
             <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
               Mechanism Efficacy Scorecard
             </h3>
           </div>
 
-          <div className="overflow-x-auto flex-1 mt-2">
+          <div className="overflow-auto flex-1 min-h-0 mt-2 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
             <table className="w-full text-left border-collapse text-[11px]">
               <thead>
                 <tr className="bg-[#FAFBF6] border-y border-[#E2E6D8] text-[#5F6656] font-semibold font-mono">
