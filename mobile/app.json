@@ -1,13 +1,11 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "dhansetu-merchant-portal",
+    "slug": "dhansetu-merchant-portal",
     "version": "1.0.0",
-    "scheme": "dhansetu",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router"],
     "ios": {
       "supportsTablet": true
     },
@@ -18,13 +16,21 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.laraibpi.dhansetumerchantportal"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
     "extra": {
-      "apiUrl": "https://dhansetu-api.piresearchlabs.com/api/v1"
+      "router": {},
+      "eas": {
+        "projectId": "7a787592-3d24-49cb-a9f6-5421f86335e3"
+      }
     }
   }
 }

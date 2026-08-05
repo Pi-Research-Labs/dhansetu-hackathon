@@ -1,0 +1,679 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import {
+  User,
+  ShieldCheck,
+  Globe,
+  Lock,
+  LogOut,
+  HelpCircle,
+  Building2,
+  Phone,
+  Award,
+  ChevronRight,
+  X,
+  PhoneCall,
+  KeyRound,
+  AlertTriangle,
+  CheckCircle2,
+} from 'lucide-react-native';
+import { useMerchantStore } from '@/store/useMerchantStore';
+import { L, SupportedLang } from '@/i18n/translations';
+import { GovHeader } from '@/components/common/GovHeader';
+import { SecurityBadge } from '@/components/common/SecurityBadge';
+
+const LANG_LIST: { id: SupportedLang; label: string; flag: string }[] = [
+  { id: 'en', label: 'English', flag: '🇬🇧' },
+  { id: 'hi', label: 'हिन्दी (Hindi)', flag: '🇮🇳' },
+  { id: 'mr', label: 'मराठी (Marathi)', flag: '🇮🇳' },
+  { id: 'te', label: 'తెలుగు (Telugu)', flag: '🇮🇳' },
+];
+
+export default function AccountScreen() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  const {
+    lang,
+    setLang,
+    name,
+    segment,
+    district,
+    phone,
+    gstin,
+    tier,
+    score,
+  } = useMerchantStore();
+
+  const t = L[lang];
+
+  // Custom Modal States
+  const [securityModalVisible, setSecurityModalVisible] = useState(false);
+  const [supportModalVisible, setSupportModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  const confirmLogout = () => {
+    setLogoutModalVisible(false);
+    router.replace('/login');
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Top Nav (Clean Header without top-bar language select) */}
+      <View style={styles.topNav}>
+        <GovHeader />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Title */}
+        <View style={styles.headerSection}>
+          <Text style={styles.mainTitle}>{t.accountTitle}</Text>
+          <Text style={styles.subtitle}>{t.accountSub}</Text>
+        </View>
+
+        {/* Merchant Profile Card */}
+        <View style={styles.card}>
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarBox}>
+              <User size={24} color="#1E293B" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.merchantName}>{name}</Text>
+              <Text style={styles.merchantMeta}>{segment} · {district}</Text>
+            </View>
+            <View style={[styles.tierBadge, tier === 'GREEN' && styles.tierGreen, tier === 'AMBER' && styles.tierAmber, tier === 'RED' && styles.tierRed]}>
+              <Text style={styles.tierText}>{t.tiers[tier]} · {score}/100</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <Building2 size={15} color="#64748B" />
+            <Text style={styles.infoLabel}>GSTIN / Merchant ID:</Text>
+            <Text style={styles.infoVal}>{gstin}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Phone size={15} color="#64748B" />
+            <Text style={styles.infoLabel}>Registered Mobile:</Text>
+            <Text style={styles.infoVal}>{phone}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Award size={15} color="#166534" />
+            <Text style={styles.infoLabel}>Verification Status:</Text>
+            <View style={styles.verifiedChip}>
+              <ShieldCheck size={12} color="#166534" />
+              <Text style={styles.verifiedText}>GST & Aadhaar Verified</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Settings & Preferences Section */}
+        <Text style={styles.sectionHeader}>{t.accountSettings}</Text>
+
+        {/* Language Selection Setting Card */}
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconBox}>
+              <Globe size={18} color="#2563EB" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>{t.changeLanguage}</Text>
+              <Text style={styles.settingSub}>Select your preferred app language</Text>
+            </View>
+          </View>
+
+          <View style={styles.langGrid}>
+            {LANG_LIST.map((item) => {
+              const isSelected = item.id === lang;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.langChip, isSelected && styles.langChipSelected]}
+                  onPress={() => setLang(item.id)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.langFlag}>{item.flag}</Text>
+                  <Text style={[styles.langChipText, isSelected && styles.langChipTextSelected]}>
+                    {item.label}
+                  </Text>
+                  {isSelected && <CheckCircle2 size={14} color="#1E293B" />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Security & Password Reset Setting */}
+        <TouchableOpacity
+          style={styles.settingCard}
+          onPress={() => setSecurityModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconBox}>
+              <Lock size={18} color="#B45309" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>{t.securitySettings}</Text>
+              <Text style={styles.settingSub}>Security, Encryption & Password Reset</Text>
+            </View>
+            <ChevronRight size={18} color="#94A3B8" />
+          </View>
+        </TouchableOpacity>
+
+        {/* Support Helpdesk Setting */}
+        <TouchableOpacity
+          style={styles.settingCard}
+          onPress={() => setSupportModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconBox}>
+              <HelpCircle size={18} color="#166534" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>{t.supportHelpdesk}</Text>
+              <Text style={styles.settingSub}>Toll Free: 1800-11-2244 · support@dhansetu.gov.in</Text>
+            </View>
+            <ChevronRight size={18} color="#94A3B8" />
+          </View>
+        </TouchableOpacity>
+
+        {/* Security Badge */}
+        <SecurityBadge />
+
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => setLogoutModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          <LogOut size={18} color="#EF4444" />
+          <Text style={styles.logoutButtonText}>{t.logoutBtn}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* ----------------- CUSTOM SECURITY & ACCESS MODAL ----------------- */}
+      <Modal visible={securityModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.customModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={[styles.modalIconBox, { backgroundColor: '#FEF3C7' }]}>
+                <Lock size={20} color="#B45309" />
+              </View>
+              <Text style={styles.modalTitle}>Security & Access Info</Text>
+              <TouchableOpacity onPress={() => setSecurityModalVisible(false)} style={styles.closeBtn}>
+                <X size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <View style={styles.modalInfoBox}>
+                <ShieldCheck size={16} color="#166534" />
+                <Text style={styles.modalInfoBoxText}>
+                  256-Bit SSL AES Encrypted Government Gateway
+                </Text>
+              </View>
+
+              <Text style={styles.modalDetailLabel}>Registered GSTIN Credentials:</Text>
+              <Text style={styles.modalDetailVal}>{gstin}</Text>
+
+              <Text style={styles.modalDetailLabel}>Aadhaar Linked Mobile:</Text>
+              <Text style={styles.modalDetailVal}>{phone}</Text>
+
+              <Text style={styles.modalDetailLabel}>Active Session ID:</Text>
+              <Text style={styles.modalDetailVal}>DS-SEC-SESSION-889231</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalPrimaryBtn}
+              onPress={() => {
+                setSecurityModalVisible(false);
+                Alert.alert('OTP Dispatched', 'Password reset code has been dispatched to your registered Aadhaar mobile number via SMS.');
+              }}
+            >
+              <KeyRound size={16} color="#FFFFFF" />
+              <Text style={styles.modalPrimaryBtnText}>REQUEST AADHAAR OTP RESET</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => setSecurityModalVisible(false)}>
+              <Text style={styles.modalSecondaryBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ----------------- CUSTOM GOVERNMENT NODAL SUPPORT MODAL ----------------- */}
+      <Modal visible={supportModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.customModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={[styles.modalIconBox, { backgroundColor: '#DCFCE7' }]}>
+                <HelpCircle size={20} color="#166534" />
+              </View>
+              <Text style={styles.modalTitle}>Government Nodal Support</Text>
+              <TouchableOpacity onPress={() => setSupportModalVisible(false)} style={styles.closeBtn}>
+                <X size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.modalDetailLabel}>Ministry / Department:</Text>
+              <Text style={styles.modalDetailVal}>MSME & Financial Inclusion Nodal Division</Text>
+
+              <Text style={styles.modalDetailLabel}>Toll-Free Helpline:</Text>
+              <Text style={[styles.modalDetailVal, { color: '#2563EB' }]}>1800-11-2244</Text>
+
+              <Text style={styles.modalDetailLabel}>Official Email Support:</Text>
+              <Text style={styles.modalDetailVal}>support@dhansetu.gov.in</Text>
+
+              <Text style={styles.modalDetailLabel}>Operating Hours:</Text>
+              <Text style={styles.modalDetailVal}>Mon - Sat: 9:00 AM to 6:00 PM IST</Text>
+
+              <Text style={styles.modalDetailLabel}>Regional Officer:</Text>
+              <Text style={styles.modalDetailVal}>Shri A. K. Sharma (Deputy Director, MSME)</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalPrimaryBtn, { backgroundColor: '#166534' }]}
+              onPress={() => {
+                setSupportModalVisible(false);
+                Alert.alert('Calling Support', 'Dialing Toll Free: 1800-11-2244...');
+              }}
+            >
+              <PhoneCall size={16} color="#FFFFFF" />
+              <Text style={styles.modalPrimaryBtnText}>CALL HELPLINE (1800-11-2244)</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => setSupportModalVisible(false)}>
+              <Text style={styles.modalSecondaryBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ----------------- CUSTOM LOGOUT CONFIRMATION MODAL ----------------- */}
+      <Modal visible={logoutModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.customModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={[styles.modalIconBox, { backgroundColor: '#FEE2E2' }]}>
+                <LogOut size={20} color="#EF4444" />
+              </View>
+              <Text style={styles.modalTitle}>Confirm Merchant Logout</Text>
+              <TouchableOpacity onPress={() => setLogoutModalVisible(false)} style={styles.closeBtn}>
+                <X size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.logoutModalPrompt}>
+                Are you sure you want to log out of your merchant portal session?
+              </Text>
+              <Text style={styles.logoutModalSub}>
+                Your transaction ledger entries and financial records are securely saved on device.
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.logoutConfirmBtn} onPress={confirmLogout}>
+              <LogOut size={16} color="#FFFFFF" />
+              <Text style={styles.logoutConfirmBtnText}>YES, LOGOUT NOW</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => setLogoutModalVisible(false)}>
+              <Text style={styles.modalSecondaryBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  topNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 110,
+  },
+  headerSection: {
+    marginBottom: 16,
+  },
+  mainTitle: {
+    color: '#0F172A',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  subtitle: {
+    color: '#64748B',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  merchantName: {
+    color: '#0F172A',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  merchantMeta: {
+    color: '#64748B',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  tierBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  tierGreen: { backgroundColor: '#DCFCE7' },
+  tierAmber: { backgroundColor: '#FEF3C7' },
+  tierRed: { backgroundColor: '#FEE2E2' },
+  tierText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  infoLabel: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  infoVal: {
+    color: '#0F172A',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  verifiedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+  },
+  verifiedText: {
+    color: '#166534',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  sectionHeader: {
+    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  settingCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 10,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  settingTitle: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  settingSub: {
+    color: '#64748B',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  langGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  langChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    width: '48%',
+  },
+  langChipSelected: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#1E293B',
+  },
+  langFlag: {
+    fontSize: 16,
+  },
+  langChipText: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '500',
+    flex: 1,
+  },
+  langChipTextSelected: {
+    color: '#0F172A',
+    fontWeight: '700',
+  },
+  logoutButton: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    marginTop: 16,
+  },
+  logoutButtonText: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  /* Custom Modal Styles */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  customModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  modalIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    color: '#0F172A',
+    fontSize: 16,
+    fontWeight: '700',
+    flex: 1,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  modalBody: {
+    marginBottom: 18,
+  },
+  modalInfoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F0FDF4',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+    marginBottom: 12,
+  },
+  modalInfoBoxText: {
+    color: '#166534',
+    fontSize: 11,
+    fontWeight: '600',
+    flex: 1,
+  },
+  modalDetailLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 8,
+  },
+  modalDetailVal: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  modalPrimaryBtn: {
+    backgroundColor: '#1E293B',
+    borderRadius: 10,
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  modalPrimaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  modalSecondaryBtn: {
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSecondaryBtnText: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  logoutModalPrompt: {
+    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+    marginBottom: 6,
+  },
+  logoutModalSub: {
+    color: '#64748B',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  logoutConfirmBtn: {
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  logoutConfirmBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+});
