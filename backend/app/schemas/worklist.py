@@ -4,6 +4,12 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 
+class WeeklyTrendPoint(BaseModel):
+    week_start: date
+    week_end: date
+    net: Decimal | None
+
+
 class WorklistItem(BaseModel):
     officer_id: str
     officer_name: str
@@ -30,3 +36,4 @@ class WorklistItem(BaseModel):
     deadline_date: date | None
     rupees_at_risk: Decimal
     km_from_centre: Decimal | None
+    weekly_trend: list[WeeklyTrendPoint] | None
