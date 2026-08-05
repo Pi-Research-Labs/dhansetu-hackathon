@@ -386,12 +386,18 @@ GROUP BY 1;
 -- (v_merchant_payment_mix, missed_emis_90d).
 -- ===========================================================================
 
-CREATE OR REPLACE VIEW v_enterprise_digital_heatmap AS
+-- Dropped and recreated, not CREATE OR REPLACE: this view was already live
+-- with digital_share/cash_share (fraction) column names from an earlier
+-- deploy, and Postgres rejects renaming columns via REPLACE (same
+-- restriction hit twice already on v_enterprise_card in this file).
+-- Nothing else depends on this view (checked before dropping).
+DROP VIEW IF EXISTS v_enterprise_digital_heatmap;
+CREATE VIEW v_enterprise_digital_heatmap AS
 SELECT
     l.enterprise_id,
     l.event_date,
-    l.digital_share,
-    ROUND((1 - l.digital_share)::numeric, 3)         AS cash_share,
+    ROUND((l.digital_share * 100)::numeric, 1)        AS digital_share_pct,
+    ROUND(((1 - l.digital_share) * 100)::numeric, 1)  AS cash_share_pct,
     (COALESCE(l.txn_count, 0) = 0)                    AS is_zero_txn_day
 FROM daily_ledger l
 WHERE l.event_date > (SELECT MAX(event_date) FROM daily_ledger) - 90
@@ -458,3 +464,18 @@ SELECT
          ELSE 'low' END                                                  AS confidence_label
 FROM scored
 ORDER BY enterprise_id, horizon_days;
+
+-- ===========================================================================
+-- 13. SEVEN-WEEK NET INFLOW HEATMAP — net cash flow per ISO week, trailing
+-- 7 weeks only (hardcoded window, unlike v_enterprise_weekly_cashflow's
+-- caller-supplied one — this is a fixed, purpose-built data point, not a
+-- general-purpose series). Built on top of v_enterprise_weekly_cashflow
+-- rather than daily_ledger directly, so "a week" means the same thing in
+-- both places. Flat {week, value} array — 7 cells, frontend lays it out.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_net_inflow_heatmap AS
+SELECT enterprise_id, week_start, week_end, net AS net_inflow
+FROM v_enterprise_weekly_cashflow
+WHERE week_start > (SELECT MAX(week_start) FROM v_enterprise_weekly_cashflow) - 49
+ORDER BY enterprise_id, week_start;

@@ -180,8 +180,9 @@ important reason why.
 |---|---|
 | `v_enterprise_card` | One enterprise's full risk picture: latest assessment + matching `feature_snapshots` row (margin gap, DSO, buyer concentration, digital share, `savings_runway_days`, `dscr_proj_180d`, etc.) |
 | `v_fired_rules` | Which rules actually fired for an enterprise at a given `as_of`, in plain (rule/mechanism) terms, heaviest first |
-| `v_enterprise_digital_heatmap` | Daily digital/cash share for one enterprise, trailing 90 days — a flat `{date, value}` series for a calendar-heatmap UI, no grid math done server-side |
+| `v_enterprise_digital_heatmap` | Daily digital/cash share **percentage** (0-100, `digital_share_pct`/`cash_share_pct`) for one enterprise, trailing 90 days — a flat `{date, value}` series for a calendar-heatmap UI, no grid math done server-side |
 | `v_enterprise_weekly_cashflow` | Historical inflow/outflow/net rolled up by ISO week, unbounded (the API layer windows it, default trailing 26 weeks) |
+| `v_enterprise_net_inflow_heatmap` | Net cash flow per week, built on `v_enterprise_weekly_cashflow` but hardcoded to a fixed trailing 7 weeks (not caller-configurable) — a purpose-built heatmap data point, not a general series |
 
 ### Forecast
 

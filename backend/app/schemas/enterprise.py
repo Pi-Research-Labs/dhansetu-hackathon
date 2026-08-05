@@ -138,8 +138,8 @@ class PaymentMix(BaseModel):
 class DigitalVisibilityDay(BaseModel):
     enterprise_id: str
     event_date: date
-    digital_share: Decimal | None
-    cash_share: Decimal | None
+    digital_share_pct: Decimal | None
+    cash_share_pct: Decimal | None
     is_zero_txn_day: bool | None
 
 
@@ -164,3 +164,10 @@ class ForecastConfidencePoint(BaseModel):
     p90: Decimal | None
     confidence_score: Decimal | None
     confidence_label: str | None
+
+
+class NetInflowHeatmapWeek(BaseModel):
+    enterprise_id: str
+    week_start: date
+    week_end: date
+    net_inflow: Decimal | None

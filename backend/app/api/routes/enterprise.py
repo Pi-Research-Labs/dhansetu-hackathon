@@ -5,6 +5,7 @@ from app.schemas.enterprise import (
     DigitalVisibilityDay,
     EnterpriseDetail,
     ForecastConfidencePoint,
+    NetInflowHeatmapWeek,
     PaymentMix,
     ReceivablesAgeing,
     WeeklyCashflow,
@@ -15,6 +16,7 @@ from app.services.enterprise import (
     get_enterprise_card,
     get_latest_alert,
     get_live_forecast,
+    get_net_inflow_heatmap,
     get_payment_mix,
     get_receivables_ageing,
     get_weekly_cashflow,
@@ -98,3 +100,14 @@ async def enterprise_cashflow_forecast(
     if not rows:
         raise HTTPException(status_code=404, detail="No live forecast for this enterprise")
     return rows
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/net-inflow-heatmap",
+    response_model=list[NetInflowHeatmapWeek],
+)
+async def enterprise_net_inflow_heatmap(
+    enterprise_id: str, claims: dict = Depends(get_token_claims)
+) -> list[dict]:
+    _check_access(claims, enterprise_id)
+    return await get_net_inflow_heatmap(enterprise_id)

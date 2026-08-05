@@ -93,6 +93,10 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/map-tile` | officer any, merchant own | **raw `image/png` bytes**, not JSON | needs a fetch+blob dance, see below |
 | `GET /enterprise/{id}/receivables` | officer any, merchant own | array of JSON | the "udhaar book" — outstanding/written-off by counterparty |
 | `GET /enterprise/{id}/payment-mix` | officer any, merchant own | JSON | UPI/wallet/cash share, full-panel and trailing-90d |
+| `GET /enterprise/{id}/digital-heatmap` | officer any, merchant own | array of JSON | daily digital/cash share %, trailing 90d, for a calendar heatmap |
+| `GET /enterprise/{id}/weekly-cashflow` | officer any, merchant own | array of JSON | historical weekly inflow/outflow/net, default trailing 26 weeks |
+| `GET /enterprise/{id}/cashflow-forecast` | officer any, merchant own | array of JSON | 6-month forecast band + confidence score per horizon |
+| `GET /enterprise/{id}/net-inflow-heatmap` | officer any, merchant own | array of JSON | net inflow per week, fixed trailing 7 weeks |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
 | `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
@@ -266,13 +270,21 @@ of week / week number yourself. Backed by `v_enterprise_digital_heatmap`.
 Always exactly 90 rows (the trailing window, not filtered by whether the
 enterprise has real activity that day).
 
+`digital_share_pct`/`cash_share_pct` are **percentages (0-100), not
+fractions** — e.g. `68.0` means 68%, not 0.68. They always sum to ~100 per
+row. (This endpoint returned raw 0-1 fractions named `digital_share`/
+`cash_share` in an earlier version; renamed with a `_pct` suffix when
+switched to percentages, matching this API's existing convention —
+`write_off_pct` on `/receivables` is the same pattern — rather than keep
+the old field names holding a different scale silently.)
+
 ```json
 // Response 200 — array of:
 {
   "enterprise_id": "ENT0031",
   "event_date": "2026-07-31",
-  "digital_share": 0.68,
-  "cash_share": 0.32,
+  "digital_share_pct": 68.0,
+  "cash_share_pct": 32.0,
   "is_zero_txn_day": false
 }
 ```
@@ -340,6 +352,24 @@ horizon-varying uncertainty signal available to vary it by. Verified
 directionally before shipping: Sunita Devi (`ENT0067`, the low-visibility
 demo persona) scores `~0.70` ("medium"), Lakshmiben (`ENT0031`) scores
 `~0.89` ("high").
+
+## `GET /enterprise/{enterprise_id}/net-inflow-heatmap` — officer (any) or merchant (own only)
+
+Net cash flow (`inflow - outflow`) per ISO week, for a heatmap — a fixed,
+purpose-built 7-week window, not caller-configurable like
+`weekly-cashflow`'s `?weeks=`. Backed by `v_enterprise_net_inflow_heatmap`
+(itself built on `v_enterprise_weekly_cashflow`, so "a week" means the
+same thing in both places). Always exactly 7 rows.
+
+```json
+// Response 200 — array of 7, oldest week first:
+{
+  "enterprise_id": "ENT0031",
+  "week_start": "2026-07-27",
+  "week_end": "2026-08-02",
+  "net_inflow": 25005.00
+}
+```
 
 ## `GET /enterprise/{enterprise_id}/map-tile` — officer (any) or merchant (own only)
 
