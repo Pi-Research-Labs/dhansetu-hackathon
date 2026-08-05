@@ -52,7 +52,7 @@ login endpoints above.
 
 | Route | Access | Backed by |
 |---|---|---|
-| `GET /api/v1/worklist` | officer only | `v_officer_worklist`, filtered to the caller's own `officer_id` |
+| `GET /api/v1/worklist` | officer only | `v_officer_worklist`, filtered to the caller's own `officer_id` — each row includes a `weekly_trend` (7-week net-cashflow sparkline) |
 | `GET /api/v1/enterprise/{enterprise_id}` | officer (any), merchant (own enterprise only) | `v_enterprise_card` + `v_live_forecast` + latest `v_alert_actions` |
 | `GET /api/v1/enterprise/{enterprise_id}/receivables` | officer (any), merchant (own only) | `v_receivables_ageing` — the udhaar book by counterparty |
 | `GET /api/v1/enterprise/{enterprise_id}/payment-mix` | officer (any), merchant (own only) | `v_merchant_payment_mix` — UPI/wallet/cash share |
@@ -113,6 +113,17 @@ the old column names and Postgres rejects renaming columns via `REPLACE`
 `net-inflow-heatmap` is new: net cash flow per week, always exactly 7
 rows — a fixed, purpose-built window rather than `weekly-cashflow`'s
 caller-configurable one.
+
+**`/worklist` rows now carry a `weekly_trend`** — the same net line as the
+historic weekly graph, as a 7-week sparkline (just `net`, not
+inflow/outflow bars, and only 7 weeks not the graph's default 26) so a
+list of dozens of enterprises doesn't balloon in payload size; the full
+26-week graph stays on the per-enterprise detail page. This required
+physically relocating `v_officer_worklist`'s definition in
+`05_views.sql` to after `v_enterprise_weekly_cashflow` — same class of
+forward-reference issue as `v_enterprise_card`/`v_live_forecast` above,
+Postgres resolves view dependencies at `CREATE` time, not by declaration
+order intent.
 
 **Found and fixed while wiring this up:** `record_outcome()` referenced bare
 table names that only resolved via `search_path`, which doesn't carry into a

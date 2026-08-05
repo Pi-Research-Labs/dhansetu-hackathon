@@ -29,6 +29,9 @@ FROM daily_ledger;
 
 -- ===========================================================================
 -- 2. GET /worklist  — the officer's ranked shortlist
+-- v_officer_worklist's definition physically lives after §11 now (below
+-- v_enterprise_weekly_cashflow) — it depends on that view for the 7-week
+-- trend sparkline, and Postgres resolves view dependencies at CREATE time.
 -- ===========================================================================
 
 CREATE OR REPLACE VIEW v_latest_assessment AS
@@ -37,47 +40,6 @@ FROM risk_assessments ra
 JOIN (SELECT enterprise_id, MAX(as_of) AS as_of
       FROM risk_assessments GROUP BY enterprise_id) m
   USING (enterprise_id, as_of);
-
-CREATE OR REPLACE VIEW v_officer_worklist AS
-SELECT
-    e.officer_id,
-    o.officer_name,
-    o.language              AS officer_lang,
-    ra.enterprise_id,
-    e.proprietor_name,
-    e.sub_type,
-    e.block,
-    e.preferred_lang,
-    e.preferred_channel,
-    ra.as_of,
-    ra.risk_tier,
-    ROUND(ra.fused_score::numeric, 3)      AS score,
-    ROUND(ra.net_buffer_days::numeric, 0)  AS net_buffer_days,
-    ra.reason_1, ra.reason_2, ra.reason_3,
-    ra.low_visibility,
-    ra.credit_headroom,
-    ra.bridge_headroom,
-    al.alert_id,
-    al.projected_shortfall,
-    al.shortfall_week_of,
-    al.deadline_date,
-    -- rupees at risk: the right sort key when every name shares one cause
-    ROUND(COALESCE(al.projected_shortfall, 0)::numeric, 0) AS rupees_at_risk,
-    -- straight-line km from the district centroid, for route ordering
-    ROUND((111.32 * sqrt(power(e.lat, 2) + power(e.lon * cos(radians(g.lat)), 2)))::numeric, 1)
-                                           AS km_from_centre
-FROM v_latest_assessment ra
-JOIN enterprises e USING (enterprise_id)
-JOIN officers o  ON o.officer_id = e.officer_id
-LEFT JOIN district_geo g ON g.district_id = e.district_id
-LEFT JOIN LATERAL (
-    SELECT a.alert_id, a.projected_shortfall, a.shortfall_week_of, a.deadline_date
-    FROM alerts a
-    WHERE a.enterprise_id = ra.enterprise_id
-    ORDER BY a.raised_at DESC LIMIT 1
-) al ON TRUE
-WHERE ra.risk_tier <> 'GREEN'
-ORDER BY ra.fused_score DESC;
 
 -- ===========================================================================
 -- 3. GET /enterprise/{id}  — the detail card
@@ -422,6 +384,65 @@ SELECT
 FROM daily_ledger l
 GROUP BY l.enterprise_id, date_trunc('week', l.event_date)
 ORDER BY l.enterprise_id, week_start;
+
+-- §2's v_officer_worklist (declared here, not up in §2, because it depends
+-- on v_enterprise_weekly_cashflow just above for the 7-week trend sparkline).
+CREATE OR REPLACE VIEW v_officer_worklist AS
+SELECT
+    e.officer_id,
+    o.officer_name,
+    o.language              AS officer_lang,
+    ra.enterprise_id,
+    e.proprietor_name,
+    e.sub_type,
+    e.block,
+    e.preferred_lang,
+    e.preferred_channel,
+    ra.as_of,
+    ra.risk_tier,
+    ROUND(ra.fused_score::numeric, 3)      AS score,
+    ROUND(ra.net_buffer_days::numeric, 0)  AS net_buffer_days,
+    ra.reason_1, ra.reason_2, ra.reason_3,
+    ra.low_visibility,
+    ra.credit_headroom,
+    ra.bridge_headroom,
+    al.alert_id,
+    al.projected_shortfall,
+    al.shortfall_week_of,
+    al.deadline_date,
+    -- rupees at risk: the right sort key when every name shares one cause
+    ROUND(COALESCE(al.projected_shortfall, 0)::numeric, 0) AS rupees_at_risk,
+    -- straight-line km from the district centroid, for route ordering
+    ROUND((111.32 * sqrt(power(e.lat, 2) + power(e.lon * cos(radians(g.lat)), 2)))::numeric, 1)
+                                           AS km_from_centre,
+    -- 7-week net-cashflow sparkline, same "week" definition as
+    -- v_enterprise_weekly_cashflow/v_enterprise_net_inflow_heatmap. Just the
+    -- net line (not inflow/outflow bars) - this is a scannable list, the
+    -- full weekly-cashflow graph lives on the per-enterprise detail page.
+    trend.weekly_trend
+FROM v_latest_assessment ra
+JOIN enterprises e USING (enterprise_id)
+JOIN officers o  ON o.officer_id = e.officer_id
+LEFT JOIN district_geo g ON g.district_id = e.district_id
+LEFT JOIN LATERAL (
+    SELECT a.alert_id, a.projected_shortfall, a.shortfall_week_of, a.deadline_date
+    FROM alerts a
+    WHERE a.enterprise_id = ra.enterprise_id
+    ORDER BY a.raised_at DESC LIMIT 1
+) al ON TRUE
+LEFT JOIN LATERAL (
+    SELECT JSONB_AGG(JSONB_BUILD_OBJECT(
+               'week_start', wc.week_start, 'week_end', wc.week_end, 'net', wc.net
+           ) ORDER BY wc.week_start) AS weekly_trend
+    FROM (
+        SELECT week_start, week_end, net FROM v_enterprise_weekly_cashflow
+        WHERE enterprise_id = ra.enterprise_id
+        ORDER BY week_start DESC
+        LIMIT 7
+    ) wc
+) trend ON TRUE
+WHERE ra.risk_tier <> 'GREEN'
+ORDER BY ra.fused_score DESC;
 
 -- ===========================================================================
 -- 12. FORECAST WITH CONFIDENCE — v_live_forecast + a heuristic score

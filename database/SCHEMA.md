@@ -172,7 +172,7 @@ important reason why.
 | View | Purpose |
 |---|---|
 | `v_latest_assessment` | Each enterprise's most recent `risk_assessments` row (dedupes the `as_of` history down to "current") |
-| `v_officer_worklist` | The ranked shortlist an officer sees: non-GREEN enterprises assigned to them, joined to officer info, latest alert, rupees-at-risk, and straight-line distance from the district centroid for route ordering |
+| `v_officer_worklist` | The ranked shortlist an officer sees: non-GREEN enterprises assigned to them, joined to officer info, latest alert, rupees-at-risk, straight-line distance from the district centroid for route ordering, and a 7-week net-cashflow sparkline (`weekly_trend`) |
 
 ### Enterprise detail card (`GET /enterprise/{id}`)
 

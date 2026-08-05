@@ -88,7 +88,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `POST /auth/login` | anyone (merchant creds) | JWT + identity | |
 | `POST /auth/officer-login` | anyone (officer creds) | JWT + identity | |
 | `GET /auth/me` | either role | caller's own identity | |
-| `GET /worklist` | officer only | array of JSON | officer's own ranked shortlist |
+| `GET /worklist` | officer only | array of JSON | officer's own ranked shortlist, each row incl. a 7-week net-cashflow sparkline |
 | `GET /enterprise/{id}` | officer any, merchant own | JSON | full risk/forecast/alert card |
 | `GET /enterprise/{id}/map-tile` | officer any, merchant own | **raw `image/png` bytes**, not JSON | needs a fetch+blob dance, see below |
 | `GET /enterprise/{id}/receivables` | officer any, merchant own | array of JSON | the "udhaar book" — outstanding/written-off by counterparty |
@@ -146,7 +146,14 @@ identified from the token, not a request parameter.
   "shortfall_week_of": "2026-08-29",
   "deadline_date": "2026-08-29",
   "rupees_at_risk": 31000,
-  "km_from_centre": 4.2
+  "km_from_centre": 4.2,
+  "weekly_trend": [
+    { "week_start": "2026-06-15", "week_end": "2026-06-21", "net": 6333.00 }
+    // ...7 points total, oldest first — the net line from the historic
+    // weekly graph (GET /enterprise/{id}/weekly-cashflow), as a compact
+    // sparkline. Just net, not inflow/outflow — this is a scannable list,
+    // the full graph lives on the per-enterprise detail page.
+  ]
 }
 ```
 A merchant token on this route → `403`.
