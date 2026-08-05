@@ -31,7 +31,7 @@ export function FirstLoadLangModal() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.globeIconBox}>
-              <Globe size={24} color="#1E293B" />
+              <Globe size={24} color="#2E7D32" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.title}>{t.firstLoadLangTitle}</Text>
@@ -57,7 +57,7 @@ export function FirstLoadLangModal() {
                     </Text>
                     <Text style={styles.langName}>{item.name}</Text>
                   </View>
-                  {isSelected && <CheckCircle2 size={20} color="#1E293B" />}
+                  {isSelected && <CheckCircle2 size={20} color="#2E7D32" />}
                 </TouchableOpacity>
               );
             })}
@@ -82,7 +82,7 @@ export function FirstLoadLangModal() {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    backgroundColor: 'rgba(29, 38, 31, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -109,19 +109,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7F2E7',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
   },
   title: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 16,
     fontWeight: '700',
   },
   subtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
   },
@@ -133,21 +133,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
   },
   optionCardSelected: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#1E293B',
+    backgroundColor: '#E7F2E7',
+    borderColor: '#2E7D32',
   },
   flagText: {
     fontSize: 22,
   },
   langNative: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -155,25 +155,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   langName: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
   },
   tipBox: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: '#FBF0D9',
     borderRadius: 8,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: '#C7770033',
     marginBottom: 16,
   },
   tipText: {
-    color: '#92400E',
+    color: '#C77700',
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '500',
   },
   applyBtn: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#2E7D32',
     borderRadius: 10,
     height: 48,
     flexDirection: 'row',

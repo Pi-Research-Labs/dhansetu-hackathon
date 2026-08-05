@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,21 +13,19 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  User,
   Lock,
   Eye,
   EyeOff,
   Smartphone,
-  RefreshCw,
   ArrowRight,
   HelpCircle,
-  Building2,
 } from 'lucide-react-native';
-import { TricolorBar } from '@/components/common/TricolorBar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GovHeader } from '@/components/common/GovHeader';
 import { SecurityBadge } from '@/components/common/SecurityBadge';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
+import { authLogin } from '@/utils/api-config';
 
 export function LoginScreen() {
   const router = useRouter();
@@ -35,45 +33,89 @@ export function LoginScreen() {
   const t = L[lang];
 
   // Form State
-  const [loginMethod, setLoginMethod] = useState<'id' | 'otp'>('id');
-  const [merchantId, setMerchantId] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [captchaInput, setCaptchaInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Captcha Generator
-  const [captchaCode, setCaptchaCode] = useState('7K9M2P');
+  // Auto-login check on mount
+  useEffect(() => {
+    const checkSavedCredentials = async () => {
+      setIsLoading(true);
+      try {
+        const savedPhone = await AsyncStorage.getItem('@dhansetu_phone');
+        const savedPassword = await AsyncStorage.getItem('@dhansetu_password');
+        if (savedPhone && savedPassword) {
+          setPhone(savedPhone);
+          setPassword(savedPassword);
+          setRememberMe(true);
 
-  const generateCaptcha = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+          // Attempt silent auto-login
+          const data = await authLogin(savedPhone, savedPassword);
+          const { login: storeLogin } = useMerchantStore.getState();
+          await storeLogin(savedPhone, data.access_token, data.enterprise_id, data.proprietor_name);
+
+          // Route to dashboard
+          router.replace('/(tabs)');
+        }
+      } catch (error) {
+        console.log('Auto login failed or no credentials stored:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSavedCredentials();
+  }, []);
+
+  const handleLogin = async () => {
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone.length !== 10) {
+      Alert.alert('Validation Error', 'Please enter a valid 10-digit mobile number.');
+      return;
     }
-    setCaptchaCode(code);
-  };
+    if (password.length < 4) {
+      Alert.alert('Validation Error', 'Password must be at least 4 characters long.');
+      return;
+    }
 
-  const handleLogin = () => {
     setIsLoading(true);
+    try {
+      // Call authentication API
+      const data = await authLogin(trimmedPhone, password);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      // Replaces login screen from stack so hardware back press cannot return to login
+      // Persist credentials locally if Remember Me is checked
+      if (rememberMe) {
+        await AsyncStorage.setItem('@dhansetu_phone', trimmedPhone);
+        await AsyncStorage.setItem('@dhansetu_password', password);
+      } else {
+        await AsyncStorage.removeItem('@dhansetu_phone');
+        await AsyncStorage.removeItem('@dhansetu_password');
+      }
+      
+      // Update merchant store state
+      const { login: storeLogin } = useMerchantStore.getState();
+      await storeLogin(trimmedPhone, data.access_token, data.enterprise_id, data.proprietor_name);
+
+      // Redirect to main screens
       router.replace('/(tabs)');
-    }, 400);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errMsg = error.response?.data?.detail || 'Invalid credentials or connection timeout. Please check your login details and try again.';
+      Alert.alert('Access Denied', errMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const isSubmitDisabled = phone.trim().length !== 10 || password.trim().length < 4 || isLoading;
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <TricolorBar />
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -88,151 +130,55 @@ export function LoginScreen() {
           </Text>
         </View>
 
-        {/* Tab Switcher */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tabButton, loginMethod === 'id' && styles.activeTabButton]}
-            onPress={() => setLoginMethod('id')}
-            activeOpacity={0.8}
-          >
-            <Building2 size={16} color={loginMethod === 'id' ? '#0F172A' : '#64748B'} />
-            <Text style={[styles.tabText, loginMethod === 'id' && styles.activeTabText]}>
-              GSTIN / Merchant ID
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabButton, loginMethod === 'otp' && styles.activeTabButton]}
-            onPress={() => setLoginMethod('otp')}
-            activeOpacity={0.8}
-          >
-            <Smartphone size={16} color={loginMethod === 'otp' ? '#0F172A' : '#64748B'} />
-            <Text style={[styles.tabText, loginMethod === 'otp' && styles.activeTabText]}>
-              Mobile & OTP
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Form Card */}
         <View style={styles.card}>
-          {loginMethod === 'id' ? (
-            <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  GSTIN / MERCHANT ID <Text style={styles.required}>*</Text>
-                </Text>
-                <View style={styles.inputWrapper}>
-                  <User size={18} color="#64748B" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="e.g. 27AAAAA0000A1Z5"
-                    placeholderTextColor="#94A3B8"
-                    value={merchantId}
-                    onChangeText={setMerchantId}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.inputLabel}>
-                    PASSWORD <Text style={styles.required}>*</Text>
-                  </Text>
-                  <TouchableOpacity onPress={() => Alert.alert('Password Reset', 'Contact your Nodal Officer or reset via Aadhaar OTP.')}>
-                    <Text style={styles.forgotLink}>Forgot Password?</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.inputWrapper}>
-                  <Lock size={18} color="#64748B" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter password"
-                    placeholderTextColor="#94A3B8"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    {showPassword ? (
-                      <EyeOff size={18} color="#64748B" />
-                    ) : (
-                      <Eye size={18} color="#64748B" />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  REGISTERED MOBILE NUMBER <Text style={styles.required}>*</Text>
-                </Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.countryCode}>+91</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="10-digit mobile number"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                    value={phone}
-                    onChangeText={setPhone}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.inputLabel}>ENTER OTP</Text>
-                  <TouchableOpacity onPress={() => Alert.alert('OTP Sent', 'OTP dispatched to registered mobile number.')}>
-                    <Text style={styles.forgotLink}>Send OTP</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.inputWrapper}>
-                  <Lock size={18} color="#64748B" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="6-digit OTP code"
-                    placeholderTextColor="#94A3B8"
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    value={otp}
-                    onChangeText={setOtp}
-                  />
-                </View>
-              </View>
-            </>
-          )}
-
-          {/* CAPTCHA */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
-              SECURITY CODE (CAPTCHA) <Text style={styles.required}>*</Text>
+              REGISTERED MOBILE NUMBER <Text style={styles.required}>*</Text>
             </Text>
-            <View style={styles.captchaRow}>
-              <View style={styles.captchaBox}>
-                <Text style={styles.captchaCodeText}>{captchaCode}</Text>
-              </View>
-              <TouchableOpacity style={styles.refreshBtn} onPress={generateCaptcha}>
-                <RefreshCw size={18} color="#475569" />
+            <View style={styles.inputWrapper}>
+              <Smartphone size={18} color="#6F6B5E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="10-digit mobile number"
+                placeholderTextColor="#94A3B8"
+                keyboardType="phone-pad"
+                maxLength={10}
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <Text style={styles.inputLabel}>
+                PASSWORD <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity onPress={() => Alert.alert('Password Reset', 'Contact your Nodal Officer or reset via Aadhaar OTP.')}>
+                <Text style={styles.forgotLink}>Forgot Password?</Text>
               </TouchableOpacity>
-              <View style={[styles.inputWrapper, { flex: 1 }]}>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Enter code"
-                  placeholderTextColor="#94A3B8"
-                  value={captchaInput}
-                  onChangeText={setCaptchaInput}
-                  autoCapitalize="characters"
-                  maxLength={6}
-                />
-              </View>
+            </View>
+            <View style={styles.inputWrapper}>
+              <Lock size={18} color="#6F6B5E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter password"
+                placeholderTextColor="#94A3B8"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
+              >
+                {showPassword ? (
+                  <EyeOff size={18} color="#6F6B5E" />
+                ) : (
+                  <Eye size={18} color="#6F6B5E" />
+                )}
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -250,9 +196,9 @@ export function LoginScreen() {
 
           {/* Submit */}
           <TouchableOpacity
-            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            style={[styles.submitButton, isSubmitDisabled && styles.submitButtonDisabled]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={isSubmitDisabled}
             activeOpacity={0.85}
           >
             {isLoading ? (
@@ -271,7 +217,7 @@ export function LoginScreen() {
         {/* Footer Support */}
         <View style={styles.footerSection}>
           <TouchableOpacity style={styles.helpButton} onPress={() => Alert.alert('Merchant Helpdesk', 'Toll Free: 1800-11-2244\nEmail: support@dhansetu.gov.in')}>
-            <HelpCircle size={15} color="#64748B" />
+            <HelpCircle size={15} color="#6F6B5E" />
             <Text style={styles.helpText}>Need Help logging in? Contact Nodal Support</Text>
           </TouchableOpacity>
           <Text style={styles.disclaimerText}>
@@ -286,7 +232,7 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -298,58 +244,22 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   mainTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 24,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
   subtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 13,
     lineHeight: 18,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    padding: 4,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  tabButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: 8,
-  },
-  activeTabButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  tabText: {
-    color: '#64748B',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#0F172A',
-    fontWeight: '600',
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -366,78 +276,41 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   inputLabel: {
-    color: '#475569',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   required: {
-    color: '#EF4444',
+    color: '#C0392B',
   },
   forgotLink: {
-    color: '#2563EB',
+    color: '#2E7D32',
     fontSize: 11,
     fontWeight: '500',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E7E5DA',
     paddingHorizontal: 12,
     height: 46,
   },
   inputIcon: {
     marginRight: 10,
   },
-  countryCode: {
-    color: '#0F172A',
-    fontWeight: '600',
-    marginRight: 10,
-    fontSize: 14,
-  },
   textInput: {
     flex: 1,
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '500',
   },
   eyeIcon: {
     padding: 4,
-  },
-  captchaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  captchaBox: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 14,
-    height: 46,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-  },
-  captchaCodeText: {
-    color: '#1E293B',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 3,
-  },
-  refreshBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -450,14 +323,14 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: '#94A3B8',
+    borderColor: '#6F6B5E',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
   checkboxChecked: {
-    backgroundColor: '#1E293B',
-    borderColor: '#1E293B',
+    backgroundColor: '#2E7D32',
+    borderColor: '#2E7D32',
   },
   checkmark: {
     color: '#FFFFFF',
@@ -465,11 +338,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   checkboxLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
   },
   submitButton: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#2E7D32',
     borderRadius: 8,
     height: 48,
     flexDirection: 'row',
@@ -479,7 +352,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   submitButtonDisabled: {
-    opacity: 0.7,
+    backgroundColor: '#BDC5BD',
+    opacity: 0.6,
   },
   submitButtonText: {
     color: '#FFFFFF',
@@ -498,13 +372,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   helpText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
     textDecorationLine: 'underline',
   },
   disclaimerText: {
-    color: '#94A3B8',
+    color: '#6F6B5E',
     fontSize: 10,
     textAlign: 'center',
     lineHeight: 14,

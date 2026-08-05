@@ -30,9 +30,9 @@ export function LangSelect() {
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
       >
-        <Globe size={14} color="#1E293B" style={styles.icon} />
+        <Globe size={14} color="#2E7D32" style={styles.icon} />
         <Text style={styles.triggerText}>{currentLangObj.name.split(' ')[0]}</Text>
-        <ChevronDown size={14} color="#64748B" />
+        <ChevronDown size={14} color="#6F6B5E" />
       </TouchableOpacity>
 
       {/* Modal Dropdown Menu */}
@@ -47,7 +47,7 @@ export function LangSelect() {
             <TouchableWithoutFeedback>
               <View style={styles.dropdownCard}>
                 <View style={styles.headerRow}>
-                  <Globe size={16} color="#0F172A" />
+                  <Globe size={16} color="#1D261F" />
                   <Text style={styles.dropdownTitle}>Select Language / भाषा चुनें</Text>
                 </View>
 
@@ -63,7 +63,7 @@ export function LangSelect() {
                       <Text style={[styles.optionText, isActive && styles.optionTextActive]}>
                         {item.name}
                       </Text>
-                      {isActive && <Check size={16} color="#166534" />}
+                      {isActive && <Check size={16} color="#2E7D32" />}
                     </TouchableOpacity>
                   );
                 })}
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E7E5DA',
     gap: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -97,13 +97,13 @@ const styles = StyleSheet.create({
     marginRight: 1,
   },
   triggerText: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 12,
     fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: 'rgba(29, 38, 31, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -129,10 +129,10 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     marginBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#E7E5DA',
   },
   dropdownTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -146,15 +146,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   optionRowActive: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#E7F2E7',
   },
   optionText: {
-    color: '#334155',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '500',
   },
   optionTextActive: {
-    color: '#166534',
+    color: '#2E7D32',
     fontWeight: '700',
   },
 });

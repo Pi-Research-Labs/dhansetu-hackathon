@@ -11,7 +11,7 @@ export function SecurityBadge({
 }: SecurityBadgeProps) {
   return (
     <View style={styles.container}>
-      <ShieldCheck size={16} color="#10B981" />
+      <ShieldCheck size={16} color="#2E7D32" />
       <Text style={styles.text}>{label}</Text>
     </View>
   );
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   text: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
   },

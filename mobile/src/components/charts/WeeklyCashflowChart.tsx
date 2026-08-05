@@ -44,22 +44,22 @@ export function WeeklyCashflowChart({ data }: Props) {
       {/* Legend Header */}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBox, { backgroundColor: '#10B981' }]} />
+          <View style={[styles.legendBox, { backgroundColor: '#2E7D32' }]} />
           <Text style={styles.legendText}>Inflow (₹)</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBox, { backgroundColor: '#64748B' }]} />
+          <View style={[styles.legendBox, { backgroundColor: '#C0392B' }]} />
           <Text style={styles.legendText}>Outflow (₹)</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendLine, { borderColor: '#2563EB' }]} />
+          <View style={[styles.legendLine, { borderColor: '#1D261F' }]} />
           <Text style={styles.legendText}>Net Line</Text>
         </View>
       </View>
 
       {/* SVG Combo Chart (Runs on Phone App Android/iOS & Web) */}
       <View style={styles.chartWrapper}>
-        <Svg width="100%" height={chartHeight} viewBox={`0 0 320 ${chartHeight}`}>
+        <Svg width={320} height={chartHeight} viewBox={`0 0 320 ${chartHeight}`}>
           {/* Y Axis Gridlines */}
           {[0, 0.33, 0.66, 1].map((pct, i) => {
             const y = paddingTop + (1 - pct) * usableH;
@@ -71,14 +71,14 @@ export function WeeklyCashflowChart({ data }: Props) {
                   y1={y}
                   x2={320 - paddingRight}
                   y2={y}
-                  stroke="#E2E8F0"
+                  stroke="#E7E5DA"
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
                 <SvgText
                   x={paddingLeft - 6}
                   y={y + 3}
-                  fill="#94A3B8"
+                  fill="#6F6B5E"
                   fontSize="9"
                   textAnchor="end"
                 >
@@ -112,7 +112,7 @@ export function WeeklyCashflowChart({ data }: Props) {
                     y={paddingTop}
                     width={step}
                     height={usableH}
-                    fill="#F1F5F9"
+                    fill="#E7F2E7"
                     rx="4"
                     opacity="0.6"
                   />
@@ -123,9 +123,9 @@ export function WeeklyCashflowChart({ data }: Props) {
                   y={inY}
                   width={barW}
                   height={inflowH}
-                  fill={isSelected ? '#059669' : '#10B981'}
+                  fill={isSelected ? '#1B5E20' : '#2E7D32'}
+                  fillOpacity={isSelected ? 1.0 : 0.45}
                   rx="3"
-                  onPress={() => setSelectedIndex(idx)}
                 />
                 {/* Outflow Bar */}
                 <Rect
@@ -133,19 +133,18 @@ export function WeeklyCashflowChart({ data }: Props) {
                   y={outY}
                   width={barW}
                   height={outflowH}
-                  fill={isSelected ? '#475569' : '#64748B'}
+                  fill={isSelected ? '#801A10' : '#C0392B'}
+                  fillOpacity={isSelected ? 1.0 : 0.4}
                   rx="3"
-                  onPress={() => setSelectedIndex(idx)}
                 />
                 {/* X Axis Label */}
                 <SvgText
                   x={xCenter}
                   y={chartHeight - 8}
-                  fill={isSelected ? '#0F172A' : '#475569'}
+                  fill={isSelected ? '#1D261F' : '#6F6B5E'}
                   fontSize="10"
                   fontWeight={isSelected ? '700' : '600'}
                   textAnchor="middle"
-                  onPress={() => setSelectedIndex(idx)}
                 >
                   {item.week}
                 </SvgText>
@@ -162,7 +161,7 @@ export function WeeklyCashflowChart({ data }: Props) {
               return `${xCenter},${netY}`;
             });
 
-            return <Path d={`M ${points.join(' L ')}`} fill="none" stroke="#2563EB" strokeWidth="2.5" />;
+            return <Path d={`M ${points.join(' L ')}`} fill="none" stroke="#1D261F" strokeWidth="2.5" />;
           })()}
 
           {/* Net Dots */}
@@ -178,14 +177,32 @@ export function WeeklyCashflowChart({ data }: Props) {
                 cx={xCenter}
                 cy={netY}
                 r={isSelected ? '5' : '3.5'}
-                fill="#2563EB"
+                fill="#1D261F"
                 stroke="#FFFFFF"
                 strokeWidth={isSelected ? '2' : '1.5'}
-                onPress={() => setSelectedIndex(idx)}
               />
             );
           })}
         </Svg>
+
+        {/* Invisible touch hotspots overlay to prevent onStartShouldSetResponder warnings on Web/Mobile */}
+        <View style={styles.hotspotsOverlay}>
+          {displayData.map((item, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.hotspot,
+                {
+                  left: paddingLeft + step * idx,
+                  width: step,
+                  height: chartHeight - paddingBottom,
+                },
+              ]}
+              onPress={() => setSelectedIndex(idx)}
+              activeOpacity={0.6}
+            />
+          ))}
+        </View>
       </View>
 
       {/* Selected Week Callout / Active Detail Box */}
@@ -194,19 +211,19 @@ export function WeeklyCashflowChart({ data }: Props) {
           <Text style={styles.detailTitle}>Week of {activeItem.week}</Text>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Inflow:</Text>
-            <Text style={[styles.detailVal, { color: '#166534' }]}>
+            <Text style={[styles.detailVal, { color: '#2E7D32' }]}>
               +₹ {activeItem.inflow.toLocaleString('en-IN')}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Outflow:</Text>
-            <Text style={[styles.detailVal, { color: '#475569' }]}>
+            <Text style={[styles.detailVal, { color: '#C0392B' }]}>
               -₹ {activeItem.outflow.toLocaleString('en-IN')}
             </Text>
           </View>
           <View style={[styles.detailRow, styles.borderTop]}>
             <Text style={styles.detailLabelBold}>Net Cashflow:</Text>
-            <Text style={[styles.detailValBold, { color: activeItem.net >= 0 ? '#166534' : '#991B1B' }]}>
+            <Text style={[styles.detailValBold, { color: activeItem.net >= 0 ? '#2E7D32' : '#C0392B' }]}>
               {activeItem.net >= 0 ? '+' : ''}₹ {activeItem.net.toLocaleString('en-IN')}
             </Text>
           </View>
@@ -245,24 +262,40 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
   },
   legendText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
   },
   chartWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+    width: 320,
+    alignSelf: 'center',
+  },
+  hotspotsOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    flexDirection: 'row',
+  },
+  hotspot: {
+    position: 'absolute',
+    top: 20, // paddingTop
+    backgroundColor: 'transparent',
   },
   detailCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     borderRadius: 8,
     padding: 10,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
   },
   detailTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
@@ -273,7 +306,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   detailLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
   },
   detailVal: {
@@ -282,12 +315,12 @@ const styles = StyleSheet.create({
   },
   borderTop: {
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: '#E7E5DA',
     paddingTop: 4,
     marginTop: 2,
   },
   detailLabelBold: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 11,
     fontWeight: '700',
   },

@@ -14,7 +14,7 @@ export function GovHeader({
   return (
     <View style={styles.container}>
       <View style={styles.iconBox}>
-        <Landmark size={20} color="#1E293B" />
+        <Landmark size={20} color="#2E7D32" />
       </View>
       <View>
         <Text style={styles.govTitle}>{title}</Text>
@@ -34,20 +34,20 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7F2E7',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     alignItems: 'center',
     justifyContent: 'center',
   },
   govTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
   },
   subtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 10,
     fontWeight: '500',
   },

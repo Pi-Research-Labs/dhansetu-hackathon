@@ -39,7 +39,7 @@ export function AddEntryScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <PlusCircle size={20} color="#1E293B" />
+          <PlusCircle size={20} color="#2E7D32" />
           <Text style={styles.headerTitle}>{t.recordEntryTitle}</Text>
         </View>
         <Text style={styles.headerSubtitle}>{t.recordEntrySub}</Text>
@@ -108,7 +108,7 @@ export function AddEntryScreen() {
         {/* Recent Ledger Entries */}
         <View style={styles.historyCard}>
           <View style={styles.historyHeader}>
-            <History size={16} color="#0F172A" />
+            <History size={16} color="#1D261F" />
             <Text style={styles.historyTitle}>{t.recentLedgerEntries} ({entries.length})</Text>
           </View>
 
@@ -135,14 +135,14 @@ export function AddEntryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#E7E5DA',
   },
   headerTopRow: {
     flexDirection: 'row',
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 17,
     fontWeight: '700',
   },
   headerSubtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 4,
     lineHeight: 16,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   cardSectionTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputLabel: {
-    color: '#475569',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.5,
@@ -206,19 +206,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pill: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E7E5DA',
   },
   pillActive: {
-    backgroundColor: '#1E293B',
-    borderColor: '#1E293B',
+    backgroundColor: '#2E7D32',
+    borderColor: '#2E7D32',
   },
   pillText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -229,26 +229,26 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E7E5DA',
     paddingHorizontal: 12,
     height: 46,
   },
   currencySymbol: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontWeight: '700',
     fontSize: 16,
     marginRight: 10,
   },
   textInput: {
     flex: 1,
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
   },
   submitBtn: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#2E7D32',
     borderRadius: 8,
     height: 46,
     flexDirection: 'row',
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.02,
@@ -281,10 +281,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#E7E5DA',
   },
   historyTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -294,18 +294,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#E7E5DA',
   },
   entryMainInfo: {
     flex: 1,
   },
   entryTypeTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '600',
   },
   entryNoteText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
   },
@@ -317,14 +317,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   entryDateText: {
-    color: '#94A3B8',
+    color: '#6F6B5E',
     fontSize: 10,
     marginTop: 2,
   },
   textRed: {
-    color: '#991B1B',
+    color: '#C0392B',
   },
   textGreen: {
-    color: '#166534',
+    color: '#2E7D32',
   },
 });

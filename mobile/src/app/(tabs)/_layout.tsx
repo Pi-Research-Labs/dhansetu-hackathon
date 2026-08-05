@@ -33,12 +33,12 @@ export default function TabsLayout() {
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: true,
-          tabBarActiveTintColor: '#0F172A',
-          tabBarInactiveTintColor: '#94A3B8',
+          tabBarActiveTintColor: '#2E7D32',
+          tabBarInactiveTintColor: '#6F6B5E',
           tabBarStyle: {
             backgroundColor: '#FFFFFF',
             borderTopWidth: 1,
-            borderTopColor: '#E2E8F0',
+            borderTopColor: '#E7E5DA',
             height: tabBarHeight,
             paddingBottom: bottomInset,
             paddingTop: 8,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
   },
   activeIconBox: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7F2E7',
   },
   alertBadgeDot: {
     position: 'absolute',
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#C0392B',
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },

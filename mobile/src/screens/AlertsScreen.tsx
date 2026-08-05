@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, AlertTriangle, Lightbulb, ShieldCheck } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
@@ -7,26 +7,49 @@ import { L } from '@/i18n/translations';
 
 export function AlertsScreen() {
   const insets = useSafeAreaInsets();
-  const { lang, name, tier, score, flags, advice } = useMerchantStore();
+  const { lang, name, tier, score, flags, advice, fetchMerchantData } = useMerchantStore();
   const t = L[lang];
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchMerchantData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchMerchantData();
+  }, []);
+
+  // Dynamic colors for risk flags based on current tier
+  const flagBg = tier === 'GREEN' ? '#E7F2E7' : tier === 'AMBER' ? '#FBF0D9' : '#F8E6E2';
+  const flagBorder = tier === 'GREEN' ? '#E7E5DA' : tier === 'AMBER' ? '#C7770033' : '#C0392B33';
+  const flagText = tier === 'GREEN' ? '#2E7D32' : tier === 'AMBER' ? '#C77700' : '#C0392B';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Bell size={20} color="#1E293B" />
+          <Bell size={20} color="#2E7D32" />
           <Text style={styles.headerTitle}>{t.alertsTitle}</Text>
         </View>
         <Text style={styles.headerSubtitle}>{t.alertsSub}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
+        }
+      >
         {/* Business Health Status Badge */}
         <View style={styles.healthCard}>
           <View style={styles.healthHeader}>
             <View style={styles.healthTitleRow}>
-              <ShieldCheck size={18} color="#1E293B" />
+              <ShieldCheck size={18} color="#2E7D32" />
               <Text style={styles.healthLabel}>{t.healthStatusLabel}</Text>
             </View>
             <View style={[styles.tierChip, tier === 'AMBER' && styles.tierAmber, tier === 'GREEN' && styles.tierGreen, tier === 'RED' && styles.tierRed]}>
@@ -43,12 +66,12 @@ export function AlertsScreen() {
         </View>
 
         {flags.map((flag, idx) => (
-          <View key={flag.key || idx} style={styles.flagCard}>
+          <View key={flag.key || idx} style={[styles.flagCard, { backgroundColor: flagBg, borderColor: flagBorder }]}>
             <View style={styles.flagTitleRow}>
-              <AlertTriangle size={16} color="#B45309" />
-              <Text style={styles.flagTagText}>{flag.tag}</Text>
+              <AlertTriangle size={16} color={flagText} />
+              <Text style={[styles.flagTagText, { color: flagText }]}>{flag.tag}</Text>
             </View>
-            <Text style={styles.flagDetailText}>{flag.detail}</Text>
+            <Text style={[styles.flagDetailText, { color: '#1D261F' }]}>{flag.detail}</Text>
           </View>
         ))}
 
@@ -60,7 +83,7 @@ export function AlertsScreen() {
         {advice.map((item, idx) => (
           <View key={idx} style={styles.adviceCard}>
             <View style={styles.adviceHeaderRow}>
-              <Lightbulb size={16} color="#2563EB" />
+              <Lightbulb size={16} color="#2E7D32" />
               <Text style={styles.adviceNumberText}>{t.recNumber(idx + 1)}</Text>
             </View>
             <Text style={styles.adviceContentText}>{item}</Text>
@@ -74,14 +97,14 @@ export function AlertsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#E7E5DA',
   },
   headerTopRow: {
     flexDirection: 'row',
@@ -94,12 +117,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 17,
     fontWeight: '700',
   },
   headerSubtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 4,
   },
@@ -112,7 +135,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -131,7 +154,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   healthLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -142,27 +165,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tierAmber: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FBF0D9',
   },
   tierGreen: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#E7F2E7',
   },
   tierRed: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#F8E6E2',
   },
   tierChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#1D261F',
   },
   businessNameText: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 16,
     fontWeight: '700',
     marginTop: 8,
   },
   healthSubtext: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 4,
     lineHeight: 16,
@@ -171,16 +194,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
   },
   flagCard: {
-    backgroundColor: '#FFFBEB',
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#FDE68A',
     marginBottom: 12,
   },
   flagTitleRow: {
@@ -190,21 +211,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   flagTagText: {
-    color: '#92400E',
     fontSize: 13,
     fontWeight: '700',
   },
   flagDetailText: {
-    color: '#78350F',
     fontSize: 11,
     lineHeight: 16,
   },
   adviceCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAF5',
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -219,12 +238,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   adviceNumberText: {
-    color: '#2563EB',
+    color: '#2E7D32',
     fontSize: 12,
     fontWeight: '700',
   },
   adviceContentText: {
-    color: '#334155',
+    color: '#1D261F',
     fontSize: 12,
     lineHeight: 18,
   },

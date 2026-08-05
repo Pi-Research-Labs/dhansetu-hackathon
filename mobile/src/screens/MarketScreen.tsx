@@ -76,11 +76,16 @@ const MARKET_INTEL: Record<string, SegmentIntel> = {
 
 export function MarketScreen() {
   const insets = useSafeAreaInsets();
-  const { lang } = useMerchantStore();
+  const { lang, segment } = useMerchantStore();
   const t = L[lang];
 
   const segments = Object.keys(MARKET_INTEL);
-  const [selectedSegment, setSelectedSegment] = useState<string>('FPO');
+  
+  // Try to find a matching segment key or default to 'FPO'
+  const matchedSegment = segments.find(
+    (s) => s.toLowerCase().includes(segment.toLowerCase()) || segment.toLowerCase().includes(s.toLowerCase())
+  ) || 'FPO';
+  const [selectedSegment, setSelectedSegment] = useState<string>(matchedSegment);
 
   const intel = MARKET_INTEL[selectedSegment] || MARKET_INTEL['FPO'];
 
@@ -89,7 +94,7 @@ export function MarketScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Store size={22} color="#1E293B" />
+          <Store size={22} color="#2E7D32" />
           <Text style={styles.headerTitle}>{t.marketTitle}</Text>
         </View>
         <Text style={styles.headerSubtitle}>{t.marketSub}</Text>
@@ -150,7 +155,7 @@ export function MarketScreen() {
         {/* Productivity Outlook */}
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
-            <TrendingUp size={16} color="#166534" />
+            <TrendingUp size={16} color="#2E7D32" />
             <Text style={styles.cardHeaderTitle}>{t.productivityTitle}</Text>
           </View>
           <Text style={styles.cardDescText}>{intel.productivity}</Text>
@@ -159,7 +164,7 @@ export function MarketScreen() {
         {/* Seasonal Pattern */}
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
-            <Calendar size={16} color="#2563EB" />
+            <Calendar size={16} color="#1565C0" />
             <Text style={styles.cardHeaderTitle}>{t.seasonalTitle}</Text>
           </View>
           <Text style={styles.cardDescText}>{intel.seasonal}</Text>
@@ -168,7 +173,7 @@ export function MarketScreen() {
         {/* Climate & Market Risks */}
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
-            <ShieldAlert size={16} color="#991B1B" />
+            <ShieldAlert size={16} color="#C0392B" />
             <Text style={styles.cardHeaderTitle}>{t.climateRisksTitle}</Text>
           </View>
 
@@ -192,14 +197,14 @@ export function MarketScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#E7E5DA',
   },
   headerTopRow: {
     flexDirection: 'row',
@@ -212,12 +217,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 17,
     fontWeight: '700',
   },
   headerSubtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 4,
   },
@@ -234,14 +239,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E7E5DA',
   },
   segTabActive: {
-    backgroundColor: '#1E293B',
-    borderColor: '#1E293B',
+    backgroundColor: '#2E7D32',
+    borderColor: '#2E7D32',
   },
   segText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -254,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -263,13 +268,13 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   cardLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   commodityTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 16,
     fontWeight: '700',
     marginTop: 4,
@@ -284,10 +289,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#166534',
+    backgroundColor: '#2E7D32',
   },
   liveTagText: {
-    color: '#166534',
+    color: '#2E7D32',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -296,7 +301,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -308,19 +313,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 10,
   },
   priceMain: {
     flex: 1,
   },
   priceName: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '600',
   },
   priceLoc: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
   },
@@ -328,7 +333,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   priceVal: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -339,20 +344,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   chipUp: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#E7F2E7',
   },
   chipDown: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#F8E6E2',
   },
   changeText: {
     fontSize: 10,
     fontWeight: '600',
   },
   textUp: {
-    color: '#166534',
+    color: '#2E7D32',
   },
   textDown: {
-    color: '#991B1B',
+    color: '#C0392B',
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -361,12 +366,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardHeaderTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '700',
   },
   cardDescText: {
-    color: '#475569',
+    color: '#1D261F',
     fontSize: 12,
     lineHeight: 18,
   },
@@ -374,7 +379,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#E7E5DA',
   },
   riskHeader: {
     flexDirection: 'row',
@@ -383,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   riskTag: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -393,21 +398,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   sevHigh: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#F8E6E2',
   },
   sevMed: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FBF0D9',
   },
   sevLow: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FAFAF5',
   },
   sevText: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#1D261F',
   },
   riskDesc: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     lineHeight: 16,
   },

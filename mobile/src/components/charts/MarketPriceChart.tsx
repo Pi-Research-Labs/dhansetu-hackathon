@@ -26,11 +26,11 @@ export function MarketPriceChart() {
       {/* Legend */}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBox, { backgroundColor: '#93C5FD' }]} />
+          <View style={[styles.legendBox, { backgroundColor: '#1565C0' }]} />
           <Text style={styles.legendText}>Rainfall (mm)</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendLine, { borderColor: '#166534' }]} />
+          <View style={[styles.legendLine, { borderColor: '#2E7D32' }]} />
           <Text style={styles.legendText}>Price Index (Base 100)</Text>
         </View>
       </View>
@@ -42,11 +42,11 @@ export function MarketPriceChart() {
           const y = paddingTop + (1 - pct) * (chartHeight - paddingTop - paddingBottom);
           return (
             <G key={i}>
-              <Line x1={paddingLeft} y1={y} x2={320 - paddingRight} y2={y} stroke="#F1F5F9" strokeWidth="1" />
-              <SvgText x={paddingLeft - 4} y={y + 3} fill="#94A3B8" fontSize="8" textAnchor="end">
+              <Line x1={paddingLeft} y1={y} x2={320 - paddingRight} y2={y} stroke="#E7E5DA" strokeWidth="1" />
+              <SvgText x={paddingLeft - 4} y={y + 3} fill="#6F6B5E" fontSize="8" textAnchor="end">
                 {Math.round(pct * maxRain)}
               </SvgText>
-              <SvgText x={320 - paddingRight + 4} y={y + 3} fill="#94A3B8" fontSize="8" textAnchor="start">
+              <SvgText x={320 - paddingRight + 4} y={y + 3} fill="#6F6B5E" fontSize="8" textAnchor="start">
                 {Math.round(minPrice + pct * (maxPrice - minPrice))}
               </SvgText>
             </G>
@@ -66,8 +66,8 @@ export function MarketPriceChart() {
 
           return (
             <G key={idx}>
-              <Rect x={x} y={rainY} width={barW} height={rainH} fill="#93C5FD" opacity="0.6" rx="1" />
-              <SvgText x={x + barW / 2} y={chartHeight - 6} fill="#64748B" fontSize="8" textAnchor="middle">
+              <Rect x={x} y={rainY} width={barW} height={rainH} fill="#1565C0" fillOpacity={0.25} rx="1" />
+              <SvgText x={x + barW / 2} y={chartHeight - 6} fill="#6F6B5E" fontSize="8" textAnchor="middle">
                 {m}
               </SvgText>
             </G>
@@ -89,12 +89,12 @@ export function MarketPriceChart() {
 
           return (
             <G>
-              <Path d={`M ${points.join(' L ')}`} fill="none" stroke="#166534" strokeWidth="2" />
+              <Path d={`M ${points.join(' L ')}`} fill="none" stroke="#2E7D32" strokeWidth="2" />
               {priceIndexData.map((val, idx) => {
                 const x = paddingLeft + step * idx + step / 2;
                 const norm = (val - minPrice) / (maxPrice - minPrice);
                 const y = paddingTop + (1 - norm) * usableH;
-                return <Circle key={idx} cx={x} cy={y} r="2.5" fill="#166534" stroke="#FFFFFF" strokeWidth="1" />;
+                return <Circle key={idx} cx={x} cy={y} r="2.5" fill="#2E7D32" stroke="#FFFFFF" strokeWidth="1" />;
               })}
             </G>
           );
@@ -110,11 +110,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 14,
   },
   chartTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
   },
   legendText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 10,
     fontWeight: '500',
   },

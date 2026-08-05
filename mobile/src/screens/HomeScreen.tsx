@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -38,9 +38,21 @@ export function HomeScreen() {
     cashShare,
     weeklyHistory,
     entries,
+    fetchMerchantData,
   } = useMerchantStore();
 
   const t = L[lang];
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchMerchantData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchMerchantData();
+  }, []);
 
   const formatCurrency = (amount: number) => {
     const isNeg = amount < 0;
@@ -53,7 +65,7 @@ export function HomeScreen() {
       {/* Top Nav */}
       <View style={styles.topNav}>
         <View style={styles.govBadge}>
-          <Landmark size={18} color="#1E293B" />
+          <Landmark size={18} color="#2E7D32" />
           <View>
             <Text style={styles.govTitle}>GOVERNMENT OF INDIA</Text>
             <Text style={styles.portalTitle}>{t.portalTitle}</Text>
@@ -61,12 +73,18 @@ export function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
+        }
+      >
         {/* Merchant Profile Card */}
         <View style={styles.merchantCard}>
           <View style={styles.merchantCardHeader}>
             <View style={styles.verifiedChip}>
-              <ShieldCheck size={14} color="#166534" />
+              <ShieldCheck size={14} color="#2E7D32" />
               <Text style={styles.verifiedText}>GST Verified</Text>
             </View>
             <View style={[styles.tierBadge, tier === 'AMBER' && styles.tierAmber, tier === 'GREEN' && styles.tierGreen, tier === 'RED' && styles.tierRed]}>
@@ -100,7 +118,7 @@ export function HomeScreen() {
 
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>{t.mEmi}</Text>
-              <Text style={[styles.statValue, missedEmi >= 1 && styles.textAmber]}>
+              <Text style={[styles.statValue, missedEmi >= 1 && styles.textRed]}>
                 {emi ? formatCurrency(emi) : '—'}
               </Text>
               {missedEmi >= 1 && <Text style={styles.statSubWarn}>{missedEmi} {t.missedEmiSuffix}</Text>}
@@ -111,7 +129,7 @@ export function HomeScreen() {
         {/* EMI Warning Banner */}
         {missedEmi >= 1 && (
           <View style={styles.warningBanner}>
-            <AlertTriangle size={18} color="#92400E" />
+            <AlertTriangle size={18} color="#C0392B" />
             <Text style={styles.warningBannerText}>
               {t.emiBanner(missedEmi)}
             </Text>
@@ -133,25 +151,25 @@ export function HomeScreen() {
           <Text style={styles.channelSubtitle}>{t.channelsSub}</Text>
 
           <View style={styles.channelBarContainer}>
-            <View style={[styles.channelBarSegment, { width: `${upiShare * 100}%`, backgroundColor: '#166534' }]} />
-            <View style={[styles.channelBarSegment, { width: `${appShare * 100}%`, backgroundColor: '#2563EB' }]} />
-            <View style={[styles.channelBarSegment, { width: `${cashShare * 100}%`, backgroundColor: '#94A3B8' }]} />
+            <View style={[styles.channelBarSegment, { width: `${upiShare * 100}%`, backgroundColor: '#2E7D32' }]} />
+            <View style={[styles.channelBarSegment, { width: `${appShare * 100}%`, backgroundColor: '#1565C0' }]} />
+            <View style={[styles.channelBarSegment, { width: `${cashShare * 100}%`, backgroundColor: '#C9CDBF' }]} />
           </View>
 
           <View style={styles.channelLegendRow}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#166534' }]} />
-              <Smartphone size={12} color="#475569" />
+              <View style={[styles.legendDot, { backgroundColor: '#2E7D32' }]} />
+              <Smartphone size={12} color="#6F6B5E" />
               <Text style={styles.legendText}>{t.upiLabel} ({Math.round(upiShare * 100)}%)</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#2563EB' }]} />
-              <CreditCard size={12} color="#475569" />
+              <View style={[styles.legendDot, { backgroundColor: '#1565C0' }]} />
+              <CreditCard size={12} color="#6F6B5E" />
               <Text style={styles.legendText}>{t.appsLabel} ({Math.round(appShare * 100)}%)</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#94A3B8' }]} />
-              <Banknote size={12} color="#475569" />
+              <View style={[styles.legendDot, { backgroundColor: '#C9CDBF' }]} />
+              <Banknote size={12} color="#6F6B5E" />
               <Text style={styles.legendText}>{t.cashLabel} ({Math.round(cashShare * 100)}%)</Text>
             </View>
           </View>
@@ -193,7 +211,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
   },
   topNav: {
     flexDirection: 'row',
@@ -202,7 +220,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#E7E5DA',
     backgroundColor: '#FFFFFF',
   },
   govBadge: {
@@ -211,13 +229,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   govTitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 1,
   },
   portalTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -230,7 +248,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7F2E7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -243,7 +261,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -261,15 +279,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#E7F2E7',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#E7E5DA',
   },
   verifiedText: {
-    color: '#166534',
+    color: '#2E7D32',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -279,32 +297,32 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tierAmber: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FBF0D9',
   },
   tierGreen: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#E7F2E7',
   },
   tierRed: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#F8E6E2',
   },
   tierText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#1D261F',
   },
   merchantName: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 18,
     fontWeight: '700',
     marginTop: 4,
   },
   locationText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     marginTop: 2,
   },
   phoneText: {
-    color: '#94A3B8',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
   },
@@ -315,56 +333,56 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
   },
   statLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
   },
   statValue: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 15,
     fontWeight: '700',
     marginTop: 4,
   },
   statSubText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 10,
     marginTop: 2,
   },
   statSubWarn: {
-    color: '#92400E',
+    color: '#C0392B',
     fontSize: 10,
     fontWeight: '600',
     marginTop: 2,
   },
   textRed: {
-    color: '#991B1B',
+    color: '#C0392B',
   },
   textAmber: {
-    color: '#B45309',
+    color: '#C77700',
   },
   textGreen: {
-    color: '#166534',
+    color: '#2E7D32',
   },
   warningBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: '#F8E6E2',
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: '#C0392B33',
     marginBottom: 16,
   },
   warningBannerText: {
-    color: '#92400E',
+    color: '#C0392B',
     fontSize: 12,
     fontWeight: '600',
     flex: 1,
@@ -375,7 +393,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -390,21 +408,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
   },
   sectionSubtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
   },
   actionLinkText: {
-    color: '#2563EB',
+    color: '#2E7D32',
     fontSize: 12,
     fontWeight: '600',
   },
   channelSubtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
     marginBottom: 12,
@@ -414,7 +432,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     overflow: 'hidden',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7E5DA',
     marginBottom: 12,
   },
   channelBarSegment: {
@@ -435,12 +453,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    color: '#475569',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
   },
   emptyLedgerText: {
-    color: '#94A3B8',
+    color: '#6F6B5E',
     fontSize: 12,
     fontStyle: 'italic',
     paddingVertical: 10,
@@ -451,18 +469,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#E7E5DA',
   },
   entryMainInfo: {
     flex: 1,
   },
   entryTypeTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '600',
   },
   entryNoteText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
   },
@@ -474,7 +492,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   entryDateText: {
-    color: '#94A3B8',
+    color: '#6F6B5E',
     fontSize: 10,
     marginTop: 2,
   },

@@ -77,7 +77,7 @@ export default function AccountScreen() {
         <View style={styles.card}>
           <View style={styles.profileHeader}>
             <View style={styles.avatarBox}>
-              <User size={24} color="#1E293B" />
+              <User size={24} color="#2E7D32" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.merchantName}>{name}</Text>
@@ -91,22 +91,22 @@ export default function AccountScreen() {
           <View style={styles.divider} />
 
           <View style={styles.infoRow}>
-            <Building2 size={15} color="#64748B" />
+            <Building2 size={15} color="#6F6B5E" />
             <Text style={styles.infoLabel}>GSTIN / Merchant ID:</Text>
             <Text style={styles.infoVal}>{gstin}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Phone size={15} color="#64748B" />
+            <Phone size={15} color="#6F6B5E" />
             <Text style={styles.infoLabel}>Registered Mobile:</Text>
             <Text style={styles.infoVal}>{phone}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Award size={15} color="#166534" />
+            <Award size={15} color="#2E7D32" />
             <Text style={styles.infoLabel}>Verification Status:</Text>
             <View style={styles.verifiedChip}>
-              <ShieldCheck size={12} color="#166534" />
+              <ShieldCheck size={12} color="#2E7D32" />
               <Text style={styles.verifiedText}>GST & Aadhaar Verified</Text>
             </View>
           </View>
@@ -119,7 +119,7 @@ export default function AccountScreen() {
         <View style={styles.settingCard}>
           <View style={styles.settingRow}>
             <View style={styles.settingIconBox}>
-              <Globe size={18} color="#2563EB" />
+              <Globe size={18} color="#2E7D32" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingTitle}>{t.changeLanguage}</Text>
@@ -141,7 +141,7 @@ export default function AccountScreen() {
                   <Text style={[styles.langChipText, isSelected && styles.langChipTextSelected]}>
                     {item.label}
                   </Text>
-                  {isSelected && <CheckCircle2 size={14} color="#1E293B" />}
+                  {isSelected && <CheckCircle2 size={14} color="#2E7D32" />}
                 </TouchableOpacity>
               );
             })}
@@ -156,13 +156,13 @@ export default function AccountScreen() {
         >
           <View style={styles.settingRow}>
             <View style={styles.settingIconBox}>
-              <Lock size={18} color="#B45309" />
+              <Lock size={18} color="#C77700" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingTitle}>{t.securitySettings}</Text>
               <Text style={styles.settingSub}>Security, Encryption & Password Reset</Text>
             </View>
-            <ChevronRight size={18} color="#94A3B8" />
+            <ChevronRight size={18} color="#6F6B5E" />
           </View>
         </TouchableOpacity>
 
@@ -174,13 +174,13 @@ export default function AccountScreen() {
         >
           <View style={styles.settingRow}>
             <View style={styles.settingIconBox}>
-              <HelpCircle size={18} color="#166534" />
+              <HelpCircle size={18} color="#2E7D32" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingTitle}>{t.supportHelpdesk}</Text>
               <Text style={styles.settingSub}>Toll Free: 1800-11-2244 · support@dhansetu.gov.in</Text>
             </View>
-            <ChevronRight size={18} color="#94A3B8" />
+            <ChevronRight size={18} color="#6F6B5E" />
           </View>
         </TouchableOpacity>
 
@@ -193,7 +193,7 @@ export default function AccountScreen() {
           onPress={() => setLogoutModalVisible(true)}
           activeOpacity={0.85}
         >
-          <LogOut size={18} color="#EF4444" />
+          <LogOut size={18} color="#C0392B" />
           <Text style={styles.logoutButtonText}>{t.logoutBtn}</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -203,18 +203,18 @@ export default function AccountScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.customModalCard}>
             <View style={styles.modalHeaderRow}>
-              <View style={[styles.modalIconBox, { backgroundColor: '#FEF3C7' }]}>
-                <Lock size={20} color="#B45309" />
+              <View style={[styles.modalIconBox, { backgroundColor: '#FBF0D9' }]}>
+                <Lock size={20} color="#C77700" />
               </View>
               <Text style={styles.modalTitle}>Security & Access Info</Text>
               <TouchableOpacity onPress={() => setSecurityModalVisible(false)} style={styles.closeBtn}>
-                <X size={18} color="#64748B" />
+                <X size={18} color="#6F6B5E" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalBody}>
               <View style={styles.modalInfoBox}>
-                <ShieldCheck size={16} color="#166534" />
+                <ShieldCheck size={16} color="#2E7D32" />
                 <Text style={styles.modalInfoBoxText}>
                   256-Bit SSL AES Encrypted Government Gateway
                 </Text>
@@ -253,12 +253,12 @@ export default function AccountScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.customModalCard}>
             <View style={styles.modalHeaderRow}>
-              <View style={[styles.modalIconBox, { backgroundColor: '#DCFCE7' }]}>
-                <HelpCircle size={20} color="#166534" />
+              <View style={[styles.modalIconBox, { backgroundColor: '#E7F2E7' }]}>
+                <HelpCircle size={20} color="#2E7D32" />
               </View>
               <Text style={styles.modalTitle}>Government Nodal Support</Text>
               <TouchableOpacity onPress={() => setSupportModalVisible(false)} style={styles.closeBtn}>
-                <X size={18} color="#64748B" />
+                <X size={18} color="#6F6B5E" />
               </TouchableOpacity>
             </View>
 
@@ -267,7 +267,7 @@ export default function AccountScreen() {
               <Text style={styles.modalDetailVal}>MSME & Financial Inclusion Nodal Division</Text>
 
               <Text style={styles.modalDetailLabel}>Toll-Free Helpline:</Text>
-              <Text style={[styles.modalDetailVal, { color: '#2563EB' }]}>1800-11-2244</Text>
+              <Text style={[styles.modalDetailVal, { color: '#1565C0' }]}>1800-11-2244</Text>
 
               <Text style={styles.modalDetailLabel}>Official Email Support:</Text>
               <Text style={styles.modalDetailVal}>support@dhansetu.gov.in</Text>
@@ -280,7 +280,7 @@ export default function AccountScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.modalPrimaryBtn, { backgroundColor: '#166534' }]}
+              style={[styles.modalPrimaryBtn, { backgroundColor: '#2E7D32' }]}
               onPress={() => {
                 setSupportModalVisible(false);
                 Alert.alert('Calling Support', 'Dialing Toll Free: 1800-11-2244...');
@@ -302,12 +302,12 @@ export default function AccountScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.customModalCard}>
             <View style={styles.modalHeaderRow}>
-              <View style={[styles.modalIconBox, { backgroundColor: '#FEE2E2' }]}>
-                <LogOut size={20} color="#EF4444" />
+              <View style={[styles.modalIconBox, { backgroundColor: '#F8E6E2' }]}>
+                <LogOut size={20} color="#C0392B" />
               </View>
               <Text style={styles.modalTitle}>Confirm Merchant Logout</Text>
               <TouchableOpacity onPress={() => setLogoutModalVisible(false)} style={styles.closeBtn}>
-                <X size={18} color="#64748B" />
+                <X size={18} color="#6F6B5E" />
               </TouchableOpacity>
             </View>
 
@@ -338,7 +338,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
   },
   topNav: {
     flexDirection: 'row',
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#E7E5DA',
     backgroundColor: '#FFFFFF',
   },
   scrollContent: {
@@ -358,12 +358,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   mainTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 22,
     fontWeight: '700',
   },
   subtitle: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     marginTop: 2,
   },
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -389,19 +389,19 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7F2E7',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E7E5DA',
   },
   merchantName: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 16,
     fontWeight: '700',
   },
   merchantMeta: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     marginTop: 2,
   },
@@ -410,17 +410,17 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 12,
   },
-  tierGreen: { backgroundColor: '#DCFCE7' },
-  tierAmber: { backgroundColor: '#FEF3C7' },
-  tierRed: { backgroundColor: '#FEE2E2' },
+  tierGreen: { backgroundColor: '#E7F2E7' },
+  tierAmber: { backgroundColor: '#FBF0D9' },
+  tierRed: { backgroundColor: '#F8E6E2' },
   tierText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#1D261F',
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E7E5DA',
     marginVertical: 12,
   },
   infoRow: {
@@ -430,12 +430,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     fontWeight: '500',
   },
   infoVal: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -443,20 +443,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#E7F2E7',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#E7E5DA',
   },
   verifiedText: {
-    color: '#166534',
+    color: '#2E7D32',
     fontSize: 10,
     fontWeight: '600',
   },
   sectionHeader: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 10,
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     marginBottom: 10,
   },
   settingRow: {
@@ -479,19 +479,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
   },
   settingTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '600',
   },
   settingSub: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     marginTop: 2,
   },
@@ -505,33 +505,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAFAF5',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E7E5DA',
     width: '48%',
   },
   langChipSelected: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#1E293B',
+    backgroundColor: '#E7F2E7',
+    borderColor: '#2E7D32',
   },
   langFlag: {
     fontSize: 16,
   },
   langChipText: {
-    color: '#475569',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
     flex: 1,
   },
   langChipTextSelected: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontWeight: '700',
   },
   logoutButton: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#F8E6E2',
     borderRadius: 12,
     height: 48,
     flexDirection: 'row',
@@ -539,11 +539,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#F8E6E2',
     marginTop: 16,
   },
   logoutButtonText: {
-    color: '#EF4444',
+    color: '#C0392B',
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   /* Custom Modal Styles */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    backgroundColor: 'rgba(29, 38, 31, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalTitle: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 16,
     fontWeight: '700',
     flex: 1,
@@ -597,33 +597,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#E7F2E7',
     padding: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#E7E5DA',
     marginBottom: 12,
   },
   modalInfoBoxText: {
-    color: '#166534',
+    color: '#2E7D32',
     fontSize: 11,
     fontWeight: '600',
     flex: 1,
   },
   modalDetailLabel: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 11,
     fontWeight: '500',
     marginTop: 8,
   },
   modalDetailVal: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 13,
     fontWeight: '700',
     marginTop: 2,
   },
   modalPrimaryBtn: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#2E7D32',
     borderRadius: 10,
     height: 44,
     flexDirection: 'row',
@@ -644,24 +644,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalSecondaryBtnText: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     fontWeight: '600',
   },
   logoutModalPrompt: {
-    color: '#0F172A',
+    color: '#1D261F',
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,
     marginBottom: 6,
   },
   logoutModalSub: {
-    color: '#64748B',
+    color: '#6F6B5E',
     fontSize: 12,
     lineHeight: 16,
   },
   logoutConfirmBtn: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#C0392B',
     borderRadius: 10,
     height: 44,
     flexDirection: 'row',

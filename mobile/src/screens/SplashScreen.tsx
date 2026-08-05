@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ShieldCheck, Landmark } from 'lucide-react-native';
-import { TricolorBar } from '@/components/common/TricolorBar';
 
 export function SplashScreen() {
   const router = useRouter();
@@ -18,7 +17,7 @@ export function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <TricolorBar />
+
 
       <View style={styles.content}>
         {/* Government Emblem Badge */}
