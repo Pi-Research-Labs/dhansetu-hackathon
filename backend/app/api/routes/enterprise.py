@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.deps import get_token_claims
@@ -107,7 +109,9 @@ async def enterprise_cashflow_forecast(
     response_model=list[NetInflowHeatmapWeek],
 )
 async def enterprise_net_inflow_heatmap(
-    enterprise_id: str, claims: dict = Depends(get_token_claims)
+    enterprise_id: str,
+    weeks: Literal[7, 14] = Query(14),
+    claims: dict = Depends(get_token_claims),
 ) -> list[dict]:
     _check_access(claims, enterprise_id)
-    return await get_net_inflow_heatmap(enterprise_id)
+    return await get_net_inflow_heatmap(enterprise_id, weeks)

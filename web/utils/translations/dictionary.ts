@@ -100,7 +100,8 @@ export interface TranslationDictionary {
     heatmapTitle: string;
     heatmapTimeHorizon: string;
     heatmapLoading: string;
-    heatmapDays: (days: number) => string;
+    heatmapWeeks: (weeks: number) => string;
+    heatmapNoData: string;
     receivablesTitle: string;
     totalBookValue: string;
     outstandingBookValue: string;
@@ -129,10 +130,10 @@ export interface TranslationDictionary {
     shiftText: (pct: string) => string;
     loadingPaymentMix: string;
     heatmapStatus: string;
-    heatmapZeroTxnDay: string;
-    heatmapActiveTxnDay: string;
-    heatmapDigitalShare: string;
-    heatmapCashShare: string;
+    heatmapPositive: string;
+    heatmapNegative: string;
+    heatmapZero: string;
+    heatmapNetCashflow: string;
   };
   tiers: {
     GREEN: string;
@@ -241,10 +242,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "RISK TIER",
       bridgeHeadroom: "Bridge Headroom",
       marginGap90d: "90D Margin Gap",
-      heatmapTitle: "Digital Activity Heatmap",
+      heatmapTitle: "Net Cashflow Heatmap",
       heatmapTimeHorizon: "Heatmap Time Horizon",
       heatmapLoading: "Loading Heatmap...",
-      heatmapDays: (days: number) => `${days} Days`,
+      heatmapWeeks: (weeks: number) => `${weeks} Weeks`,
+      heatmapNoData: "No weekly cashflow data recorded for this enterprise.",
       receivablesTitle: "Udhaar Book & Receivables Ageing",
       totalBookValue: "Total Book Value",
       outstandingBookValue: "Outstanding Book Value",
@@ -273,10 +275,10 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       shiftText: (pct: string) => `${pct}% shift`,
       loadingPaymentMix: "Loading Payment Mix breakdown...",
       heatmapStatus: "Status",
-      heatmapZeroTxnDay: "Zero Transaction Day",
-      heatmapActiveTxnDay: "Active Transaction Day",
-      heatmapDigitalShare: "Digital Share",
-      heatmapCashShare: "Cash Share",
+      heatmapPositive: "Positive",
+      heatmapNegative: "Negative",
+      heatmapZero: "No activity",
+      heatmapNetCashflow: "Net Cashflow",
     },
     tiers: {
       GREEN: "Stable",
@@ -400,10 +402,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "जोखिम स्तर",
       bridgeHeadroom: "ब्रिज हेडरूम",
       marginGap90d: "90D मार्जिन अंतर",
-      heatmapTitle: "डिजिटल गतिविधि हीटमैप",
+      heatmapTitle: "नकदी प्रवाह हीटमैप",
       heatmapTimeHorizon: "हीटमैप समय सीमा",
       heatmapLoading: "हीटमैप लोड हो रहा है...",
-      heatmapDays: (days: number) => `${days} दिन`,
+      heatmapWeeks: (weeks: number) => `${weeks} सप्ताह`,
+      heatmapNoData: "इस उद्यम के लिए कोई साप्ताहिक नकदी प्रवाह डेटा दर्ज नहीं है।",
       receivablesTitle: "उधार बही और प्राप्य आयु (उधार बुक)",
       totalBookValue: "कुल पुस्तक मूल्य (उधार)",
       outstandingBookValue: "बकाया मूल्य",
@@ -432,10 +435,10 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       shiftText: (pct: string) => `${pct}% बदलाव`,
       loadingPaymentMix: "पेमेंट मिक्स विवरण लोड हो रहा है...",
       heatmapStatus: "स्थिति",
-      heatmapZeroTxnDay: "शून्य लेनदेन दिवस",
-      heatmapActiveTxnDay: "सक्रिय लेनदेन दिवस",
-      heatmapDigitalShare: "डिजिटल हिस्सा",
-      heatmapCashShare: "नकद हिस्सा",
+      heatmapPositive: "सकारात्मक",
+      heatmapNegative: "नकारात्मक",
+      heatmapZero: "कोई गतिविधि नहीं",
+      heatmapNetCashflow: "शुद्ध नकदी प्रवाह",
     },
     tiers: {
       GREEN: "स्थिर",
@@ -559,10 +562,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "రిస్క్ వర్గం",
       bridgeHeadroom: "బ్రిడ్జ్ హెడ్‌రూమ్",
       marginGap90d: "90D మార్జిన్ నిష్పత్తి",
-      heatmapTitle: "డిజిటల్ కార్యకలాపాల హీట్‌మ్యాప్",
+      heatmapTitle: "నికర నగదు ప్రవాహ హీట్‌మ్యాప్",
       heatmapTimeHorizon: "హీట్‌మ్యాప్ సమయ పరిమితి",
       heatmapLoading: "హీట్‌మ్యాప్ లోడ్ అవుతోంది...",
-      heatmapDays: (days: number) => `${days} రోజులు`,
+      heatmapWeeks: (weeks: number) => `${weeks} వారాలు`,
+      heatmapNoData: "ఈ సంస్థ కోసం వారపు నగదు ప్రవాహ డేటా నమోదు కాలేదు.",
       receivablesTitle: "ఉధార్ బుక్ & వసూళ్లు వయస్సు విశ్లేషణ",
       totalBookValue: "మొత్తం పుస్తక విలువ",
       outstandingBookValue: "బాకీ ఉన్న విలువ",
@@ -591,10 +595,10 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       shiftText: (pct: string) => `${pct}% మార్పు`,
       loadingPaymentMix: "చెల్లింపుల విభజన లోడ్ అవుతోంది...",
       heatmapStatus: "స్థితి",
-      heatmapZeroTxnDay: "శూన్య లావాదేవీ రోజు",
-      heatmapActiveTxnDay: "సక్రియ లావాదేవీ రోజు",
-      heatmapDigitalShare: "డిజిటల్ వాటా",
-      heatmapCashShare: "నగదు వాటా",
+      heatmapPositive: "సానుకూలం",
+      heatmapNegative: "ప్రతికూలం",
+      heatmapZero: "కార్యకలాపం లేదు",
+      heatmapNetCashflow: "నికర నగదు ప్రవాహం",
     },
     tiers: {
       GREEN: "స్థిరం",
@@ -718,10 +722,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "जोखीम स्तर",
       bridgeHeadroom: "ब्रिज हेडरूम",
       marginGap90d: "90D मार्जिन फरक",
-      heatmapTitle: "डिजिटल उपक्रम हीटमॅप",
+      heatmapTitle: "निव्वळ रोख प्रवाह हीटमॅप",
       heatmapTimeHorizon: "हीटमॅप कालावधी",
       heatmapLoading: "हीटमॅप लोड होत आहे...",
-      heatmapDays: (days: number) => `${days} दिवस`,
+      heatmapWeeks: (weeks: number) => `${weeks} आठवडे`,
+      heatmapNoData: "या उद्योगासाठी साप्ताहिक रोख प्रवाह डेटा नोंदवलेला नाही.",
       receivablesTitle: "उधारी खाते आणि येणे रक्कम विश्लेषण",
       totalBookValue: "एकूण उधारी मूल्य",
       outstandingBookValue: "थकीत मूल्य",
@@ -750,10 +755,10 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       shiftText: (pct: string) => `${pct}% बदल`,
       loadingPaymentMix: "पेमेंट मिक्स तपशील लोड होत आहे...",
       heatmapStatus: "स्थिती",
-      heatmapZeroTxnDay: "शून्य व्यवहार दिवस",
-      heatmapActiveTxnDay: "सक्रिय व्यवहार दिवस",
-      heatmapDigitalShare: "डिजिटल वाटा",
-      heatmapCashShare: "रोख वाटा",
+      heatmapPositive: "सकारात्मक",
+      heatmapNegative: "नकारात्मक",
+      heatmapZero: "कोणतीही हालचाल नाही",
+      heatmapNetCashflow: "निव्वळ रोख प्रवाह",
     },
     tiers: {
       GREEN: "स्थिर",

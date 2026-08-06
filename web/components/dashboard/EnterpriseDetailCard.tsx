@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   EnterpriseCard,
   fetchMapTileBlobUrl,
-  getDigitalHeatmap,
-  DigitalHeatmapItem,
+  getNetInflowHeatmap,
+  NetInflowHeatmapItem,
 } from "@/utils/api-config";
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/utils/formatters";
 import { Enterprise } from "@/types/enterprise";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import {
@@ -95,15 +95,15 @@ export default function EnterpriseDetailCard({
   const [isExpandedMap, setIsExpandedMap] = useState<boolean>(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
-  // Digital Heatmap State & Period Filter (Default: 7 Days)
-  const [heatmapData, setHeatmapData] = useState<DigitalHeatmapItem[]>([]);
+  // Net Cashflow Heatmap State & Aggregate Window Filter (Default: 7 Weeks)
+  const [heatmapData, setHeatmapData] = useState<NetInflowHeatmapItem[]>([]);
   const [isLoadingHeatmap, setIsLoadingHeatmap] = useState<boolean>(false);
-  const [timePeriod, setTimePeriod] = useState<7 | 14 | 30 | 90>(7);
+  const [timePeriod, setTimePeriod] = useState<7 | 14>(7);
   const [isPeriodOpen, setIsPeriodOpen] = useState<boolean>(false);
   const heatmapScrollRef = useRef<HTMLDivElement>(null);
 
   // Heatmap Hover Tooltip States
-  const [hoveredItem, setHoveredItem] = useState<DigitalHeatmapItem | null>(null);
+  const [hoveredItem, setHoveredItem] = useState<NetInflowHeatmapItem | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -151,7 +151,7 @@ export default function EnterpriseDetailCard({
     };
   }, [mapTileUrl]);
 
-  // Fetch 90D Digital Heatmap
+  // Fetch Net Cashflow Heatmap (backend returns exactly the 7 or 14 week window)
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
@@ -159,7 +159,7 @@ export default function EnterpriseDetailCard({
       if (isMounted) setIsLoadingHeatmap(true);
     });
 
-    getDigitalHeatmap(id)
+    getNetInflowHeatmap(id, timePeriod)
       .then((data) => {
         if (isMounted) {
           setHeatmapData(data || []);
@@ -175,20 +175,14 @@ export default function EnterpriseDetailCard({
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, timePeriod]);
 
-  // Filter heatmap items based on selected time period (7D, 14D, 30D, 90D)
-  const visibleHeatmapData = useMemo(() => {
-    if (!heatmapData || heatmapData.length === 0) return [];
-    return heatmapData.slice(-timePeriod);
-  }, [heatmapData, timePeriod]);
-
-  // Auto-scroll heatmap to the most recent trailing date when period changes
+  // Auto-scroll heatmap to the most recent trailing week when period changes
   useEffect(() => {
-    if (heatmapScrollRef.current && visibleHeatmapData.length > 0) {
+    if (heatmapScrollRef.current && heatmapData.length > 0) {
       heatmapScrollRef.current.scrollLeft = heatmapScrollRef.current.scrollWidth;
     }
-  }, [visibleHeatmapData]);
+  }, [heatmapData]);
 
   // Handle smooth horizontal scrolling via buttons
   const scrollHeatmap = (direction: "left" | "right") => {
@@ -478,16 +472,15 @@ export default function EnterpriseDetailCard({
                 className="px-1.5 py-0.5 rounded border border-[#E2E6D8] text-[9px] font-mono font-bold text-[#2E7D32] bg-white hover:bg-[#FAFBF6] flex items-center gap-0.5 cursor-pointer shadow-2xs transition-all"
                 title={t?.dash?.heatmapTimeHorizon || "Select Heatmap Time Horizon"}
               >
-                <span>{t?.dash?.heatmapDays ? t.dash.heatmapDays(timePeriod) : `${timePeriod}D`}</span>
+                <span>{t?.dash?.heatmapWeeks ? t.dash.heatmapWeeks(timePeriod) : `${timePeriod}W`}</span>
                 <ChevronDown className="w-3 h-3 text-[#5F6656]" />
               </button>
             </div>
 
             <div className="flex items-center gap-1.5 text-[8.5px] font-mono shrink-0">
-              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#2E7D32] inline-block" /> ≥70%</span>
-              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#E65100] inline-block" /> 40–69%</span>
-              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#C62828] inline-block" /> &lt;40%</span>
-              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#E0E2D8] inline-block" /> 0</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#2E7D32] inline-block" /> {t?.dash?.heatmapPositive || "Positive"}</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#C62828] inline-block" /> {t?.dash?.heatmapNegative || "Negative"}</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#E0E2D8] inline-block" /> {t?.dash?.heatmapZero || "No activity"}</span>
             </div>
           </div>
 
@@ -507,22 +500,22 @@ export default function EnterpriseDetailCard({
                 </button>
               </div>
 
-              <div className="grid grid-cols-4 gap-1.5 w-full">
-                {[7, 14, 30, 90].map((days) => (
+              <div className="grid grid-cols-2 gap-1.5 w-full">
+                {[7, 14].map((weeks) => (
                   <button
-                    key={days}
+                    key={weeks}
                     type="button"
                     onClick={() => {
-                      setTimePeriod(days as 7 | 14 | 30 | 90);
+                      setTimePeriod(weeks as 7 | 14);
                       setIsPeriodOpen(false);
                     }}
                     className={`py-1.5 px-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border text-center ${
-                      timePeriod === days
+                      timePeriod === weeks
                         ? "bg-[#2E7D32] border-[#4CAF50] text-white shadow-sm"
                         : "bg-white/10 border-white/20 text-white/90 hover:bg-white/25"
                     }`}
                   >
-                    {t?.dash?.heatmapDays ? t.dash.heatmapDays(days) : `${days} Days`}
+                    {t?.dash?.heatmapWeeks ? t.dash.heatmapWeeks(weeks) : `${weeks} Weeks`}
                   </button>
                 ))}
               </div>
@@ -534,9 +527,9 @@ export default function EnterpriseDetailCard({
               <Loader2 className="w-3 h-3 text-[#2E7D32] animate-spin" />
               <span>{t?.dash?.heatmapLoading || "Loading Heatmap..."}</span>
             </div>
-          ) : visibleHeatmapData.length > 0 ? (
+          ) : heatmapData.length > 0 ? (
             <div className="flex items-center gap-1 relative min-w-0 w-full">
-              {/* Left Scroll Button - visible only for 14, 30, 90 */}
+              {/* Left Scroll Button - visible only for the 14-week view */}
               {timePeriod > 7 && (
                 <button
                   type="button"
@@ -555,47 +548,43 @@ export default function EnterpriseDetailCard({
                   timePeriod === 7 ? "justify-between" : ""
                 }`}
               >
-                {visibleHeatmapData.map((item) => {
-                  const isZero = item.is_zero_txn_day;
-                  const pct = Math.round(item.digital_share_pct || 0);
+                {heatmapData.map((item) => {
+                  const net = item.net_inflow || 0;
 
-                  let bgCol = "bg-[#2E7D32]";
-                  let textCol = "text-white";
-                  if (isZero) {
-                    bgCol = "bg-[#E0E2D8]";
-                    textCol = "text-[#5F6656]";
-                  } else if (pct >= 70) {
+                  let bgCol = "bg-[#E0E2D8]";
+                  let textCol = "text-[#5F6656]";
+                  if (net > 0) {
                     bgCol = "bg-[#2E7D32]";
-                  } else if (pct >= 40) {
-                    bgCol = "bg-[#E65100]";
-                  } else {
+                    textCol = "text-white";
+                  } else if (net < 0) {
                     bgCol = "bg-[#C62828]";
+                    textCol = "text-white";
                   }
 
-                  const shortDate = item.event_date ? item.event_date.slice(5) : "";
+                  const shortWeek = item.week_start ? item.week_start.slice(5) : "";
 
                   return (
                     <div
-                      key={item.event_date}
-                      className="flex-1 min-w-[36px] sm:min-w-[48px] max-w-[80px] flex flex-col items-center shrink-0 group relative cursor-pointer"
+                      key={item.week_start}
+                      className="flex-1 min-w-[40px] sm:min-w-[56px] max-w-[88px] flex flex-col items-center shrink-0 group relative cursor-pointer"
                       onMouseEnter={() => setHoveredItem(item)}
                       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
                       onMouseLeave={() => setHoveredItem(null)}
                     >
                       <div
-                        className={`w-full h-4.5 rounded-xs flex items-center justify-center text-[8px] sm:text-[9px] font-mono font-bold ${bgCol} ${textCol} transition-transform group-hover:scale-105`}
+                        className={`w-full h-4.5 rounded-xs flex items-center justify-center text-[7.5px] sm:text-[8.5px] font-mono font-bold px-0.5 ${bgCol} ${textCol} transition-transform group-hover:scale-105`}
                       >
-                        {isZero ? "0" : `${pct}%`}
+                        {formatCurrencyCompact(net)}
                       </div>
                       <span className="text-[7.5px] font-mono text-[#5F6656] leading-none mt-0.5 whitespace-nowrap">
-                        {shortDate}
+                        {shortWeek}
                       </span>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Right Scroll Button - visible only for 14, 30, 90 */}
+              {/* Right Scroll Button - visible only for the 14-week view */}
               {timePeriod > 7 && (
                 <button
                   type="button"
@@ -609,7 +598,7 @@ export default function EnterpriseDetailCard({
             </div>
           ) : (
             <div className="text-[10px] text-[#5F6656] italic py-0.5 font-mono">
-              No daily heatmap data recorded for this enterprise.
+              {t?.dash?.heatmapNoData || "No weekly cashflow data recorded for this enterprise."}
             </div>
           )}
 
@@ -626,28 +615,30 @@ export default function EnterpriseDetailCard({
               className="bg-[#1A2016]/95 backdrop-blur-md border border-white/20 text-white p-2.5 rounded-lg shadow-xl text-[10px] font-mono space-y-1"
             >
               <div className="text-[9.5px] text-[#A2E6D8] font-bold pb-0.5 border-b border-white/10 mb-1">
-                {hoveredItem.event_date}
+                {hoveredItem.week_start} – {hoveredItem.week_end}
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-white/70">{t?.dash?.heatmapStatus || "Status"}:</span>
-                <span className={hoveredItem.is_zero_txn_day ? "text-[#FF8A80] font-bold" : "text-[#81C784] font-bold"}>
-                  {hoveredItem.is_zero_txn_day
-                    ? t?.dash?.heatmapZeroTxnDay || "Zero Transaction"
-                    : t?.dash?.heatmapActiveTxnDay || "Active"}
+                <span
+                  className={
+                    hoveredItem.net_inflow > 0
+                      ? "text-[#81C784] font-bold"
+                      : hoveredItem.net_inflow < 0
+                      ? "text-[#FF8A80] font-bold"
+                      : "text-white/80 font-bold"
+                  }
+                >
+                  {hoveredItem.net_inflow > 0
+                    ? t?.dash?.heatmapPositive || "Positive"
+                    : hoveredItem.net_inflow < 0
+                    ? t?.dash?.heatmapNegative || "Negative"
+                    : t?.dash?.heatmapZero || "No activity"}
                 </span>
               </div>
-              {!hoveredItem.is_zero_txn_day && (
-                <>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-white/70">{t?.dash?.heatmapDigitalShare || "Digital Share"}:</span>
-                    <strong className="text-white">{Math.round(hoveredItem.digital_share_pct)}%</strong>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span className="text-white/70">{t?.dash?.heatmapCashShare || "Cash Share"}:</span>
-                    <strong className="text-white">{Math.round(hoveredItem.cash_share_pct || (100 - hoveredItem.digital_share_pct))}%</strong>
-                  </div>
-                </>
-              )}
+              <div className="flex justify-between gap-4">
+                <span className="text-white/70">{t?.dash?.heatmapNetCashflow || "Net Cashflow"}:</span>
+                <strong className="text-white">{formatCurrency(hoveredItem.net_inflow)}</strong>
+              </div>
             </div>
           )}
         </div>

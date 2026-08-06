@@ -80,12 +80,21 @@ async def get_cashflow_forecast(enterprise_id: str) -> list[dict]:
         return [dict(row) for row in rows]
 
 
-async def get_net_inflow_heatmap(enterprise_id: str) -> list[dict]:
+async def get_net_inflow_heatmap(enterprise_id: str, weeks: int = 14) -> list[dict]:
     pool = get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
-            "SELECT * FROM dhansetu.v_enterprise_net_inflow_heatmap WHERE enterprise_id = $1",
+            """
+            SELECT * FROM (
+                SELECT * FROM dhansetu.v_enterprise_net_inflow_heatmap
+                WHERE enterprise_id = $1
+                ORDER BY week_start DESC
+                LIMIT $2
+            ) recent
+            ORDER BY week_start ASC
+            """,
             enterprise_id,
+            weeks,
         )
         return [dict(row) for row in rows]
 
