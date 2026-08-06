@@ -102,8 +102,15 @@ SELECT
     ra.tier_cutoffs, ra.fusion_weights, ra.model_id, ra.rule_version,
     f.margin_gap_90d, f.cost_index_chg_90d, f.rev_index_chg_90d,
     f.dso_days, f.overdue_share, f.buyer_concentration,
-    f.zero_inflow_days_30d, f.digital_share, f.informal_debt,
+    f.zero_inflow_days_30d, f.informal_debt,
     f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m,
+    -- digital_share here is a trailing-90d average from daily_ledger, NOT
+    -- feature_snapshots.digital_share (which is a single most-recent-day
+    -- snapshot) - same recent_90d_digital_share pattern
+    -- v_merchant_payment_mix already uses, just window-safe against ra.as_of
+    -- rather than the panel's latest date, matching this view's own
+    -- point-in-time discipline (see emi180 below).
+    ROUND(digital90.digital_share_90d::numeric, 3)      AS digital_share,
     -- New columns appended at the end on purpose for CREATE OR REPLACE VIEW compatibility
     ra.net_buffer_days                                  AS savings_runway_days,
     ROUND((emi180.forecast_180d_p50 / NULLIF(emi180.trailing_180d_emi, 0))::numeric, 2) AS dscr_proj_180d,
@@ -127,7 +134,14 @@ LEFT JOIN LATERAL (
               AND d.event_date > ra.as_of - 180) AS trailing_180d_emi
     FROM v_live_forecast lf
     WHERE lf.enterprise_id = ra.enterprise_id AND lf.horizon_days = 180
-) emi180 ON TRUE;
+) emi180 ON TRUE
+LEFT JOIN LATERAL (
+    SELECT AVG(d.digital_share) AS digital_share_90d
+    FROM daily_ledger d
+    WHERE d.enterprise_id = ra.enterprise_id
+      AND d.event_date > ra.as_of - 90
+      AND d.event_date <= ra.as_of
+) digital90 ON TRUE;
 
 -- Deepest point of the downside path = the shortfall, and the week it lands.
 CREATE OR REPLACE VIEW v_projected_shortfall AS
