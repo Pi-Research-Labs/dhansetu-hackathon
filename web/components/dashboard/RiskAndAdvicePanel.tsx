@@ -100,10 +100,10 @@ export default function RiskAndAdvicePanel({
                 <CheckCircle2 className="w-4 h-4 text-[#2E7D32] shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs font-bold text-[#2E7D32] capitalize">
-                    Rank #{act.rank}: {act.action_key.replace(/_/g, " ")}
+                    Rank #{act.rank}: {t.actionKeys[act.action_key] || act.action_key.replace(/_/g, " ")}
                   </div>
                   <div className="text-[11px] text-[#1A2016] mt-0.5">
-                    Mechanism: {act.mechanism.replace(/_/g, " ")} (Audience: {act.audience})
+                    Mechanism: {t.mechanisms[act.mechanism] || act.mechanism.replace(/_/g, " ")} (Audience: {act.audience})
                   </div>
                 </div>
               </div>

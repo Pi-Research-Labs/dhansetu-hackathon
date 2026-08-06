@@ -16,6 +16,7 @@ import {
   EvidenceHeadroomByTierItem,
 } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
+import { useTranslation } from "@/utils/translations/useTranslation";
 import {
   Activity,
   TrendingUp,
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 
 export default function MarketIntelligenceTab() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(true);
   const [leadTime, setLeadTime] = useState<EvidenceLeadTimeResponse | null>(null);
   const [districtEvents, setDistrictEvents] = useState<EvidenceDistrictEvent[]>([]);
@@ -178,10 +180,10 @@ export default function MarketIntelligenceTab() {
                   {districtEvents.map((event, idx) => (
                     <tr key={idx} className="hover:bg-[#FAFBF6]">
                       <td className="py-2 px-2 font-sans font-medium text-[#1A2016]">
-                        {event.district} <span className="text-[9.5px] text-[#5F6656] font-normal capitalize">({event.sector.toLowerCase()})</span>
+                        {event.district} <span className="text-[9.5px] text-[#5F6656] font-normal">({t.sectors[event.sector] || event.sector})</span>
                       </td>
                       <td className="py-2 px-2 text-[#5F6656] capitalize">
-                        {event.mechanism.replace(/_/g, " ")}
+                        {t.mechanisms[event.mechanism] || event.mechanism.replace(/_/g, " ")}
                       </td>
                       <td className="py-2 px-2 text-center font-bold text-[#C62828]">
                         {event.flagged}/{event.total_in_cohort} ({event.pct_of_cohort}%)
@@ -222,7 +224,7 @@ export default function MarketIntelligenceTab() {
                 {scorecard.map((row, idx) => (
                   <tr key={idx} className="hover:bg-[#FAFBF6]">
                     <td className="py-2 px-2 font-sans font-medium text-[#1A2016] capitalize">
-                      {row.mechanism ? row.mechanism.replace(/_/g, " ") : "All Mechanisms"}
+                      {row.mechanism ? (t.mechanisms[row.mechanism] || row.mechanism.replace(/_/g, " ")) : t.dash.allMechanisms}
                     </td>
                     <td className="py-2 px-2 text-center text-[#5F6656]">
                       {row.predicted_count} / {row.true_count}
