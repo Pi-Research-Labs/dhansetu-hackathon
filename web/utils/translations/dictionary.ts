@@ -134,6 +134,7 @@ export interface TranslationDictionary {
     heatmapNegative: string;
     heatmapZero: string;
     heatmapNetCashflow: string;
+    allMechanisms: string;
   };
   tiers: {
     GREEN: string;
@@ -142,6 +143,10 @@ export interface TranslationDictionary {
   };
   advice: Record<string, string>;
   flagTags: Record<string, string>;
+  mechanisms: Record<string, string>;
+  actionKeys: Record<string, string>;
+  sectors: Record<string, string>;
+  counterpartyTypes: Record<string, string>;
 }
 
 export const translations: Record<LanguageCode, TranslationDictionary> = {
@@ -279,11 +284,48 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapNegative: "Negative",
       heatmapZero: "No activity",
       heatmapNetCashflow: "Net Cashflow",
+      allMechanisms: "All Mechanisms",
     },
     tiers: {
       GREEN: "Stable",
       AMBER: "Watchlist",
       RED: "High Risk",
+    },
+    mechanisms: {
+      margin_squeeze: "Margin squeeze",
+      working_capital_erosion: "Working capital erosion",
+      debt_overhang: "Debt overhang",
+      climate_shock: "Climate shock",
+      demand_trough: "Demand trough",
+      receivable_stretch: "Receivable stretch",
+    },
+    actionKeys: {
+      request_bridge_loan: "Request bridge loan",
+      defer_capex: "Defer capital expense",
+      prebook_input: "Pre-book input",
+      renegotiate_buyer_terms: "Renegotiate buyer terms",
+      diversify_buyer: "Diversify buyer",
+      collect_udhaar: "Collect udhaar",
+      stagger_batch: "Stagger batch",
+      restructure_emi: "Restructure EMI",
+      claim_scheme: "Claim scheme",
+      reduce_drawings: "Reduce drawings",
+      sell_slow_stock: "Sell slow stock",
+      on_track: "On track",
+    },
+    sectors: {
+      DAIRY: "Dairy",
+      POULTRY: "Poultry",
+      HANDICRAFT: "Handicrafts & handloom",
+      FOODPROC: "Food processing & agri-aggregation",
+      RETAIL: "Rural retail",
+    },
+    counterpartyTypes: {
+      cooperative: "Cooperative",
+      trader: "Trader",
+      exporter: "Exporter",
+      retailer: "Retailer",
+      village_credit: "Village credit",
     },
     advice: {
       repayment_stress: "Protect credit record: pay upcoming EMI first and contact bank for restructuring before missing another installment.",
@@ -439,11 +481,48 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapNegative: "नकारात्मक",
       heatmapZero: "कोई गतिविधि नहीं",
       heatmapNetCashflow: "शुद्ध नकदी प्रवाह",
+      allMechanisms: "सभी कारण",
     },
     tiers: {
       GREEN: "स्थिर",
       AMBER: "निगरानी",
       RED: "उच्च जोखिम",
+    },
+    mechanisms: {
+      margin_squeeze: "मार्जिन संकुचन",
+      working_capital_erosion: "कार्यशील पूंजी क्षरण",
+      debt_overhang: "ऋण भार",
+      climate_shock: "मौसम झटका",
+      demand_trough: "मांग में गिरावट",
+      receivable_stretch: "प्राप्य राशियों में देरी",
+    },
+    actionKeys: {
+      request_bridge_loan: "ब्रिज लोन का आवेदन करें",
+      defer_capex: "पूंजीगत खर्च टालें",
+      prebook_input: "इनपुट पहले से बुक करें",
+      renegotiate_buyer_terms: "खरीदार की शर्तों पर पुनः बातचीत करें",
+      diversify_buyer: "खरीदार आधार बढ़ाएँ",
+      collect_udhaar: "उधार वसूल करें",
+      stagger_batch: "बैच को टालें",
+      restructure_emi: "EMI पुनर्गठित करें",
+      claim_scheme: "योजना का लाभ लें",
+      reduce_drawings: "घरेलू निकासी घटाएँ",
+      sell_slow_stock: "धीमे स्टॉक को बेचें",
+      on_track: "स्थिति सामान्य",
+    },
+    sectors: {
+      DAIRY: "डेयरी",
+      POULTRY: "पोल्ट्री",
+      HANDICRAFT: "हस्तशिल्प एवं हथकरघा",
+      FOODPROC: "खाद्य प्रसंस्करण एवं कृषि-एकत्रीकरण",
+      RETAIL: "ग्रामीण खुदरा",
+    },
+    counterpartyTypes: {
+      cooperative: "सहकारी समिति",
+      trader: "व्यापारी",
+      exporter: "निर्यातक",
+      retailer: "खुदरा विक्रेता",
+      village_credit: "गांव उधार",
     },
     advice: {
       repayment_stress: "क्रेडिट रिकॉर्ड बचाएँ: पहले अगली EMI चुकाएँ और किस्त चूकने से पहले बैंक से पुनर्गठन पर बात करें।",
@@ -599,11 +678,48 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapNegative: "ప్రతికూలం",
       heatmapZero: "కార్యకలాపం లేదు",
       heatmapNetCashflow: "నికర నగదు ప్రవాహం",
+      allMechanisms: "అన్ని కారణాలు",
     },
     tiers: {
       GREEN: "స్థిరం",
       AMBER: "గమనించండి",
       RED: "అధిక రిస్క్",
+    },
+    mechanisms: {
+      margin_squeeze: "మార్జిన్ ఒత్తిడి",
+      working_capital_erosion: "వర్కింగ్ కేపిటల్ క్షీణత",
+      debt_overhang: "అప్పుల భారం",
+      climate_shock: "వాతావరణ షాక్",
+      demand_trough: "డిమాండ్ పతనం",
+      receivable_stretch: "వసూళ్ల ఆలస్యం",
+    },
+    actionKeys: {
+      request_bridge_loan: "బ్రిడ్జ్ లోన్ కోసం అభ్యర్థించండి",
+      defer_capex: "మూలధన వ్యయాన్ని వాయిదా వేయండి",
+      prebook_input: "ఇన్‌పుట్‌ను ముందుగా బుక్ చేయండి",
+      renegotiate_buyer_terms: "కొనుగోలుదారు నిబంధనలను తిరిగి చర్చించండి",
+      diversify_buyer: "కొనుగోలుదారులను విస్తరించండి",
+      collect_udhaar: "ఉధార్ వసూలు చేయండి",
+      stagger_batch: "బ్యాచ్‌ను వాయిదా వేయండి",
+      restructure_emi: "EMI పునర్‌వ్యవస్థీకరించండి",
+      claim_scheme: "పథకం ప్రయోజనం పొందండి",
+      reduce_drawings: "ఇంటి ఖర్చులు తగ్గించండి",
+      sell_slow_stock: "నెమ్మదిగా అమ్ముడైన స్టాక్‌ను విక్రయించండి",
+      on_track: "సక్రమంగా ఉంది",
+    },
+    sectors: {
+      DAIRY: "పాడి పరిశ్రమ",
+      POULTRY: "పౌల్ట్రీ",
+      HANDICRAFT: "హస్తకళలు & చేనేత",
+      FOODPROC: "ఆహార ప్రాసెసింగ్ & వ్యవసాయ సమీకరణ",
+      RETAIL: "గ్రామీణ రిటైల్",
+    },
+    counterpartyTypes: {
+      cooperative: "సహకార సంఘం",
+      trader: "వ్యాపారి",
+      exporter: "ఎగుమతిదారు",
+      retailer: "రిటైలర్",
+      village_credit: "గ్రామ అప్పు",
     },
     advice: {
       repayment_stress: "క్రెడిట్ రికార్డును కాపాడుకోండి: ముందుగా EMI చెల్లించండి, లేకపోతే బ్యాంకుతో మాట్లాడండి.",
@@ -759,11 +875,48 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapNegative: "नकारात्मक",
       heatmapZero: "कोणतीही हालचाल नाही",
       heatmapNetCashflow: "निव्वळ रोख प्रवाह",
+      allMechanisms: "सर्व कारणे",
     },
     tiers: {
       GREEN: "स्थिर",
       AMBER: "लक्ष ठेवा",
       RED: "उच्च जोखीम",
+    },
+    mechanisms: {
+      margin_squeeze: "मार्जिन दबाव",
+      working_capital_erosion: "खेळते भांडवल क्षरण",
+      debt_overhang: "कर्जाचा भार",
+      climate_shock: "हवामान धोका",
+      demand_trough: "मागणीतील घट",
+      receivable_stretch: "येणे रकमेत विलंब",
+    },
+    actionKeys: {
+      request_bridge_loan: "ब्रिज लोनसाठी अर्ज करा",
+      defer_capex: "भांडवली खर्च पुढे ढकला",
+      prebook_input: "इनपुट आधीच बुक करा",
+      renegotiate_buyer_terms: "खरेदीदाराच्या अटींवर पुन्हा बोलणी करा",
+      diversify_buyer: "खरेदीदार वाढवा",
+      collect_udhaar: "उधारी वसूल करा",
+      stagger_batch: "बॅच पुढे ढकला",
+      restructure_emi: "EMI पुनर्रचना करा",
+      claim_scheme: "योजनेचा लाभ घ्या",
+      reduce_drawings: "घरगुती खर्च कमी करा",
+      sell_slow_stock: "साचलेला माल विका",
+      on_track: "स्थिती सामान्य आहे",
+    },
+    sectors: {
+      DAIRY: "दुग्धव्यवसाय",
+      POULTRY: "कुक्कुटपालन",
+      HANDICRAFT: "हस्तकला व हातमाग",
+      FOODPROC: "अन्न प्रक्रिया व कृषी-एकत्रीकरण",
+      RETAIL: "ग्रामीण किरकोळ विक्री",
+    },
+    counterpartyTypes: {
+      cooperative: "सहकारी संस्था",
+      trader: "व्यापारी",
+      exporter: "निर्यातदार",
+      retailer: "किरकोळ विक्रेता",
+      village_credit: "गाव उधारी",
     },
     advice: {
       repayment_stress: "क्रेडिट रेकॉर्ड सांभाळा: आधी EMI भरा व बँकेशी पुनर्रचनेबाबत बोला.",

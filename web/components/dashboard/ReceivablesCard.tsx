@@ -122,7 +122,7 @@ export default function ReceivablesCard({ items, isLoading = false, t }: Receiva
             {items.map((row, idx) => (
               <tr key={idx} className="hover:bg-[#FAFBF6]">
                 <td className="py-2 px-2.5 font-sans font-medium text-[#1A2016] capitalize">
-                  {row.counterparty_type.replace(/_/g, " ")}
+                  {t?.counterpartyTypes?.[row.counterparty_type] || row.counterparty_type.replace(/_/g, " ")}
                 </td>
                 <td className="py-2 px-2.5 text-[#5F6656]">{row.invoices}</td>
                 <td className="py-2 px-2.5 font-bold text-[#1A2016]">
