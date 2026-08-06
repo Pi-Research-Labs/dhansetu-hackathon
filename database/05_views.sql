@@ -487,12 +487,13 @@ FROM scored
 ORDER BY enterprise_id, horizon_days;
 
 -- ===========================================================================
--- 13. SEVEN-WEEK NET INFLOW HEATMAP — net cash flow per ISO week, trailing
--- 7 weeks only (hardcoded window, unlike v_enterprise_weekly_cashflow's
--- caller-supplied one — this is a fixed, purpose-built data point, not a
--- general-purpose series). Built on top of v_enterprise_weekly_cashflow
+-- 13. NET INFLOW HEATMAP — net cash flow per ISO week, capped to a trailing
+-- 49-week pool here; the API's `weeks` param (7 or 14 — the heatmap's two
+-- aggregate views) does the actual windowing via LIMIT in
+-- get_net_inflow_heatmap, same pattern as v_enterprise_weekly_cashflow's
+-- caller-supplied window. Built on top of v_enterprise_weekly_cashflow
 -- rather than daily_ledger directly, so "a week" means the same thing in
--- both places. Flat {week, value} array — 7 cells, frontend lays it out.
+-- both places. Flat {week, value} array, frontend lays it out.
 -- ===========================================================================
 
 CREATE OR REPLACE VIEW v_enterprise_net_inflow_heatmap AS
@@ -500,3 +501,26 @@ SELECT enterprise_id, week_start, week_end, net AS net_inflow
 FROM v_enterprise_weekly_cashflow
 WHERE week_start > (SELECT MAX(week_start) FROM v_enterprise_weekly_cashflow) - 49
 ORDER BY enterprise_id, week_start;
+
+-- ===========================================================================
+-- 14. ABSOLUTE ENTERPRISE LOCATIONS — enterprises.lat/lon are small WGS84
+-- degree offsets from the district centroid (district_geo), not usable as
+-- a real-world point on their own (same convention v_officer_worklist's
+-- km_from_centre and app/services/maps.get_enterprise_location rely on,
+-- the latter doing this exact sum for one enterprise at a time). This view
+-- does it for every enterprise: absolute lat/lon = district centroid +
+-- offset, in WGS84 decimal degrees, ready to plot directly.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_locations AS
+SELECT
+    e.enterprise_id,
+    e.proprietor_name,
+    e.business_name,
+    e.district_id,
+    e.district,
+    e.state,
+    g.lat + e.lat AS lat,
+    g.lon + e.lon AS lon
+FROM v_enterprises_safe e
+LEFT JOIN district_geo g ON g.district_id = e.district_id;

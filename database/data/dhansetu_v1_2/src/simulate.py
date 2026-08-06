@@ -307,8 +307,12 @@ def build_enterprises(rng):
             state=dm["state"],
             agro_zone=dm["zone"],
             block=f"{dm['name']} {rng.choice(['North', 'South', 'East', 'West', 'Rural'])}",
-            lat=round(float(rng.uniform(-0.35, 0.35)), 5),   # offset from district centroid
-            lon=round(float(rng.uniform(-0.35, 0.35)), 5),
+            # Offset from district centroid, kept small (~2km) so the enterprise
+            # still falls inside the district HQ town's built-up area rather
+            # than out in open countryside — district_geo's centroid is the
+            # town itself, not just an arbitrary point in the district.
+            lat=round(float(rng.uniform(-0.02, 0.02)), 5),
+            lon=round(float(rng.uniform(-0.02, 0.02)), 5),
             preferred_lang=dm["lang"],
             preferred_channel=channel,
             literacy=lit,
