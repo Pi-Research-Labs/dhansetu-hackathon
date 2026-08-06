@@ -145,6 +145,7 @@ export interface TranslationDictionary {
   mechanisms: Record<string, string>;
   actionKeys: Record<string, string>;
   sectors: Record<string, string>;
+  counterpartyTypes: Record<string, string>;
 }
 
 export const translations: Record<LanguageCode, TranslationDictionary> = {
@@ -316,6 +317,13 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       HANDICRAFT: "Handicrafts & handloom",
       FOODPROC: "Food processing & agri-aggregation",
       RETAIL: "Rural retail",
+    },
+    counterpartyTypes: {
+      cooperative: "Cooperative",
+      trader: "Trader",
+      exporter: "Exporter",
+      retailer: "Retailer",
+      village_credit: "Village credit",
     },
     advice: {
       repayment_stress: "Protect credit record: pay upcoming EMI first and contact bank for restructuring before missing another installment.",
@@ -506,6 +514,13 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       FOODPROC: "खाद्य प्रसंस्करण एवं कृषि-एकत्रीकरण",
       RETAIL: "ग्रामीण खुदरा",
     },
+    counterpartyTypes: {
+      cooperative: "सहकारी समिति",
+      trader: "व्यापारी",
+      exporter: "निर्यातक",
+      retailer: "खुदरा विक्रेता",
+      village_credit: "गांव उधार",
+    },
     advice: {
       repayment_stress: "क्रेडिट रिकॉर्ड बचाएँ: पहले अगली EMI चुकाएँ और किस्त चूकने से पहले बैंक से पुनर्गठन पर बात करें।",
       spend_exceeds: "इस माह खर्च कमाई से अधिक है — गैर-ज़रूरी खरीद टालें और आपूर्तिकर्ताओं से उधार शर्तों पर बात करें।",
@@ -695,6 +710,13 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       FOODPROC: "ఆహార ప్రాసెసింగ్ & వ్యవసాయ సమీకరణ",
       RETAIL: "గ్రామీణ రిటైల్",
     },
+    counterpartyTypes: {
+      cooperative: "సహకార సంఘం",
+      trader: "వ్యాపారి",
+      exporter: "ఎగుమతిదారు",
+      retailer: "రిటైలర్",
+      village_credit: "గ్రామ అప్పు",
+    },
     advice: {
       repayment_stress: "క్రెడిట్ రికార్డును కాపాడుకోండి: ముందుగా EMI చెల్లించండి, లేకపోతే బ్యాంకుతో మాట్లాడండి.",
       spend_exceeds: "ఈ నెల సంపాదన కంటే ఎక్కువ ఖర్చు చేస్తున్నారు — అనవసర కొనుగోళ్లను వాయిదా వేయండి.",
@@ -883,6 +905,13 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       HANDICRAFT: "हस्तकला व हातमाग",
       FOODPROC: "अन्न प्रक्रिया व कृषी-एकत्रीकरण",
       RETAIL: "ग्रामीण किरकोळ विक्री",
+    },
+    counterpartyTypes: {
+      cooperative: "सहकारी संस्था",
+      trader: "व्यापारी",
+      exporter: "निर्यातदार",
+      retailer: "किरकोळ विक्रेता",
+      village_credit: "गाव उधारी",
     },
     advice: {
       repayment_stress: "क्रेडिट रेकॉर्ड सांभाळा: आधी EMI भरा व बँकेशी पुनर्रचनेबाबत बोला.",
