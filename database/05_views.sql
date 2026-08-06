@@ -102,15 +102,18 @@ SELECT
     ra.tier_cutoffs, ra.fusion_weights, ra.model_id, ra.rule_version,
     f.margin_gap_90d, f.cost_index_chg_90d, f.rev_index_chg_90d,
     f.dso_days, f.overdue_share, f.buyer_concentration,
-    f.zero_inflow_days_30d, f.informal_debt,
-    f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m,
+    f.zero_inflow_days_30d,
     -- digital_share here is a trailing-90d average from daily_ledger, NOT
     -- feature_snapshots.digital_share (which is a single most-recent-day
     -- snapshot) - same recent_90d_digital_share pattern
     -- v_merchant_payment_mix already uses, just window-safe against ra.as_of
     -- rather than the panel's latest date, matching this view's own
-    -- point-in-time discipline (see emi180 below).
-    ROUND(digital90.digital_share_90d::numeric, 3)      AS digital_share,
+    -- point-in-time discipline (see emi180 below). Kept at this exact
+    -- position in the column list -- CREATE OR REPLACE VIEW can't reorder
+    -- existing columns, only append new ones at the end.
+    ROUND(digital90.digital_share_90d::numeric, 3)::double precision AS digital_share,
+    f.informal_debt,
+    f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m,
     -- New columns appended at the end on purpose for CREATE OR REPLACE VIEW compatibility
     ra.net_buffer_days                                  AS savings_runway_days,
     ROUND((emi180.forecast_180d_p50 / NULLIF(emi180.trailing_180d_emi, 0))::numeric, 2) AS dscr_proj_180d,
