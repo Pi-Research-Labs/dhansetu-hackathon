@@ -32,18 +32,17 @@ export default function EnterpriseList({
           e.tier === "GREEN"
             ? "text-[#2E7D32] bg-[#E8F5E9] border-[#2E7D32]/30"
             : e.tier === "AMBER"
-            ? "text-[#E65100] bg-[#FFF3E0] border-[#E65100]/30"
-            : "text-[#C62828] bg-[#FFEBEE] border-[#C62828]/30";
+              ? "text-[#E65100] bg-[#FFF3E0] border-[#E65100]/30"
+              : "text-[#C62828] bg-[#FFEBEE] border-[#C62828]/30";
 
         return (
           <button
             key={e.id}
             onClick={() => onSelect(e.id)}
-            className={`w-full text-left p-3 transition-all flex items-center justify-between cursor-pointer ${
-              isSelected
+            className={`w-full text-left p-3 transition-all flex items-center justify-between cursor-pointer ${isSelected
                 ? "bg-[#E8F5E9] border-l-4 border-l-[#2E7D32]"
                 : "hover:bg-[#FAFBF6]"
-            }`}
+              }`}
           >
             <div>
               <div className="font-bold text-xs text-[#1A2016] flex items-center gap-1.5">

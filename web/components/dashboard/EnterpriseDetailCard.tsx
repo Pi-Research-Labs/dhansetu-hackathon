@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { EnterpriseCard, fetchMapTileBlobUrl } from "@/utils/api-config";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  EnterpriseCard,
+  fetchMapTileBlobUrl,
+  getDigitalHeatmap,
+  DigitalHeatmapItem,
+} from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
 import { Enterprise } from "@/types/enterprise";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
 import {
   Building2,
   MapPin,
@@ -16,30 +22,68 @@ import {
   Maximize2,
   Minimize2,
   Loader2,
+  TrendingUp,
+  AlertCircle,
+  Activity,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Filter,
+  X,
 } from "lucide-react";
 
 interface EnterpriseDetailCardProps {
   card?: EnterpriseCard | null;
   enterprise?: Enterprise;
+  t?: TranslationDictionary;
 }
 
 export default function EnterpriseDetailCard({
   card,
   enterprise,
+  t,
 }: EnterpriseDetailCardProps) {
   // Extract values prioritizing raw API card properties
   const id = card?.enterprise_id || enterprise?.id || "";
   const name = card?.business_name || card?.proprietor_name || enterprise?.name || "";
   const proprietor = card?.proprietor_name || enterprise?.name || "";
-  const district = (card?.district as string) || enterprise?.district || "Gujarat";
+  const district = (card?.district as string) || enterprise?.district || "District";
   const tier = (card?.risk_tier || enterprise?.tier || "AMBER").toUpperCase();
   const rawScore = card?.score ?? enterprise?.score ?? 0;
   const scorePct = rawScore <= 1 ? (rawScore * 100).toFixed(1) : rawScore.toFixed(1);
 
-  const bufferDays =
-    card?.buffer_days ??
+  // 1. Next 3 months net (proj.)
+  const forecast90d = card?.forecast_net_90d_p50 ?? enterprise?.forecast90 ?? 0;
+
+  // 2. Next 6 months net (proj.)
+  const forecast180d = card?.forecast_net_180d_p50 ?? enterprise?.forecast180 ?? 0;
+
+  // 3. Savings runway
+  const savingsRunwayDays =
+    card?.savings_runway_days ??
+    card?.net_buffer_days ??
     (enterprise?.metrics?.runwayMonths ? Math.round(enterprise.metrics.runwayMonths * 30) : 0);
-  const netBufferDays = card?.net_buffer_days ?? -10;
+  const runwayDisplay = `${(savingsRunwayDays / 30).toFixed(1)} mo`;
+
+  // 4. Missed EMIs (90d)
+  const missedEmi = enterprise?.metrics?.missedEmi ?? 0;
+  const hasLoan = Boolean(enterprise?.metrics?.loan && enterprise.metrics.loan > 0) || card?.dscr_proj_180d !== null;
+  const noLoanText = t?.dash?.noLoan || "no loan";
+  const missedEmiDisplay = hasLoan ? `${missedEmi}` : noLoanText;
+
+  // 5. DSCR (projected)
+  const rawDscr = card?.dscr_proj_180d ?? enterprise?.metrics?.dscr ?? null;
+  const parsedDscr = rawDscr !== null && rawDscr !== undefined ? parseFloat(String(rawDscr)) : NaN;
+  const dscrVal = isNaN(parsedDscr) ? null : parsedDscr;
+  const dscrDisplay = dscrVal !== null ? dscrVal.toFixed(2) : noLoanText;
+
+  // 6. Digital visibility
+  const digitalShareRaw = enterprise?.metrics?.digitalShare ?? 0.85;
+  const digitalShareNum = typeof digitalShareRaw === "number" ? digitalShareRaw : parseFloat(String(digitalShareRaw)) || 0.85;
+  const digitalVisibilityPct = Math.round(digitalShareNum <= 1 ? digitalShareNum * 100 : digitalShareNum);
+
+  // Secondary metrics
   const creditHeadroom = card?.credit_headroom ?? enterprise?.metrics.creditHeadroom ?? 0;
   const bridgeHeadroom = card?.bridge_headroom ?? enterprise?.metrics.savings ?? 0;
   const marginGap = card?.margin_gap_90d ?? null;
@@ -50,6 +94,17 @@ export default function EnterpriseDetailCard({
   const [isLoadingMap, setIsLoadingMap] = useState<boolean>(true);
   const [isExpandedMap, setIsExpandedMap] = useState<boolean>(false);
   const [mapError, setMapError] = useState<string | null>(null);
+
+  // Digital Heatmap State & Period Filter (Default: 7 Days)
+  const [heatmapData, setHeatmapData] = useState<DigitalHeatmapItem[]>([]);
+  const [isLoadingHeatmap, setIsLoadingHeatmap] = useState<boolean>(false);
+  const [timePeriod, setTimePeriod] = useState<7 | 14 | 30 | 90>(7);
+  const [isPeriodOpen, setIsPeriodOpen] = useState<boolean>(false);
+  const heatmapScrollRef = useRef<HTMLDivElement>(null);
+
+  // Heatmap Hover Tooltip States
+  const [hoveredItem, setHoveredItem] = useState<DigitalHeatmapItem | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!id) return;
@@ -96,6 +151,53 @@ export default function EnterpriseDetailCard({
     };
   }, [mapTileUrl]);
 
+  // Fetch 90D Digital Heatmap
+  useEffect(() => {
+    if (!id) return;
+    let isMounted = true;
+    queueMicrotask(() => {
+      if (isMounted) setIsLoadingHeatmap(true);
+    });
+
+    getDigitalHeatmap(id)
+      .then((data) => {
+        if (isMounted) {
+          setHeatmapData(data || []);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setHeatmapData([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingHeatmap(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  // Filter heatmap items based on selected time period (7D, 14D, 30D, 90D)
+  const visibleHeatmapData = useMemo(() => {
+    if (!heatmapData || heatmapData.length === 0) return [];
+    return heatmapData.slice(-timePeriod);
+  }, [heatmapData, timePeriod]);
+
+  // Auto-scroll heatmap to the most recent trailing date when period changes
+  useEffect(() => {
+    if (heatmapScrollRef.current && visibleHeatmapData.length > 0) {
+      heatmapScrollRef.current.scrollLeft = heatmapScrollRef.current.scrollWidth;
+    }
+  }, [visibleHeatmapData]);
+
+  // Handle smooth horizontal scrolling via buttons
+  const scrollHeatmap = (direction: "left" | "right") => {
+    if (heatmapScrollRef.current) {
+      const scrollAmount = direction === "left" ? -120 : 120;
+      heatmapScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
   const tierBadge =
     tier === "GREEN"
       ? "bg-[#E8F5E9] border-[#2E7D32]/40 text-[#2E7D32]"
@@ -103,9 +205,12 @@ export default function EnterpriseDetailCard({
       ? "bg-[#FFF3E0] border-[#E65100]/40 text-[#E65100]"
       : "bg-[#FFEBEE] border-[#C62828]/40 text-[#C62828]";
 
+  const translatedTier = t?.tiers?.[tier as "GREEN" | "AMBER" | "RED"] || tier;
+  const riskTierLabel = t?.dash?.riskTier || "RISK TIER";
+
   return (
     <div className="bg-white border border-[#E2E6D8] p-5 rounded-2xl shadow-2xs space-y-4">
-      {/* Main Top Grid: Same row by default, separate line when expanded */}
+      {/* Main Top Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
         {/* Enterprise Details Text Column */}
         <div
@@ -119,38 +224,48 @@ export default function EnterpriseDetailCard({
               <span>{name}</span>
             </h2>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${tierBadge}`}>
-              {tier} RISK TIER ({scorePct}%)
+              {translatedTier.toUpperCase()} {riskTierLabel} ({scorePct}%)
             </span>
           </div>
 
           <p className="text-xs text-[#5F6656] flex flex-wrap items-center gap-2">
-            <span className="font-mono font-medium">Proprietor: {proprietor}</span>
+            <span className="font-mono font-medium">
+              {t?.dash?.proprietor || "Proprietor"}: {proprietor}
+            </span>
             <span>·</span>
-            <span className="font-mono">ID: {id}</span>
+            <span className="font-mono">{t?.dash?.id || "ID"}: {id}</span>
             <span>·</span>
-            <span>District: {district}</span>
+            <span>
+              {t?.dash?.district || "District"}: {district}
+            </span>
           </p>
 
-          {/* Quick Metrics Pills */}
+          {/* Quick Headroom & Margin Pills */}
           <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
-            <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono">
-              <Clock className="w-3.5 h-3.5 text-[#E65100]" />
-              <span>Net Buffer: </span>
-              <strong className={netBufferDays < 0 ? "text-[#C62828]" : "text-[#2E7D32]"}>
-                {netBufferDays} days
-              </strong>
-            </div>
+            {creditHeadroom > 0 && (
+              <div className="bg-[#E8F5E9] border border-[#2E7D32]/30 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono">
+                <CreditCard className="w-3.5 h-3.5 text-[#2E7D32]" />
+                <span className="text-[#5F6656]">
+                  {t?.dash?.creditHeadroom || "Credit Headroom"}:{" "}
+                </span>
+                <strong className="text-[#2E7D32]">{formatCurrency(creditHeadroom)}</strong>
+              </div>
+            )}
 
             <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono">
-              <CreditCard className="w-3.5 h-3.5 text-[#2E7D32]" />
-              <span>Bridge Headroom: </span>
+              <Clock className="w-3.5 h-3.5 text-[#E65100]" />
+              <span className="text-[#5F6656]">
+                {t?.dash?.bridgeHeadroom || "Bridge Headroom"}:{" "}
+              </span>
               <strong className="text-[#2E7D32]">{formatCurrency(bridgeHeadroom)}</strong>
             </div>
 
             {marginGap !== null && (
               <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono">
                 <ShieldAlert className="w-3.5 h-3.5 text-[#C62828]" />
-                <span>90D Margin Gap: </span>
+                <span className="text-[#5F6656]">
+                  {t?.dash?.marginGap90d || "90D Margin Gap"}:{" "}
+                </span>
                 <strong className="text-[#C62828]">{marginGap}%</strong>
               </div>
             )}
@@ -248,47 +363,299 @@ export default function EnterpriseDetailCard({
         </div>
       </div>
 
-      {/* Core Metrics Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-3 border-t border-[#E2E6D8]">
-        <div className="bg-[#FAFBF6] p-2.5 rounded-lg border border-[#E2E6D8]">
-          <div className="text-[10px] text-[#5F6656]">Total Buffer Days</div>
-          <div className="text-xs font-mono font-bold text-[#1A2016] mt-0.5">
-            {bufferDays} Days
+      {/* Core Metrics & Heatmap Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-3 border-t border-[#E2E6D8] items-stretch">
+        {/* 1. Next 3 months net (proj.) */}
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <TrendingUp className="w-3.5 h-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
+              {t?.dash?.metrics?.m3 || "Next 3 months net (proj.)"}
+            </div>
           </div>
-        </div>
-
-        <div className="bg-[#FAFBF6] p-2.5 rounded-lg border border-[#E2E6D8]">
-          <div className="text-[10px] text-[#5F6656]">Net Buffer Days</div>
           <div
-            className={`text-xs font-mono font-bold mt-0.5 ${
-              netBufferDays < 0 ? "text-[#C62828]" : "text-[#2E7D32]"
+            className={`text-xs font-mono font-bold ${
+              forecast90d < 0 ? "text-[#C62828]" : "text-[#1A2016]"
             }`}
           >
-            {netBufferDays} Days
+            {formatCurrency(forecast90d)}
           </div>
         </div>
 
-        <div className="bg-[#FAFBF6] p-2.5 rounded-lg border border-[#E2E6D8]">
-          <div className="text-[10px] text-[#5F6656]">Credit Headroom</div>
-          <div className="text-xs font-mono font-bold text-[#1A2016] mt-0.5">
-            {formatCurrency(creditHeadroom)}
+        {/* 2. Next 6 months net (proj.) */}
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <TrendingUp className="w-3.5 h-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
+              {t?.dash?.metrics?.m6 || "Next 6 months net (proj.)"}
+            </div>
+          </div>
+          <div
+            className={`text-xs font-mono font-bold ${
+              forecast180d < 0 ? "text-[#C62828]" : "text-[#1A2016]"
+            }`}
+          >
+            {formatCurrency(forecast180d)}
           </div>
         </div>
 
-        <div className="bg-[#FAFBF6] p-2.5 rounded-lg border border-[#E2E6D8]">
-          <div className="text-[10px] text-[#5F6656]">Bridge Headroom</div>
-          <div className="text-xs font-mono font-bold text-[#2E7D32] mt-0.5">
-            {formatCurrency(bridgeHeadroom)}
+        {/* 3. Savings runway */}
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <Clock className="w-3.5 h-3.5 text-[#E65100] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
+              {t?.dash?.metrics?.runway || "Savings runway"}
+            </div>
+          </div>
+          <div
+            className={`text-xs font-mono font-bold ${
+              savingsRunwayDays < 30 ? "text-[#C62828]" : "text-[#1A2016]"
+            }`}
+          >
+            {runwayDisplay}
           </div>
         </div>
 
-        <div className="bg-[#FAFBF6] p-2.5 rounded-lg border border-[#E2E6D8] col-span-2 sm:col-span-1">
-          <div className="text-[10px] text-[#5F6656]">Model Risk Score</div>
-          <div className="text-xs font-mono font-bold text-[#C62828] mt-0.5">
-            {scorePct}%
+        {/* 4. Missed EMIs (90d) */}
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <AlertCircle className="w-3.5 h-3.5 text-[#C62828] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
+              {t?.dash?.metrics?.missedEmi || "Missed EMIs (90d)"}
+            </div>
           </div>
+          <div
+            className={`text-xs font-mono font-bold ${
+              missedEmi >= 1 ? "text-[#C62828]" : "text-[#1A2016]"
+            }`}
+          >
+            {missedEmiDisplay}
+          </div>
+        </div>
+
+        {/* 5. DSCR (projected) */}
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <Activity className="w-3.5 h-3.5 text-[#1565C0] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
+              {t?.dash?.metrics?.dscr || "DSCR (projected)"}
+            </div>
+          </div>
+          <div
+            className={`text-xs font-mono font-bold ${
+              dscrVal !== null && dscrVal < 1.25 ? "text-[#E65100]" : "text-[#1A2016]"
+            }`}
+          >
+            {dscrDisplay}
+          </div>
+        </div>
+
+        {/* 6. Digital visibility */}
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <CreditCard className="w-3.5 h-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
+            <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
+              {t?.dash?.metrics?.digital || "Digital visibility"}
+            </div>
+          </div>
+          <div className="text-xs font-mono font-bold text-[#2E7D32]">
+            {digitalVisibilityPct}%
+          </div>
+        </div>
+
+        {/* 7. Trailing Digital Heatmap Scroll Widget (Spanning 4 columns on row 2, matching KPI card height) */}
+        <div className="bg-[#FAFBF6] px-2.5 py-2 rounded-xl border border-[#E2E6D8] col-span-2 sm:col-span-3 lg:col-span-4 flex flex-col justify-between min-w-0 h-full relative">
+          {/* Header Row: Title, Period Selector Toggle & Legend */}
+          <div className="flex items-center justify-between text-[10px] text-[#5F6656] leading-none mb-1 gap-1">
+            <div className="flex items-center gap-1.5 font-medium truncate">
+              <Calendar className="w-3 h-3 text-[#2E7D32] shrink-0" />
+              <span className="truncate">{t?.dash?.heatmapTitle || "Digital Activity Heatmap"}</span>
+
+              {/* Time Period Selector Overlay Button */}
+              <button
+                type="button"
+                onClick={() => setIsPeriodOpen(!isPeriodOpen)}
+                className="px-1.5 py-0.5 rounded border border-[#E2E6D8] text-[9px] font-mono font-bold text-[#2E7D32] bg-white hover:bg-[#FAFBF6] flex items-center gap-0.5 cursor-pointer shadow-2xs transition-all"
+                title={t?.dash?.heatmapTimeHorizon || "Select Heatmap Time Horizon"}
+              >
+                <span>{t?.dash?.heatmapDays ? t.dash.heatmapDays(timePeriod) : `${timePeriod}D`}</span>
+                <ChevronDown className="w-3 h-3 text-[#5F6656]" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-[8.5px] font-mono shrink-0">
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#2E7D32] inline-block" /> ≥70%</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#E65100] inline-block" /> 40–69%</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#C62828] inline-block" /> &lt;40%</span>
+              <span className="flex items-center gap-0.5"><span className="w-1.5 h-1.5 rounded-xs bg-[#E0E2D8] inline-block" /> 0</span>
+            </div>
+          </div>
+
+          {/* Time Period Selection Modal / Popover Overlay */}
+          {isPeriodOpen && (
+            <div className="absolute inset-0 bg-[#1A2016]/85 backdrop-blur-xs z-30 rounded-xl p-2.5 flex flex-col justify-center text-white shadow-xl">
+              <div className="flex items-center justify-between w-full mb-1.5">
+                <span className="text-[11px] font-bold font-mono text-[#E8F5E9] flex items-center gap-1">
+                  <Filter className="w-3 h-3 text-[#4CAF50]" /> {t?.dash?.heatmapTimeHorizon || "Heatmap Time Horizon"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsPeriodOpen(false)}
+                  className="text-white/70 hover:text-white p-0.5 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-1.5 w-full">
+                {[7, 14, 30, 90].map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => {
+                      setTimePeriod(days as 7 | 14 | 30 | 90);
+                      setIsPeriodOpen(false);
+                    }}
+                    className={`py-1.5 px-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border text-center ${
+                      timePeriod === days
+                        ? "bg-[#2E7D32] border-[#4CAF50] text-white shadow-sm"
+                        : "bg-white/10 border-white/20 text-white/90 hover:bg-white/25"
+                    }`}
+                  >
+                    {t?.dash?.heatmapDays ? t.dash.heatmapDays(days) : `${days} Days`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isLoadingHeatmap ? (
+            <div className="flex items-center justify-center py-1 text-[10px] text-[#5F6656] font-mono gap-1.5">
+              <Loader2 className="w-3 h-3 text-[#2E7D32] animate-spin" />
+              <span>{t?.dash?.heatmapLoading || "Loading Heatmap..."}</span>
+            </div>
+          ) : visibleHeatmapData.length > 0 ? (
+            <div className="flex items-center gap-1 relative min-w-0 w-full">
+              {/* Left Scroll Button - visible only for 14, 30, 90 */}
+              {timePeriod > 7 && (
+                <button
+                  type="button"
+                  onClick={() => scrollHeatmap("left")}
+                  className="p-0.5 rounded bg-white border border-[#E2E6D8] text-[#5F6656] hover:text-[#1A2016] hover:bg-[#FAFBF6] shadow-2xs cursor-pointer shrink-0 transition-all z-10"
+                  title="Scroll Left"
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                </button>
+              )}
+
+              {/* Unified Scrollable Tiles Track */}
+              <div
+                ref={heatmapScrollRef}
+                className={`overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex items-center gap-1.5 py-0.5 flex-1 min-w-0 ${
+                  timePeriod === 7 ? "justify-between" : ""
+                }`}
+              >
+                {visibleHeatmapData.map((item) => {
+                  const isZero = item.is_zero_txn_day;
+                  const pct = Math.round(item.digital_share_pct || 0);
+
+                  let bgCol = "bg-[#2E7D32]";
+                  let textCol = "text-white";
+                  if (isZero) {
+                    bgCol = "bg-[#E0E2D8]";
+                    textCol = "text-[#5F6656]";
+                  } else if (pct >= 70) {
+                    bgCol = "bg-[#2E7D32]";
+                  } else if (pct >= 40) {
+                    bgCol = "bg-[#E65100]";
+                  } else {
+                    bgCol = "bg-[#C62828]";
+                  }
+
+                  const shortDate = item.event_date ? item.event_date.slice(5) : "";
+
+                  return (
+                    <div
+                      key={item.event_date}
+                      className="flex-1 min-w-[36px] sm:min-w-[48px] max-w-[80px] flex flex-col items-center shrink-0 group relative cursor-pointer"
+                      onMouseEnter={() => setHoveredItem(item)}
+                      onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
+                      onMouseLeave={() => setHoveredItem(null)}
+                    >
+                      <div
+                        className={`w-full h-4.5 rounded-xs flex items-center justify-center text-[8px] sm:text-[9px] font-mono font-bold ${bgCol} ${textCol} transition-transform group-hover:scale-105`}
+                      >
+                        {isZero ? "0" : `${pct}%`}
+                      </div>
+                      <span className="text-[7.5px] font-mono text-[#5F6656] leading-none mt-0.5 whitespace-nowrap">
+                        {shortDate}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right Scroll Button - visible only for 14, 30, 90 */}
+              {timePeriod > 7 && (
+                <button
+                  type="button"
+                  onClick={() => scrollHeatmap("right")}
+                  className="p-0.5 rounded bg-white border border-[#E2E6D8] text-[#5F6656] hover:text-[#1A2016] hover:bg-[#FAFBF6] shadow-2xs cursor-pointer shrink-0 transition-all z-10"
+                  title="Scroll Right"
+                >
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="text-[10px] text-[#5F6656] italic py-0.5 font-mono">
+              No daily heatmap data recorded for this enterprise.
+            </div>
+          )}
+
+          {/* Floating Hover Tooltip Detail Overlay (Follows Mouse Cursor) */}
+          {hoveredItem && (
+            <div
+              style={{
+                position: "fixed",
+                left: `${mousePos.x + 12}px`,
+                top: `${mousePos.y + 12}px`,
+                zIndex: 9999,
+                pointerEvents: "none",
+              }}
+              className="bg-[#1A2016]/95 backdrop-blur-md border border-white/20 text-white p-2.5 rounded-lg shadow-xl text-[10px] font-mono space-y-1"
+            >
+              <div className="text-[9.5px] text-[#A2E6D8] font-bold pb-0.5 border-b border-white/10 mb-1">
+                {hoveredItem.event_date}
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-white/70">{t?.dash?.heatmapStatus || "Status"}:</span>
+                <span className={hoveredItem.is_zero_txn_day ? "text-[#FF8A80] font-bold" : "text-[#81C784] font-bold"}>
+                  {hoveredItem.is_zero_txn_day
+                    ? t?.dash?.heatmapZeroTxnDay || "Zero Transaction"
+                    : t?.dash?.heatmapActiveTxnDay || "Active"}
+                </span>
+              </div>
+              {!hoveredItem.is_zero_txn_day && (
+                <>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-white/70">{t?.dash?.heatmapDigitalShare || "Digital Share"}:</span>
+                    <strong className="text-white">{Math.round(hoveredItem.digital_share_pct)}%</strong>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-white/70">{t?.dash?.heatmapCashShare || "Cash Share"}:</span>
+                    <strong className="text-white">{Math.round(hoveredItem.cash_share_pct || (100 - hoveredItem.digital_share_pct))}%</strong>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
