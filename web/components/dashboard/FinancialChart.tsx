@@ -223,10 +223,10 @@ export default function FinancialChart({ enterprise, liveForecast, t }: Financia
                 formatter={(val: unknown, name?: unknown) => [
                   formatCurrency(Number(val)),
                   name === "forecast"
-                    ? "P50 Expected Net"
+                    ? "Expected Cash Flow"
                     : name === "upper"
-                    ? "P90 Optimistic"
-                    : "P10 Stress Net",
+                    ? "Best Case (if things go well)"
+                    : "Worst Case (if things go bad)",
                 ]}
               />
               <ReferenceLine y={0} stroke="#C62828" strokeDasharray="3 3" />
