@@ -448,8 +448,9 @@ export async function getCashflowForecast(enterpriseId: string): Promise<Cashflo
   return await apiClient.get<CashflowForecastItem[]>(`/enterprise/${enterpriseId}/cashflow-forecast`);
 }
 
-export async function getNetInflowHeatmap(enterpriseId: string): Promise<NetInflowHeatmapItem[]> {
-  return await apiClient.get<NetInflowHeatmapItem[]>(`/enterprise/${enterpriseId}/net-inflow-heatmap`);
+export async function getNetInflowHeatmap(enterpriseId: string, weeks?: 7 | 14): Promise<NetInflowHeatmapItem[]> {
+  const query = weeks ? `?weeks=${weeks}` : "";
+  return await apiClient.get<NetInflowHeatmapItem[]>(`/enterprise/${enterpriseId}/net-inflow-heatmap${query}`);
 }
 
 // Risk Prediction

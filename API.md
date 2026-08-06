@@ -96,7 +96,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/digital-heatmap` | officer any, merchant own | array of JSON | daily digital/cash share %, trailing 90d, for a calendar heatmap |
 | `GET /enterprise/{id}/weekly-cashflow` | officer any, merchant own | array of JSON | historical weekly inflow/outflow/net, default trailing 26 weeks |
 | `GET /enterprise/{id}/cashflow-forecast` | officer any, merchant own | array of JSON | 6-month forecast band + confidence score per horizon |
-| `GET /enterprise/{id}/net-inflow-heatmap` | officer any, merchant own | array of JSON | net inflow per week, fixed trailing 7 weeks |
+| `GET /enterprise/{id}/net-inflow-heatmap` | officer any, merchant own | array of JSON | net inflow per week, trailing 7 or 14 weeks via `?weeks=` |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
 | `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
@@ -362,14 +362,17 @@ demo persona) scores `~0.70` ("medium"), Lakshmiben (`ENT0031`) scores
 
 ## `GET /enterprise/{enterprise_id}/net-inflow-heatmap` — officer (any) or merchant (own only)
 
-Net cash flow (`inflow - outflow`) per ISO week, for a heatmap — a fixed,
-purpose-built 7-week window, not caller-configurable like
-`weekly-cashflow`'s `?weeks=`. Backed by `v_enterprise_net_inflow_heatmap`
-(itself built on `v_enterprise_weekly_cashflow`, so "a week" means the
-same thing in both places). Always exactly 7 rows.
+Net cash flow (`inflow - outflow`) per ISO week, for a heatmap. Backed by
+`v_enterprise_net_inflow_heatmap` (itself built on
+`v_enterprise_weekly_cashflow`, so "a week" means the same thing in both
+places).
+
+`?weeks=` — `7` (default `14`), the only two values the heatmap's two
+aggregate views use; anything else is a `422`. Returns exactly that many
+of the most recent weeks, oldest first.
 
 ```json
-// Response 200 — array of 7, oldest week first:
+// Response 200 — array of `weeks` rows, oldest week first:
 {
   "enterprise_id": "ENT0031",
   "week_start": "2026-07-27",
