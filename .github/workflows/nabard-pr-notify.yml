@@ -23,7 +23,7 @@ jobs:
             --arg title "$PR_TITLE" \
             --arg author "$PR_AUTHOR" \
             --arg url "$PR_URL" \
-            '{text: ("Nugget: New PR opened by " + $author + " -- " + $title + "\n" + $url)}')
+            '{text: ("Hey, new PR just hatched! " + $author + " opened: \"" + $title + "\"\n" + $url + "\n-- Nugget")}')
           curl -sf -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD"
