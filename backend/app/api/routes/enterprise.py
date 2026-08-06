@@ -1,5 +1,3 @@
-from typing import Literal
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.deps import get_token_claims
@@ -110,8 +108,14 @@ async def enterprise_cashflow_forecast(
 )
 async def enterprise_net_inflow_heatmap(
     enterprise_id: str,
-    weeks: Literal[7, 14] = Query(14),
+    weeks: int = Query(14),
     claims: dict = Depends(get_token_claims),
 ) -> list[dict]:
-    _check_access(claims, enterprise_id)
+    # Literal[7, 14] as the Query type looked right but doesn't work: FastAPI
+    # passes the raw query string straight to Pydantic's Literal validator
+    # without str->int coercion here, so "7"/"14" fail against literal ints
+    # 7/14 even though they're the only two intended values. Validating by
+    # hand avoids relying on that coercion.
+    if weeks not in (7, 14):
+        raise HTTPException(status_code=422, detail="weeks must be 7 or 14")
     return await get_net_inflow_heatmap(enterprise_id, weeks)

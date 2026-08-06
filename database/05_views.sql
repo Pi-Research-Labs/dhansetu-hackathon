@@ -488,18 +488,24 @@ ORDER BY enterprise_id, horizon_days;
 
 -- ===========================================================================
 -- 13. NET INFLOW HEATMAP — net cash flow per ISO week, capped to a trailing
--- 49-week pool here; the API's `weeks` param (7 or 14 — the heatmap's two
--- aggregate views) does the actual windowing via LIMIT in
--- get_net_inflow_heatmap, same pattern as v_enterprise_weekly_cashflow's
--- caller-supplied window. Built on top of v_enterprise_weekly_cashflow
--- rather than daily_ledger directly, so "a week" means the same thing in
--- both places. Flat {week, value} array, frontend lays it out.
+-- 100-DAY pool here (~14 weeks + a few days' margin at the boundary — NOT
+-- 100 weeks; week_start rows are 7 days apart, so the cutoff is in days,
+-- not weeks. A prior version of this comment said "49-week pool" for a
+-- `- 49` cutoff, which was actually a 49-DAY / 7-week cap — silently
+-- capping the 14-week aggregate view to 7 rows). The API's `weeks` param
+-- (7 or 14 — the heatmap's two aggregate views) does the real windowing
+-- via LIMIT in get_net_inflow_heatmap, same pattern as
+-- v_enterprise_weekly_cashflow's caller-supplied window; this cap just
+-- needs to be wide enough to have 14 weeks available to LIMIT from. Built
+-- on top of v_enterprise_weekly_cashflow rather than daily_ledger
+-- directly, so "a week" means the same thing in both places. Flat
+-- {week, value} array, frontend lays it out.
 -- ===========================================================================
 
 CREATE OR REPLACE VIEW v_enterprise_net_inflow_heatmap AS
 SELECT enterprise_id, week_start, week_end, net AS net_inflow
 FROM v_enterprise_weekly_cashflow
-WHERE week_start > (SELECT MAX(week_start) FROM v_enterprise_weekly_cashflow) - 49
+WHERE week_start > (SELECT MAX(week_start) FROM v_enterprise_weekly_cashflow) - 100
 ORDER BY enterprise_id, week_start;
 
 -- ===========================================================================
