@@ -1,0 +1,29 @@
+name: Notify Nabard on new PR
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post PR link to Nabard Google Chat (Nugget)
+        env:
+          WEBHOOK_URL: ${{ secrets.NABARD_GCHAT_WEBHOOK }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          # PR_TITLE/PR_AUTHOR/PR_URL come in via env, not interpolated
+          # directly into this script, and jq --arg handles all JSON
+          # escaping -- a PR title can contain quotes, backslashes, etc.
+          # without breaking the payload or the shell.
+          PAYLOAD=$(jq -n \
+            --arg title "$PR_TITLE" \
+            --arg author "$PR_AUTHOR" \
+            --arg url "$PR_URL" \
+            '{text: ("Hey, new PR just hatched! " + $author + " opened: \"" + $title + "\"\n" + $url + "\n-- Nugget")}')
+          curl -sf -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
