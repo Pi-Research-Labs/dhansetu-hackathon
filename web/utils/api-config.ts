@@ -184,6 +184,7 @@ export interface EnterpriseCard {
   reason_2?: string | null;
   reason_3?: string | null;
   margin_gap_90d?: number | null;
+  digital_share?: number | null;
   [key: string]: unknown;
 }
 

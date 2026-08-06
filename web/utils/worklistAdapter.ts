@@ -148,7 +148,7 @@ export function enterpriseDetailsToEnterprise(details: EnterpriseDetailsResponse
       emi: 25000,
       upiShare: 0.6,
       appShare: 0.2,
-      digitalShare: 0.8,
+      digitalShare: card.digital_share ?? 0.8,
       dscr: card.rule_score ? Number((card.rule_score * 4).toFixed(2)) : 1.2,
       creditHeadroom: creditHeadroom,
       suggestedEmi: bridgeHeadroom > 0 ? Math.round(bridgeHeadroom / 6) : 0,

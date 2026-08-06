@@ -81,7 +81,15 @@ export default function EnterpriseDetailCard({
   // 6. Digital visibility
   const digitalShareRaw = enterprise?.metrics?.digitalShare ?? 0.85;
   const digitalShareNum = typeof digitalShareRaw === "number" ? digitalShareRaw : parseFloat(String(digitalShareRaw)) || 0.85;
-  const digitalVisibilityPct = Math.round(digitalShareNum <= 1 ? digitalShareNum * 100 : digitalShareNum);
+  // digital_share is a fraction and should be <=1, but ~19% of live rows run
+  // slightly over (up to ~1.09) — a data-quality quirk upstream, not a UI
+  // bug. 1.5 gives real fractions (even the noisy over-1 ones) headroom to
+  // still be read as "fraction, multiply by 100" rather than
+  // "already a percent", and the outer clamp catches the rest.
+  const digitalVisibilityPct = Math.min(
+    100,
+    Math.max(0, Math.round(digitalShareNum <= 1.5 ? digitalShareNum * 100 : digitalShareNum))
+  );
 
   // Secondary metrics
   const creditHeadroom = card?.credit_headroom ?? enterprise?.metrics.creditHeadroom ?? 0;
