@@ -13,6 +13,7 @@
     "dayjs": "^1.11.21",
     "echarts": "^6.1.0",
     "expo": "~57.0.9",
+    "expo-audio": "~57.0.3",
     "expo-constants": "~57.0.8",
     "expo-dev-client": "~57.0.10",
     "expo-linking": "~57.0.4",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "babel-preset-expo": "^57.0.6",
     "typescript": "~6.0.3"
   },
   "scripts": {

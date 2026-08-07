@@ -2,17 +2,27 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ShieldCheck, Landmark } from 'lucide-react-native';
+import { useMerchantStore } from '@/store/useMerchantStore';
 
 export function SplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Replace route so user cannot press back to return to Splash
-      router.replace('/login');
-    }, 2500);
+    const initializeSession = async () => {
+      const { restoreSession } = useMerchantStore.getState();
+      const isRestored = await restoreSession();
 
-    return () => clearTimeout(timer);
+      // Delay navigation slightly to let splash branding render
+      setTimeout(() => {
+        if (isRestored) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/login');
+        }
+      }, 1500);
+    };
+
+    initializeSession();
   }, []);
 
   return (
@@ -20,13 +30,13 @@ export function SplashScreen() {
 
 
       <View style={styles.content}>
-        {/* Government Emblem Badge */}
+        {/* Emblem Badge */}
         <View style={styles.emblemContainer}>
           <View style={styles.emblemIconCircle}>
             <Landmark size={36} color="#1E293B" />
           </View>
-          <Text style={styles.govTitle}>GOVERNMENT OF INDIA</Text>
-          <Text style={styles.ministryTitle}>MINISTRY OF COMMERCE & INDUSTRY</Text>
+          <Text style={styles.govTitle}>DHANSETU NETWORK</Text>
+          <Text style={styles.ministryTitle}>VERIFIED MERCHANT GATEWAY</Text>
         </View>
 
         {/* App Branding */}
@@ -52,7 +62,7 @@ export function SplashScreen() {
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Designed for Verified Indian Merchants & Enterprises</Text>
-        <Text style={styles.versionText}>v1.0.0 (Build 57) • Government Gateway</Text>
+        <Text style={styles.versionText}>v1.0.0 (Build 57) • Secure Gateway</Text>
       </View>
     </View>
   );

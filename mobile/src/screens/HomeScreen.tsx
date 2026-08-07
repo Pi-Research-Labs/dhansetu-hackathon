@@ -9,6 +9,7 @@ import {
   Smartphone,
   CreditCard,
   Banknote,
+  BookOpen,
 } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
@@ -38,6 +39,7 @@ export function HomeScreen() {
     cashShare,
     weeklyHistory,
     entries,
+    receivables,
     fetchMerchantData,
   } = useMerchantStore();
 
@@ -67,7 +69,7 @@ export function HomeScreen() {
         <View style={styles.govBadge}>
           <Landmark size={18} color="#2E7D32" />
           <View>
-            <Text style={styles.govTitle}>GOVERNMENT OF INDIA</Text>
+            <Text style={styles.govTitle}>DHANSETU NETWORK</Text>
             <Text style={styles.portalTitle}>{t.portalTitle}</Text>
           </View>
         </View>
@@ -174,6 +176,40 @@ export function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {/* Receivables/Udhaar Book Card */}
+        {receivables && receivables.length > 0 && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <BookOpen size={16} color="#2E7D32" />
+                <Text style={styles.sectionTitle}>Udhaar Book (Receivables Ageing)</Text>
+              </View>
+            </View>
+            <Text style={styles.channelSubtitle}>Outstanding credit from business counterparties</Text>
+
+            {receivables.map((item, idx) => (
+              <View key={idx} style={styles.receivableRow}>
+                <View style={styles.receivableMain}>
+                  <Text style={styles.receivableType}>
+                    {item.counterparty_type.replace('_', ' ').toUpperCase()}
+                  </Text>
+                  <Text style={styles.receivableInvoiceCount}>
+                    {item.invoices} Invoices · Avg {item.avg_days_to_cash} Days to Cash
+                  </Text>
+                </View>
+                <View style={styles.receivableValues}>
+                  <Text style={styles.receivableTotal}>₹ {item.total.toLocaleString('en-IN')}</Text>
+                  {item.written_off > 0 && (
+                    <Text style={styles.receivableWriteOff}>
+                      Written-Off: ₹ {item.written_off.toLocaleString('en-IN')} ({item.write_off_pct}%)
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Recorded Entries Ledger */}
         <View style={styles.sectionCard}>
@@ -494,6 +530,41 @@ const styles = StyleSheet.create({
   entryDateText: {
     color: '#6F6B5E',
     fontSize: 10,
+    marginTop: 2,
+  },
+  receivableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7E5DA',
+  },
+  receivableMain: {
+    flex: 1,
+  },
+  receivableType: {
+    color: '#1D261F',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  receivableInvoiceCount: {
+    color: '#6F6B5E',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  receivableValues: {
+    alignItems: 'flex-end',
+  },
+  receivableTotal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1D261F',
+  },
+  receivableWriteOff: {
+    color: '#C0392B',
+    fontSize: 9,
+    fontWeight: '600',
     marginTop: 2,
   },
 });

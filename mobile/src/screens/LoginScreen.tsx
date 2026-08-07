@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -26,6 +25,7 @@ import { SecurityBadge } from '@/components/common/SecurityBadge';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { authLogin } from '@/utils/api-config';
+import { CustomAlert } from '@/components/common/CustomAlert';
 
 export function LoginScreen() {
   const router = useRouter();
@@ -39,9 +39,22 @@ export function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto-login check on mount
+  // Custom Alert State
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'success' | 'error' | 'warning' | 'info'
+  });
+
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    setAlertConfig({ title, message, type });
+    setAlertVisible(true);
+  };
+
+  // Pre-fill credentials on mount (no silent auto-login)
   useEffect(() => {
-    const checkSavedCredentials = async () => {
+    const loadSavedCredentials = async () => {
       setIsLoading(true);
       try {
         const savedPhone = await AsyncStorage.getItem('@dhansetu_phone');
@@ -50,33 +63,25 @@ export function LoginScreen() {
           setPhone(savedPhone);
           setPassword(savedPassword);
           setRememberMe(true);
-
-          // Attempt silent auto-login
-          const data = await authLogin(savedPhone, savedPassword);
-          const { login: storeLogin } = useMerchantStore.getState();
-          await storeLogin(savedPhone, data.access_token, data.enterprise_id, data.proprietor_name);
-
-          // Route to dashboard
-          router.replace('/(tabs)');
         }
       } catch (error) {
-        console.log('Auto login failed or no credentials stored:', error);
+        console.log('Failed to load saved credentials:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkSavedCredentials();
+    loadSavedCredentials();
   }, []);
 
   const handleLogin = async () => {
     const trimmedPhone = phone.trim();
     if (trimmedPhone.length !== 10) {
-      Alert.alert('Validation Error', 'Please enter a valid 10-digit mobile number.');
+      showAlert('Validation Error', 'Please enter a valid 10-digit mobile number.', 'warning');
       return;
     }
     if (password.length < 4) {
-      Alert.alert('Validation Error', 'Password must be at least 4 characters long.');
+      showAlert('Validation Error', 'Password must be at least 4 characters long.', 'warning');
       return;
     }
 
@@ -103,7 +108,7 @@ export function LoginScreen() {
     } catch (error: any) {
       console.error('Login error:', error);
       const errMsg = error.response?.data?.detail || 'Invalid credentials or connection timeout. Please check your login details and try again.';
-      Alert.alert('Access Denied', errMsg);
+      showAlert('Access Denied', errMsg, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +160,7 @@ export function LoginScreen() {
               <Text style={styles.inputLabel}>
                 PASSWORD <Text style={styles.required}>*</Text>
               </Text>
-              <TouchableOpacity onPress={() => Alert.alert('Password Reset', 'Contact your Nodal Officer or reset via Aadhaar OTP.')}>
+              <TouchableOpacity onPress={() => showAlert('Password Reset', 'Contact your Nodal Officer or reset via Aadhaar OTP.', 'info')}>
                 <Text style={styles.forgotLink}>Forgot Password?</Text>
               </TouchableOpacity>
             </View>
@@ -216,15 +221,23 @@ export function LoginScreen() {
 
         {/* Footer Support */}
         <View style={styles.footerSection}>
-          <TouchableOpacity style={styles.helpButton} onPress={() => Alert.alert('Merchant Helpdesk', 'Toll Free: 1800-11-2244\nEmail: support@dhansetu.gov.in')}>
+          <TouchableOpacity style={styles.helpButton} onPress={() => showAlert('Merchant Helpdesk', 'Toll Free: 1800-11-2244\nEmail: support@dhansetu.net', 'info')}>
             <HelpCircle size={15} color="#6F6B5E" />
             <Text style={styles.helpText}>Need Help logging in? Contact Nodal Support</Text>
           </TouchableOpacity>
           <Text style={styles.disclaimerText}>
-            Unauthorized access to this government system is strictly prohibited under the IT Act 2000.
+            {t.disclaimer}
           </Text>
         </View>
       </ScrollView>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

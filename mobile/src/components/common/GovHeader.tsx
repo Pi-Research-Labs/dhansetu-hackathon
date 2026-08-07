@@ -8,8 +8,8 @@ interface GovHeaderProps {
 }
 
 export function GovHeader({
-  title = 'GOVERNMENT OF INDIA',
-  subtitle = 'Ministry of Commerce & Industry',
+  title = 'DHANSETU NETWORK',
+  subtitle = 'Verified Merchant Gateway',
 }: GovHeaderProps) {
   return (
     <View style={styles.container}>

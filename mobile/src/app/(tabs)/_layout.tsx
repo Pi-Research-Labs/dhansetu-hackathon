@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, PlusCircle, Store, Bell, User } from 'lucide-react-native';
@@ -16,7 +16,7 @@ const TAB_TITLES: Record<string, { home: string; add: string; market: string; al
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const { lang } = useMerchantStore();
+  const { lang, hasUnreadAlerts } = useMerchantStore();
   
   // Intercepts hardware back press: double tap to exit app
   useDoubleBackExit();
@@ -30,34 +30,59 @@ export default function TabsLayout() {
       <FirstLoadLangModal />
 
       <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: true,
-          tabBarActiveTintColor: '#2E7D32',
-          tabBarInactiveTintColor: '#6F6B5E',
-          tabBarStyle: {
-            backgroundColor: '#FFFFFF',
-            borderTopWidth: 1,
-            borderTopColor: '#E7E5DA',
-            height: tabBarHeight,
-            paddingBottom: bottomInset,
-            paddingTop: 8,
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            elevation: 8,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 6,
-          },
-          tabBarLabelStyle: {
-            fontSize: 10,
-            fontWeight: '600',
-            letterSpacing: 0.1,
-            marginTop: 2,
-          },
+        screenOptions={({ route }) => {
+          let activeColor = '#2E7D32';
+          if (route.name === 'index') activeColor = '#2563EB';
+          else if (route.name === 'add-entry') activeColor = '#10B981';
+          else if (route.name === 'market') activeColor = '#D97706';
+          else if (route.name === 'alerts') activeColor = '#DC2626';
+          else if (route.name === 'account') activeColor = '#7C3AED';
+
+          return {
+            headerShown: false,
+            tabBarShowLabel: true,
+            tabBarActiveTintColor: activeColor,
+            tabBarInactiveTintColor: '#6F6B5E',
+            tabBarStyle: {
+              backgroundColor: '#FFFFFF',
+              borderTopWidth: 1,
+              borderTopColor: '#E7E5DA',
+              height: tabBarHeight,
+              paddingBottom: bottomInset,
+              paddingTop: 8,
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              elevation: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 6,
+            },
+            tabBarLabelStyle: {
+              fontSize: 10,
+              fontWeight: '700',
+              letterSpacing: 0.1,
+              marginTop: 2,
+            },
+            tabBarButton: (props) => {
+              const { ref, ...rest } = props;
+              return (
+                <Pressable
+                  {...rest}
+                  ref={ref as any}
+                  android_ripple={{ color: '#E2E8F0', borderless: true, radius: 24 }}
+                  style={({ pressed }) => [
+                    rest.style as any,
+                    {
+                      opacity: pressed ? 0.75 : 1,
+                    }
+                  ]}
+                />
+              );
+            },
+          };
         }}
       >
         <Tabs.Screen
@@ -65,7 +90,7 @@ export default function TabsLayout() {
           options={{
             title: titles.home,
             tabBarIcon: ({ color, focused }) => (
-              <View style={[styles.iconBox, focused && styles.activeIconBox]}>
+              <View style={[styles.iconBox, focused && { backgroundColor: '#EFF6FF' }]}>
                 <Home size={focused ? 21 : 19} color={color} />
               </View>
             ),
@@ -77,7 +102,7 @@ export default function TabsLayout() {
           options={{
             title: titles.add,
             tabBarIcon: ({ color, focused }) => (
-              <View style={[styles.iconBox, focused && styles.activeIconBox]}>
+              <View style={[styles.iconBox, focused && { backgroundColor: '#ECFDF5' }]}>
                 <PlusCircle size={focused ? 23 : 21} color={color} />
               </View>
             ),
@@ -89,7 +114,7 @@ export default function TabsLayout() {
           options={{
             title: titles.market,
             tabBarIcon: ({ color, focused }) => (
-              <View style={[styles.iconBox, focused && styles.activeIconBox]}>
+              <View style={[styles.iconBox, focused && { backgroundColor: '#FEF3C7' }]}>
                 <Store size={focused ? 21 : 19} color={color} />
               </View>
             ),
@@ -101,9 +126,9 @@ export default function TabsLayout() {
           options={{
             title: titles.alerts,
             tabBarIcon: ({ color, focused }) => (
-              <View style={[styles.iconBox, focused && styles.activeIconBox]}>
+              <View style={[styles.iconBox, focused && { backgroundColor: '#FEF2F2' }]}>
                 <Bell size={focused ? 21 : 19} color={color} />
-                <View style={styles.alertBadgeDot} />
+                {hasUnreadAlerts && <View style={styles.alertBadgeDot} />}
               </View>
             ),
           }}
@@ -114,7 +139,7 @@ export default function TabsLayout() {
           options={{
             title: titles.account,
             tabBarIcon: ({ color, focused }) => (
-              <View style={[styles.iconBox, focused && styles.activeIconBox]}>
+              <View style={[styles.iconBox, focused && { backgroundColor: '#F5F3FF' }]}>
                 <User size={focused ? 21 : 19} color={color} />
               </View>
             ),
@@ -132,9 +157,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 26,
     borderRadius: 13,
-  },
-  activeIconBox: {
-    backgroundColor: '#E7F2E7',
   },
   alertBadgeDot: {
     position: 'absolute',

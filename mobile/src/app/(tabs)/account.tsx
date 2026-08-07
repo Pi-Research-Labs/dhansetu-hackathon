@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -18,11 +18,16 @@ import {
   KeyRound,
   AlertTriangle,
   CheckCircle2,
+  MapPin,
+  Plus,
+  Minus,
 } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L, SupportedLang } from '@/i18n/translations';
 import { GovHeader } from '@/components/common/GovHeader';
 import { SecurityBadge } from '@/components/common/SecurityBadge';
+import { API_BASE_URL, apiClient } from '@/utils/api-config';
+import { CustomAlert } from '@/components/common/CustomAlert';
 
 const LANG_LIST: { id: SupportedLang; label: string; flag: string }[] = [
   { id: 'en', label: 'English', flag: '🇬🇧' },
@@ -45,6 +50,9 @@ export default function AccountScreen() {
     gstin,
     tier,
     score,
+    logout,
+    token,
+    enterpriseId,
   } = useMerchantStore();
 
   const t = L[lang];
@@ -54,8 +62,85 @@ export default function AccountScreen() {
   const [supportModalVisible, setSupportModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
+  // Custom Alert State
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'success' | 'error' | 'warning' | 'info'
+  });
+
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    setAlertConfig({ title, message, type });
+    setAlertVisible(true);
+  };
+
+  // Map Tile States
+  const [mapImageUri, setMapImageUri] = useState<string | null>(null);
+  const [mapLoading, setMapLoading] = useState<boolean>(false);
+  const [mapError, setMapError] = useState<boolean>(false);
+  const [zoom, setZoom] = useState<number>(15);
+
+  // Helper to convert ArrayBuffer to base64
+  const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    if (typeof btoa === 'function') {
+      return btoa(binary);
+    }
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    let base64 = '';
+    let i = 0;
+    while (i < len) {
+      const byte1 = bytes[i++];
+      const byte2 = i < len ? bytes[i++] : NaN;
+      const byte3 = i < len ? bytes[i++] : NaN;
+
+      const enc1 = byte1 >> 2;
+      const enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
+      let enc3 = ((byte2 & 15) << 2) | (byte3 >> 6);
+      let enc4 = byte3 & 63;
+
+      if (isNaN(byte2)) {
+        enc3 = enc4 = 64;
+      } else if (isNaN(byte3)) {
+        enc4 = 64;
+      }
+
+      base64 += chars.charAt(enc1) + chars.charAt(enc2) +
+                (enc3 === 64 ? '=' : chars.charAt(enc3)) +
+                (enc4 === 64 ? '=' : chars.charAt(enc4));
+    }
+    return base64;
+  };
+
+  useEffect(() => {
+    if (enterpriseId && token) {
+      setMapLoading(true);
+      setMapError(false);
+      apiClient.get(`/enterprise/${enterpriseId}/map-tile?zoom=${zoom}&size=500x250`, {
+        responseType: 'arraybuffer'
+      })
+      .then(response => {
+        const base64 = arrayBufferToBase64(response.data);
+        setMapImageUri(`data:image/png;base64,${base64}`);
+        setMapLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch map tile:', err);
+        setMapError(true);
+        setMapLoading(false);
+      });
+    }
+  }, [enterpriseId, token, zoom]);
+
   const confirmLogout = () => {
     setLogoutModalVisible(false);
+    logout();
     router.replace('/login');
   };
 
@@ -178,11 +263,81 @@ export default function AccountScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingTitle}>{t.supportHelpdesk}</Text>
-              <Text style={styles.settingSub}>Toll Free: 1800-11-2244 · support@dhansetu.gov.in</Text>
+              <Text style={styles.settingSub}>Toll Free: 1800-11-2244 · support@dhansetu.net</Text>
             </View>
             <ChevronRight size={18} color="#6F6B5E" />
           </View>
         </TouchableOpacity>
+
+        {/* Verified Business Location Card */}
+        {enterpriseId && token && (
+          <View style={styles.card}>
+            <View style={styles.profileHeader}>
+              <View style={styles.avatarBox}>
+                <MapPin size={24} color="#2E7D32" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.merchantName}>Verified Shop Location</Text>
+                <Text style={styles.merchantMeta}>Google Maps Centered GPS Centroid</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.mapContainer}>
+              {mapLoading && !mapImageUri ? (
+                <View style={styles.mapOverlaySpinner}>
+                  <ActivityIndicator size="small" color="#2E7D32" />
+                  <Text style={styles.mapLoadingText}>Loading location map...</Text>
+                </View>
+              ) : mapError ? (
+                <View style={styles.mapOverlayError}>
+                  <MapPin size={24} color="#C0392B" style={{ marginBottom: 6 }} />
+                  <Text style={styles.mapErrorText}>Unable to load map tile.</Text>
+                </View>
+              ) : mapImageUri ? (
+                <>
+                  <Image
+                    source={{ uri: mapImageUri }}
+                    style={styles.mapImage}
+                    resizeMode="cover"
+                  />
+                  {/* Subtle Loading overlay while fetching new zoom levels */}
+                  {mapLoading && (
+                    <View style={styles.mapSubtleLoading}>
+                      <ActivityIndicator size="small" color="#2E7D32" />
+                    </View>
+                  )}
+                  {/* Zoom Controls Overlay */}
+                  <View style={styles.zoomControls}>
+                    <TouchableOpacity
+                      style={styles.zoomBtn}
+                      onPress={() => setZoom(prev => Math.min(18, prev + 1))}
+                      disabled={zoom >= 18 || mapLoading}
+                      activeOpacity={0.7}
+                    >
+                      <Plus size={16} color={zoom >= 18 || mapLoading ? "#CBD5E1" : "#1D261F"} />
+                    </TouchableOpacity>
+                    <View style={styles.zoomDivider} />
+                    <TouchableOpacity
+                      style={styles.zoomBtn}
+                      onPress={() => setZoom(prev => Math.max(12, prev - 1))}
+                      disabled={zoom <= 12 || mapLoading}
+                      activeOpacity={0.7}
+                    >
+                      <Minus size={16} color={zoom <= 12 || mapLoading ? "#CBD5E1" : "#1D261F"} />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.mapOverlaySpinner}>
+                  <ActivityIndicator size="small" color="#2E7D32" />
+                </View>
+              )}
+            </View>
+            <Text style={styles.mapFooterText}>
+              Your GPS coordinates are securely locked and verified by your regional nodal coordinator.
+            </Text>
+          </View>
+        )}
 
         {/* Security Badge */}
         <SecurityBadge />
@@ -216,7 +371,7 @@ export default function AccountScreen() {
               <View style={styles.modalInfoBox}>
                 <ShieldCheck size={16} color="#2E7D32" />
                 <Text style={styles.modalInfoBoxText}>
-                  256-Bit SSL AES Encrypted Government Gateway
+                  256-Bit SSL AES Encrypted Secure Gateway
                 </Text>
               </View>
 
@@ -234,7 +389,7 @@ export default function AccountScreen() {
               style={styles.modalPrimaryBtn}
               onPress={() => {
                 setSecurityModalVisible(false);
-                Alert.alert('OTP Dispatched', 'Password reset code has been dispatched to your registered Aadhaar mobile number via SMS.');
+                showAlert('OTP Dispatched', 'Password reset code has been dispatched to your registered Aadhaar mobile number via SMS.', 'success');
               }}
             >
               <KeyRound size={16} color="#FFFFFF" />
@@ -256,34 +411,34 @@ export default function AccountScreen() {
               <View style={[styles.modalIconBox, { backgroundColor: '#E7F2E7' }]}>
                 <HelpCircle size={20} color="#2E7D32" />
               </View>
-              <Text style={styles.modalTitle}>Government Nodal Support</Text>
+              <Text style={styles.modalTitle}>DhanSetu Support Helpdesk</Text>
               <TouchableOpacity onPress={() => setSupportModalVisible(false)} style={styles.closeBtn}>
                 <X size={18} color="#6F6B5E" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalBody}>
-              <Text style={styles.modalDetailLabel}>Ministry / Department:</Text>
-              <Text style={styles.modalDetailVal}>MSME & Financial Inclusion Nodal Division</Text>
+              <Text style={styles.modalDetailLabel}>Support Department:</Text>
+              <Text style={styles.modalDetailVal}>Financial Inclusion Support Division</Text>
 
               <Text style={styles.modalDetailLabel}>Toll-Free Helpline:</Text>
               <Text style={[styles.modalDetailVal, { color: '#1565C0' }]}>1800-11-2244</Text>
 
               <Text style={styles.modalDetailLabel}>Official Email Support:</Text>
-              <Text style={styles.modalDetailVal}>support@dhansetu.gov.in</Text>
+              <Text style={styles.modalDetailVal}>support@dhansetu.net</Text>
 
               <Text style={styles.modalDetailLabel}>Operating Hours:</Text>
               <Text style={styles.modalDetailVal}>Mon - Sat: 9:00 AM to 6:00 PM IST</Text>
 
-              <Text style={styles.modalDetailLabel}>Regional Officer:</Text>
-              <Text style={styles.modalDetailVal}>Shri A. K. Sharma (Deputy Director, MSME)</Text>
+              <Text style={styles.modalDetailLabel}>Support Coordinator:</Text>
+              <Text style={styles.modalDetailVal}>A. K. Sharma (Lead Coordinator)</Text>
             </View>
 
             <TouchableOpacity
               style={[styles.modalPrimaryBtn, { backgroundColor: '#2E7D32' }]}
               onPress={() => {
                 setSupportModalVisible(false);
-                Alert.alert('Calling Support', 'Dialing Toll Free: 1800-11-2244...');
+                showAlert('Calling Support', 'Dialing Toll Free: 1800-11-2244...', 'info');
               }}
             >
               <PhoneCall size={16} color="#FFFFFF" />
@@ -331,6 +486,14 @@ export default function AccountScreen() {
           </View>
         </View>
       </Modal>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }
@@ -675,5 +838,89 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  mapContainer: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#F1F5F9',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  mapImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mapSubtleLoading: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  zoomControls: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  zoomBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  zoomDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    width: '100%',
+  },
+  mapOverlaySpinner: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+  },
+  mapLoadingText: {
+    color: '#6F6B5E',
+    fontSize: 11,
+    marginTop: 6,
+    fontWeight: '500',
+  },
+  mapOverlayError: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FDEDEC',
+    padding: 12,
+  },
+  mapErrorText: {
+    color: '#C0392B',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  mapFooterText: {
+    color: '#6F6B5E',
+    fontSize: 10,
+    marginTop: 8,
+    lineHeight: 14,
+    fontStyle: 'italic',
   },
 });

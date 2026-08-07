@@ -14,6 +14,19 @@ interface Props {
 }
 
 export function WeeklyCashflowChart({ data }: Props) {
+  if (!data || data.length === 0) {
+    return (
+      <View style={[styles.container, { paddingVertical: 40, alignItems: 'center', justifyContent: 'center' }]}>
+        <Text style={{ color: '#6F6B5E', fontSize: 13, fontWeight: '700' }}>
+          No cashflow records available yet
+        </Text>
+        <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 4, textAlign: 'center', paddingHorizontal: 20 }}>
+          Add daily entries to generate weekly cashflow analytics.
+        </Text>
+      </View>
+    );
+  }
+
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const chartHeight = 190;

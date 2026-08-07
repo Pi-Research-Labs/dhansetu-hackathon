@@ -1,13 +1,17 @@
 import { create } from 'zustand';
 import { SupportedLang } from '@/i18n/translations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   authLogin,
+  authMe,
   getEnterprise,
   getPaymentMix,
   getWeeklyCashflow,
   getDigitalHeatmap,
   getNetInflowHeatmap,
   getCashflowForecast,
+  getReceivables,
+  getRiskPredict,
   setAuthTokenLoader,
 } from '@/utils/api-config';
 
@@ -39,6 +43,7 @@ export interface MerchantStore {
   proprietorName: string | null;
   login: (phone: string, token: string, enterpriseId: string, proprietorName: string) => Promise<void>;
   logout: () => void;
+  restoreSession: () => Promise<boolean>;
   fetchMerchantData: () => Promise<void>;
 
   // Merchant details
@@ -67,11 +72,16 @@ export interface MerchantStore {
   digitalHeatmap: Array<{ enterprise_id: string; event_date: string; digital_share_pct: number; cash_share_pct: number; is_zero_txn_day: boolean }>;
   netInflowHeatmap: Array<{ enterprise_id: string; week_start: string; week_end: string; net_inflow: number }>;
   cashflowForecast: Array<{ enterprise_id: string; horizon_days: number; horizon_label: string; p10: number; p50: number; p90: number; confidence_score: number; confidence_label: string }>;
-
+  receivables: any[];
+  riskPrediction: any | null;
 
   // Risk Flags & Advice
   flags: { key: string; tag: string; detail: string }[];
   advice: string[];
+
+  // Unread alerts indicator
+  hasUnreadAlerts: boolean;
+  markAlertsAsRead: () => void;
 
   // Entries ledger
   entries: Entry[];
@@ -80,9 +90,15 @@ export interface MerchantStore {
 
 export const useMerchantStore = create<MerchantStore>((set, get) => ({
   lang: 'en',
-  setLang: (lang) => set({ lang }),
+  setLang: (lang) => {
+    set({ lang });
+    AsyncStorage.setItem('@dhansetu_lang', lang).catch((e) => console.log('Error saving lang', e));
+  },
   hasChosenLang: false,
-  setHasChosenLang: (hasChosenLang) => set({ hasChosenLang }),
+  setHasChosenLang: (hasChosenLang) => {
+    set({ hasChosenLang });
+    AsyncStorage.setItem('@dhansetu_has_chosen_lang', hasChosenLang ? 'true' : 'false').catch((e) => console.log('Error saving chosen lang', e));
+  },
 
   // Auth Initial State
   isAuthenticated: false,
@@ -115,8 +131,11 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
   digitalHeatmap: [],
   netInflowHeatmap: [],
   cashflowForecast: [],
+  receivables: [],
+  riskPrediction: null,
   flags: [],
   advice: [],
+  hasUnreadAlerts: true,
   entries: [],
 
   // Login Action
@@ -129,6 +148,11 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
       phone,
       gstin: enterpriseId,
     });
+    try {
+      await AsyncStorage.setItem('@dhansetu_token', token);
+    } catch (e) {
+      console.log('Error saving auth token', e);
+    }
     // Immediately fetch details for this merchant enterprise
     await get().fetchMerchantData();
   },
@@ -142,10 +166,69 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
       proprietorName: null,
       name: 'Logged Out',
       weeklyHistory: [],
+      receivables: [],
+      riskPrediction: null,
       flags: [],
       advice: [],
       entries: [],
     });
+    // AsyncStorage.removeItem('@dhansetu_token').catch((e) => console.log('Error removing auth token', e));
+  },
+
+  markAlertsAsRead: () => {
+    set({ hasUnreadAlerts: false });
+  },
+
+  // Restore Session Action
+  restoreSession: async () => {
+    // Load language settings on startup
+    try {
+      const savedLang = await AsyncStorage.getItem('@dhansetu_lang');
+      const savedChosen = await AsyncStorage.getItem('@dhansetu_has_chosen_lang');
+      if (savedLang) {
+        set({ lang: savedLang as SupportedLang });
+      }
+      if (savedChosen) {
+        set({ hasChosenLang: savedChosen === 'true' });
+      }
+    } catch (e) {
+      console.log('Error loading saved language settings', e);
+    }
+
+    try {
+      const savedToken = await AsyncStorage.getItem('@dhansetu_token');
+      if (!savedToken) return false;
+
+      // Set temporarily in state so the axios interceptor picks it up
+      set({ token: savedToken });
+
+      const data = await authMe();
+
+      set({
+        isAuthenticated: true,
+        token: savedToken,
+        enterpriseId: data.enterprise_id,
+        proprietorName: data.proprietor_name,
+        phone: data.phone_number || '',
+        gstin: data.enterprise_id,
+      });
+
+      // Load all data
+      await get().fetchMerchantData();
+      return true;
+    } catch (error) {
+      console.log('Restore session failed:', error);
+      set({
+        isAuthenticated: false,
+        token: null,
+        enterpriseId: null,
+        proprietorName: null,
+        receivables: [],
+        riskPrediction: null,
+      });
+      await AsyncStorage.removeItem('@dhansetu_token').catch(() => { });
+      return false;
+    }
   },
 
   // Fetch Merchant Dashboard Metrics & Charts
@@ -155,13 +238,15 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
 
     try {
       // Call endpoints in parallel for fast loading
-      const [entData, paymentMix, weeklyData, digitalData, netInflowData, forecastData] = await Promise.all([
+      const [entData, paymentMix, weeklyData, digitalData, netInflowData, forecastData, receivablesData, riskPredictData] = await Promise.all([
         getEnterprise(enterpriseId),
         getPaymentMix(enterpriseId),
         getWeeklyCashflow(enterpriseId, 26),
         getDigitalHeatmap(enterpriseId),
         getNetInflowHeatmap(enterpriseId),
         getCashflowForecast(enterpriseId),
+        getReceivables(enterpriseId).catch(() => []),
+        getRiskPredict(enterpriseId).catch(() => null),
       ]);
 
       const card = entData.card || {};
@@ -256,9 +341,9 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
 
       const weeklyHistory = (weeklyData || []).map((item: any) => ({
         week: formatWeek(item.week_start),
-        inflow: item.inflow,
-        outflow: item.outflow,
-        net: item.net,
+        inflow: Math.round(parseFloat(item.inflow) || 0),
+        outflow: Math.round(parseFloat(item.outflow) || 0),
+        net: Math.round(parseFloat(item.net) || 0),
       }));
 
       // Update Zustand state fields
@@ -287,8 +372,11 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
         digitalHeatmap: digitalData,
         netInflowHeatmap: netInflowData,
         cashflowForecast: forecastData,
+        receivables: receivablesData || [],
+        riskPrediction: riskPredictData || null,
         flags,
         advice: adviceList,
+        hasUnreadAlerts: flags.length > 0,
       });
     } catch (error) {
       console.error('Error fetching merchant data:', error);

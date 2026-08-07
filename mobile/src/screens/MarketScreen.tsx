@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Store, TrendingUp, Calendar, ShieldAlert } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
@@ -85,9 +85,8 @@ export function MarketScreen() {
   const matchedSegment = segments.find(
     (s) => s.toLowerCase().includes(segment.toLowerCase()) || segment.toLowerCase().includes(s.toLowerCase())
   ) || 'FPO';
-  const [selectedSegment, setSelectedSegment] = useState<string>(matchedSegment);
 
-  const intel = MARKET_INTEL[selectedSegment] || MARKET_INTEL['FPO'];
+  const intel = MARKET_INTEL[matchedSegment] || MARKET_INTEL['FPO'];
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -101,23 +100,6 @@ export function MarketScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Segment Selector */}
-        <View style={styles.segmentContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {segments.map((seg) => (
-              <TouchableOpacity
-                key={seg}
-                style={[styles.segTab, selectedSegment === seg && styles.segTabActive]}
-                onPress={() => setSelectedSegment(seg)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.segText, selectedSegment === seg && styles.segTextActive]}>
-                  {seg}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
 
         {/* Commodity Basket Banner */}
         <View style={styles.card}>
