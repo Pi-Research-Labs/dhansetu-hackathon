@@ -547,3 +547,80 @@ SELECT
     g.lon + e.lon AS lon
 FROM v_enterprises_safe e
 LEFT JOIN district_geo g ON g.district_id = e.district_id;
+
+-- ===========================================================================
+-- 15. MARKET INTELLIGENCE VIEWS
+-- Category dropdown, sector-level risk cards, commodity price series, and weather rainfall.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_market_intelligence_categories AS
+SELECT sub_type_id, sub_type, sector, typical_daily_turnover
+FROM sub_types
+ORDER BY sub_type_id;
+
+CREATE OR REPLACE VIEW v_market_risk_cards AS
+SELECT sector, risk_type, detail, severity
+FROM market_risk_cards
+ORDER BY sector, severity DESC;
+
+-- Dynamic 12-month chart data combining monthly commodity price index and rainfall
+CREATE OR REPLACE VIEW v_market_intelligence_chart AS
+WITH months AS (
+    SELECT generate_series(1, 12) AS month_num
+),
+weather_m AS (
+    SELECT EXTRACT(MONTH FROM obs_date)::int AS month_num,
+           ROUND(AVG(rainfall_mm)::numeric, 1) AS avg_rainfall_mm
+    FROM weather_daily
+    GROUP BY EXTRACT(MONTH FROM obs_date)
+),
+price_m AS (
+    SELECT c.commodity_id,
+           EXTRACT(MONTH FROM p.price_date)::int AS month_num,
+           ROUND(AVG(p.modal_price)::numeric, 1) AS avg_price_index
+    FROM mandi_prices p
+    JOIN commodities c USING (commodity_id)
+    GROUP BY c.commodity_id, EXTRACT(MONTH FROM p.price_date)
+)
+SELECT
+    st.sub_type_id,
+    st.sub_type,
+    st.sector,
+    m.month_num,
+    TO_CHAR(TO_DATE(m.month_num::text, 'MM'), 'Mon') AS month,
+    COALESCE(pm.avg_price_index, ROUND((c.base_price * (1 + c.seasonal_amplitude * SIN((m.month_num - c.seasonal_peak_month) * 0.5236)))::numeric, 1)) AS price_index,
+    COALESCE(wm.avg_rainfall_mm, 0) AS rainfall_mm
+FROM sub_types st
+CROSS JOIN months m
+LEFT JOIN commodities c ON (
+    (st.sector = 'DAIRY' AND c.commodity_id = 'CM01') OR
+    (st.sector = 'POULTRY' AND c.commodity_id = 'CM03') OR
+    (st.sector = 'HANDICRAFT' AND c.commodity_id = 'CM05') OR
+    (st.sector = 'FOODPROC' AND c.commodity_id = 'CM06') OR
+    (st.sector = 'RETAIL' AND c.commodity_id = 'CM08')
+)
+LEFT JOIN price_m pm ON pm.commodity_id = c.commodity_id AND pm.month_num = m.month_num
+LEFT JOIN weather_m wm ON wm.month_num = m.month_num
+ORDER BY st.sub_type_id, m.month_num;
+
+-- Dynamic market intelligence detail per sub_type
+CREATE OR REPLACE VIEW v_market_intelligence_detail AS
+SELECT
+    st.sub_type_id,
+    st.sub_type,
+    st.sector,
+    COALESCE(c.commodity || ' (' || c.unit || ')', st.sub_type || ' price index') AS tracked_commodity,
+    COALESCE(c.annual_trend_pct, 4.0) AS price_trend_12m_pct,
+    COALESCE(sec.failure_mode, 'Sector risk monitoring active') AS productivity_outlook,
+    'Peak seasonal demand in month ' || COALESCE(c.seasonal_peak_month, 10)::text || '; monsoon dip in Jul-Aug.' AS seasonal_pattern
+FROM sub_types st
+LEFT JOIN sectors sec ON sec.sector = st.sector
+LEFT JOIN commodities c ON (
+    (st.sector = 'DAIRY' AND c.commodity_id = 'CM01') OR
+    (st.sector = 'POULTRY' AND c.commodity_id = 'CM03') OR
+    (st.sector = 'HANDICRAFT' AND c.commodity_id = 'CM05') OR
+    (st.sector = 'FOODPROC' AND c.commodity_id = 'CM06') OR
+    (st.sector = 'RETAIL' AND c.commodity_id = 'CM08')
+);
+
+
