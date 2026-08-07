@@ -263,7 +263,7 @@ export default function AccountScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingTitle}>{t.supportHelpdesk}</Text>
-              <Text style={styles.settingSub}>Toll Free: 1800-11-2244 · support@dhansetu.net</Text>
+              <Text style={styles.settingSub}>Toll Free: 1800-11-2244 · support@dhansetu.example</Text>
             </View>
             <ChevronRight size={18} color="#6F6B5E" />
           </View>
@@ -425,13 +425,13 @@ export default function AccountScreen() {
               <Text style={[styles.modalDetailVal, { color: '#1565C0' }]}>1800-11-2244</Text>
 
               <Text style={styles.modalDetailLabel}>Official Email Support:</Text>
-              <Text style={styles.modalDetailVal}>support@dhansetu.net</Text>
+              <Text style={styles.modalDetailVal}>support@dhansetu.example</Text>
 
               <Text style={styles.modalDetailLabel}>Operating Hours:</Text>
               <Text style={styles.modalDetailVal}>Mon - Sat: 9:00 AM to 6:00 PM IST</Text>
 
               <Text style={styles.modalDetailLabel}>Support Coordinator:</Text>
-              <Text style={styles.modalDetailVal}>A. K. Sharma (Lead Coordinator)</Text>
+              <Text style={styles.modalDetailVal}>Regional Nodal Coordinator</Text>
             </View>
 
             <TouchableOpacity

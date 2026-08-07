@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { SupportedLang } from '@/i18n/translations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -67,7 +68,7 @@ export interface MerchantStore {
   cashShare: number;
 
   // Weekly historical data
-  weeklyHistory: { week: string; inflow: number; outflow: number; net: number }[];
+  weeklyHistory: { week: string; weekLabel: string; dateRange: string; inflow: number; outflow: number; net: number }[];
   // New data arrays
   digitalHeatmap: Array<{ enterprise_id: string; event_date: string; digital_share_pct: number; cash_share_pct: number; is_zero_txn_day: boolean }>;
   netInflowHeatmap: Array<{ enterprise_id: string; week_start: string; week_end: string; net_inflow: number }>;
@@ -88,8 +89,10 @@ export interface MerchantStore {
   addEntry: (entry: Omit<Entry, 'id' | 'date'>) => void;
 }
 
-export const useMerchantStore = create<MerchantStore>((set, get) => ({
-  lang: 'en',
+export const useMerchantStore = create<MerchantStore>()(
+  persist(
+    (set, get) => ({
+      lang: 'en',
   setLang: (lang) => {
     set({ lang });
     AsyncStorage.setItem('@dhansetu_lang', lang).catch((e) => console.log('Error saving lang', e));
@@ -181,26 +184,19 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
 
   // Restore Session Action
   restoreSession: async () => {
-    // Load language settings on startup
-    try {
-      const savedLang = await AsyncStorage.getItem('@dhansetu_lang');
-      const savedChosen = await AsyncStorage.getItem('@dhansetu_has_chosen_lang');
-      if (savedLang) {
-        set({ lang: savedLang as SupportedLang });
-      }
-      if (savedChosen) {
-        set({ hasChosenLang: savedChosen === 'true' });
-      }
-    } catch (e) {
-      console.log('Error loading saved language settings', e);
+    // Wait for store rehydration if it hasn't finished yet
+    if (!useMerchantStore.persist.hasHydrated()) {
+      await new Promise<void>((resolve) => {
+        const unsub = useMerchantStore.persist.onFinishHydration(() => {
+          unsub();
+          resolve();
+        });
+      });
     }
 
     try {
-      const savedToken = await AsyncStorage.getItem('@dhansetu_token');
+      const savedToken = get().token;
       if (!savedToken) return false;
-
-      // Set temporarily in state so the axios interceptor picks it up
-      set({ token: savedToken });
 
       const data = await authMe();
 
@@ -226,7 +222,6 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
         receivables: [],
         riskPrediction: null,
       });
-      await AsyncStorage.removeItem('@dhansetu_token').catch(() => { });
       return false;
     }
   },
@@ -333,18 +328,48 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
       }
 
       // Map weekly history
-      const formatWeek = (dateStr: string) => {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
-        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+      const getWeekOfMonthAndRange = (dateStr: string) => {
+        const startDate = new Date(dateStr);
+        if (isNaN(startDate.getTime())) {
+          return {
+            week: dateStr,
+            weekLabel: `Week of ${dateStr}`,
+            dateRange: dateStr,
+          };
+        }
+
+        const weekNum = Math.ceil(startDate.getDate() / 7);
+        const monthName = startDate.toLocaleDateString('en-IN', { month: 'long' });
+        const ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth'];
+        const weekOrdinal = ordinals[weekNum - 1] || 'First';
+        const weekLabel = `${weekOrdinal} week of ${monthName}`;
+
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+
+        const formatOptions: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short' };
+        const startStr = startDate.toLocaleDateString('en-IN', formatOptions);
+        const endStr = endDate.toLocaleDateString('en-IN', formatOptions);
+        const dateRange = `${startStr} to ${endStr}`;
+
+        const weekShort = startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+        return {
+          week: weekShort,
+          weekLabel,
+          dateRange,
+        };
       };
 
-      const weeklyHistory = (weeklyData || []).map((item: any) => ({
-        week: formatWeek(item.week_start),
-        inflow: Math.round(parseFloat(item.inflow) || 0),
-        outflow: Math.round(parseFloat(item.outflow) || 0),
-        net: Math.round(parseFloat(item.net) || 0),
-      }));
+      const weeklyHistory = (weeklyData || []).map((item: any) => {
+        const info = getWeekOfMonthAndRange(item.week_start);
+        return {
+          ...info,
+          inflow: Math.round(parseFloat(item.inflow) || 0),
+          outflow: Math.round(parseFloat(item.outflow) || 0),
+          net: Math.round(parseFloat(item.net) || 0),
+        };
+      });
 
       // Update Zustand state fields
       set({
@@ -356,12 +381,14 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
         score: Math.round((card.score || 0) * 100),
 
         // Financial Metrics
-        net90: card.forecast_net_90d_p50 || card.forecast_net_90d_p50 === 0 ? card.forecast_net_90d_p50 : 0,
-        savings: card.savings ?? card.savings_balance ?? (card.net_buffer_days > 0 ? card.net_buffer_days * 3500 : 85000),
-        runwayMonths: card.savings_runway_days ? card.savings_runway_days / 30 : (card.net_buffer_days ? card.net_buffer_days / 30 : 0),
-        missedEmi: card.missed_emi ?? card.missed_emi_count ?? (card.net_buffer_days < -10 ? 2 : 0),
-        loan: card.loan ?? card.loan_outstanding ?? (card.bridge_headroom > 0 ? 350000 : 0),
-        emi: card.emi ?? card.monthly_emi ?? 0,
+        net90: parseFloat(card.forecast_net_90d_p50) || 0,
+        savings: card.savings !== undefined ? parseFloat(card.savings) : 
+                (card.savings_balance !== undefined ? parseFloat(card.savings_balance) : 
+                (parseFloat(card.net_buffer_days) > 0 ? parseFloat(card.net_buffer_days) * 3500 : 85000)),
+        runwayMonths: Number((card.savings_runway_days ? parseFloat(card.savings_runway_days) / 30 : (card.net_buffer_days ? parseFloat(card.net_buffer_days) / 30 : 0)).toFixed(2)),
+        missedEmi: card.missed_emis_90d ?? card.missed_emi ?? (parseFloat(card.net_buffer_days) < -10 ? 2 : 0),
+        loan: card.informal_debt ?? card.loan ?? (parseFloat(card.bridge_headroom) > 0 ? 350000 : 0),
+        emi: (card.emi ?? card.monthly_emi ?? parseFloat(card.suggested_max_emi)) || 0,
 
         // Payment Shares
         upiShare: paymentMix.avg_digital_share ?? 0.5,
@@ -394,6 +421,9 @@ export const useMerchantStore = create<MerchantStore>((set, get) => ({
       ...state.entries,
     ],
   })),
+}), {
+  name: 'dhansetu-merchant-storage',
+  storage: createJSONStorage(() => AsyncStorage),
 }));
 
 // Wire up the token loader to feed the Axios instance on demand

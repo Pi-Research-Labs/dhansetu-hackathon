@@ -221,7 +221,7 @@ export function LoginScreen() {
 
         {/* Footer Support */}
         <View style={styles.footerSection}>
-          <TouchableOpacity style={styles.helpButton} onPress={() => showAlert('Merchant Helpdesk', 'Toll Free: 1800-11-2244\nEmail: support@dhansetu.net', 'info')}>
+          <TouchableOpacity style={styles.helpButton} onPress={() => showAlert('Merchant Helpdesk', 'Toll Free: 1800-11-2244\nEmail: support@dhansetu.example', 'info')}>
             <HelpCircle size={15} color="#6F6B5E" />
             <Text style={styles.helpText}>Need Help logging in? Contact Nodal Support</Text>
           </TouchableOpacity>

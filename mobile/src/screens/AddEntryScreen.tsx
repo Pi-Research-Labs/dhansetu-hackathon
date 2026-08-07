@@ -146,8 +146,8 @@ export function AddEntryScreen() {
   const [isSaved, setIsSaved] = useState(false);
 
   // Timers and Refs
-  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Custom Alert State

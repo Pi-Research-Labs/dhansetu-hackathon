@@ -58,7 +58,7 @@ export function HomeScreen() {
 
   const formatCurrency = (amount: number) => {
     const isNeg = amount < 0;
-    const absVal = Math.abs(amount).toLocaleString('en-IN');
+    const absVal = Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 });
     return isNeg ? `-₹ ${absVal}` : `₹ ${absVal}`;
   };
 
@@ -108,7 +108,7 @@ export function HomeScreen() {
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>{t.savBal}</Text>
               <Text style={styles.statValue}>{formatCurrency(savings)}</Text>
-              <Text style={styles.statSubText}>{runwayMonths} {t.runwaySuffix}</Text>
+              <Text style={styles.statSubText}>{Number(runwayMonths.toFixed(2))} {t.runwaySuffix}</Text>
             </View>
           </View>
 
@@ -121,7 +121,7 @@ export function HomeScreen() {
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>{t.mEmi}</Text>
               <Text style={[styles.statValue, missedEmi >= 1 && styles.textRed]}>
-                {emi ? formatCurrency(emi) : '—'}
+                {emi ? formatCurrency(emi) : '0'}
               </Text>
               {missedEmi >= 1 && <Text style={styles.statSubWarn}>{missedEmi} {t.missedEmiSuffix}</Text>}
             </View>

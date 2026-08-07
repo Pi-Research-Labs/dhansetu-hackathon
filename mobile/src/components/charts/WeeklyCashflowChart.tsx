@@ -4,6 +4,8 @@ import Svg, { Rect, Path, Circle, Line, Text as SvgText, G } from 'react-native-
 
 interface WeeklyData {
   week: string;
+  weekLabel: string;
+  dateRange: string;
   inflow: number;
   outflow: number;
   net: number;
@@ -221,7 +223,10 @@ export function WeeklyCashflowChart({ data }: Props) {
       {/* Selected Week Callout / Active Detail Box */}
       {activeItem && (
         <View style={styles.detailCard}>
-          <Text style={styles.detailTitle}>Week of {activeItem.week}</Text>
+          <View style={styles.detailHeader}>
+            <Text style={styles.detailTitle}>{activeItem.weekLabel}</Text>
+            <Text style={styles.detailRange}>{activeItem.dateRange}</Text>
+          </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Inflow:</Text>
             <Text style={[styles.detailVal, { color: '#2E7D32' }]}>
@@ -311,7 +316,17 @@ const styles = StyleSheet.create({
     color: '#1D261F',
     fontSize: 12,
     fontWeight: '700',
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 6,
+  },
+  detailRange: {
+    color: '#6F6B5E',
+    fontSize: 11,
+    fontWeight: '600',
   },
   detailRow: {
     flexDirection: 'row',

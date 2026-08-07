@@ -27,7 +27,7 @@ export interface Translations {
   recordedEntriesTitle: string;
   addNew: string;
   noEntries: string;
-  
+
   // Add Entry Screen
   recordEntryTitle: string;
   recordEntrySub: string;
@@ -39,7 +39,7 @@ export interface Translations {
   saveEntryBtn: string;
   recentLedgerEntries: string;
   entryTypes: Record<string, string>;
-  
+
   // Market Screen
   marketTitle: string;
   marketSub: string;
@@ -50,7 +50,7 @@ export interface Translations {
   seasonalTitle: string;
   climateRisksTitle: string;
   severityLabel: (sev: string) => string;
-  
+
   // Alerts Screen
   alertsTitle: string;
   alertsSub: string;
@@ -60,7 +60,7 @@ export interface Translations {
   suggestedActionsTitle: string;
   recNumber: (n: number) => string;
   tiers: Record<string, string>;
-  
+
   // Login Screen
   merchantAccessPortal: string;
   officialPortalSub: string;
@@ -92,7 +92,7 @@ export interface Translations {
   logoutConfirmTitle: string;
   logoutConfirmMsg: string;
   cancel: string;
-  
+
   // First load modal
   firstLoadLangTitle: string;
   firstLoadLangSub: string;
@@ -114,7 +114,7 @@ export const L: Record<SupportedLang, Translations> = {
     missedEmiSuffix: 'missed 90d',
     noLoan: 'No active loan',
     runwaySuffix: 'mo runway',
-    emiBanner: (n) => `⚠️ ${n} missed EMI(s) in the last 90 days — see Alerts tab for recommended actions.`,
+    emiBanner: (n) => `⚠️ ${n} missed EMI(s) in the last 90 days - see Alerts tab for recommended actions.`,
     weeklyRecordTitle: 'Weekly Cashflow Record',
     weeklyRecordSub: 'Last 4 weeks history',
     inflowLabel: 'In',
@@ -130,7 +130,7 @@ export const L: Record<SupportedLang, Translations> = {
     noEntries: 'No transaction entries recorded yet.',
 
     recordEntryTitle: 'Record Transaction Entry',
-    recordEntrySub: 'Entries you add here enrich your record — cash sales recorded digitally strengthen your credit profile.',
+    recordEntrySub: 'Entries you add here enrich your record - cash sales recorded digitally strengthen your credit profile.',
     newLedgerEntry: 'New Ledger Entry',
     transTypeLabel: 'TRANSACTION TYPE *',
     amountLabel: 'AMOUNT (INR) *',
@@ -215,7 +215,7 @@ export const L: Record<SupportedLang, Translations> = {
     missedEmiSuffix: 'चूकी 90d',
     noLoan: 'कोई ऋण नहीं',
     runwaySuffix: 'माह बचत',
-    emiBanner: (n) => `⚠️ पिछले 90 दिनों में ${n} EMI चूकी — क्या करें, इसके लिए अलर्ट टैब देखें।`,
+    emiBanner: (n) => `⚠️ पिछले 90 दिनों में ${n} EMI चूकी - क्या करें, इसके लिए अलर्ट टैब देखें।`,
     weeklyRecordTitle: 'साप्ताहिक नकदी प्रवाह रिकॉर्ड',
     weeklyRecordSub: 'पिछले 4 हफ्तों का इतिहास',
     inflowLabel: 'आवक',
@@ -231,7 +231,7 @@ export const L: Record<SupportedLang, Translations> = {
     noEntries: 'अभी कोई प्रविष्टि दर्ज नहीं की गई है।',
 
     recordEntryTitle: 'लेनदेन प्रविष्टि दर्ज करें',
-    recordEntrySub: 'यहाँ जोड़ी गई प्रविष्टियाँ आपका रिकॉर्ड समृद्ध करती हैं — नकद बिक्री को डिजिटल दर्ज करने से आपकी क्रेडिट प्रोफ़ाइल मज़बूत होती है।',
+    recordEntrySub: 'यहाँ जोड़ी गई प्रविष्टियाँ आपका रिकॉर्ड समृद्ध करती हैं - नकद बिक्री को डिजिटल दर्ज करने से आपकी क्रेडिट प्रोफ़ाइल मज़बूत होती है।',
     newLedgerEntry: 'नई बही-खाता प्रविष्टि',
     transTypeLabel: 'लेनदेन का प्रकार *',
     amountLabel: 'राशि (₹) *',
@@ -316,7 +316,7 @@ export const L: Record<SupportedLang, Translations> = {
     missedEmiSuffix: 'चुकल्या ९०d',
     noLoan: 'कर्ज नाही',
     runwaySuffix: 'महिने बचत',
-    emiBanner: (n) => `⚠️ मागील ९० दिवसांत ${n} EMI चुकल्या — काय करावे यासाठी सूचना टॅब पहा.`,
+    emiBanner: (n) => `⚠️ मागील ९० दिवसांत ${n} EMI चुकल्या - काय करावे यासाठी सूचना टॅब पहा.`,
     weeklyRecordTitle: 'साप्ताहिक रोख प्रवाह नोंद',
     weeklyRecordSub: 'मागील ४ आठवड्यांचा इतिहास',
     inflowLabel: 'आवक',
@@ -332,7 +332,7 @@ export const L: Record<SupportedLang, Translations> = {
     noEntries: 'अद्याप कोणतीही नोंद जतन केलेली नाही.',
 
     recordEntryTitle: 'व्यवहार नोंद करा',
-    recordEntrySub: 'येथे केलेल्या नोंदी तुमची माहिती समृद्ध करतात — रोख विक्री डिजिटल नोंदवल्याने तुमची क्रेडिट प्रोफाइल बळकट होते.',
+    recordEntrySub: 'येथे केलेल्या नोंदी तुमची माहिती समृद्ध करतात - रोख विक्री डिजिटल नोंदवल्याने तुमची क्रेडिट प्रोफाइल बळकट होते.',
     newLedgerEntry: 'नवीन वही नोंद',
     transTypeLabel: 'व्यवहाराचा प्रकार *',
     amountLabel: 'रक्कम (₹) *',
@@ -417,7 +417,7 @@ export const L: Record<SupportedLang, Translations> = {
     missedEmiSuffix: 'మిస్సయినవి 90d',
     noLoan: 'రుణం లేదు',
     runwaySuffix: 'నెల్ల పొదుపు',
-    emiBanner: (n) => `⚠️ గత 90 రోజుల్లో ${n} EMIలు మిస్సయ్యాయి — సూచనల కోసం అలర్ట్స్ ట్యాబ్ చూడండి.`,
+    emiBanner: (n) => `⚠️ గత 90 రోజుల్లో ${n} EMIలు మిస్సయ్యాయి - సూచనల కోసం అలర్ట్స్ ట్యాబ్ చూడండి.`,
     weeklyRecordTitle: 'వారాంతపు నగదు ప్రవాహ రికార్డు',
     weeklyRecordSub: 'గత 4 వారాల చరిత్ర',
     inflowLabel: 'వచ్చినవి',
@@ -433,7 +433,7 @@ export const L: Record<SupportedLang, Translations> = {
     noEntries: 'ఇంకా ఎంట్రీలు ఏవీ నమోదు కాలేదు.',
 
     recordEntryTitle: 'లావాదేవీ ఎంట్రీని నమోదు చేయండి',
-    recordEntrySub: 'ఇక్కడ నమోదు చేసే ఎంట్రీలు మీ రికార్డును బలోపేతం చేస్తాయి — డిజిటల్‌గా నమోదు చేసే నగదు అమ్మకాలు మీ క్రెడిట్ ప్రొఫైల్‌ను పెంచుతాయి.',
+    recordEntrySub: 'ఇక్కడ నమోదు చేసే ఎంట్రీలు మీ రికార్డును బలోపేతం చేస్తాయి - డిజిటల్‌గా నమోదు చేసే నగదు అమ్మకాలు మీ క్రెడిట్ ప్రొఫైల్‌ను పెంచుతాయి.',
     newLedgerEntry: 'కొత్త ఖాతా ఎంట్రీ',
     transTypeLabel: 'లావాదేవీ రకం *',
     amountLabel: 'మొత్తం (₹) *',
