@@ -502,4 +502,48 @@ export async function getEvidenceDataProvenance(): Promise<EvidenceDataProvenanc
   return await apiClient.get<EvidenceDataProvenanceItem[]>("/evidence/data-provenance");
 }
 
+// ==========================================
+// Market Intelligence API Suite
+// ==========================================
+
+export interface MarketCategory {
+  sub_type_id: string;
+  sub_type: string;
+  sector: string;
+  typical_daily_turnover?: number;
+}
+
+export interface MarketRiskCard {
+  risk_type: string;
+  detail: string;
+  severity: "high" | "medium" | "low" | string;
+}
+
+export interface MarketChartPoint {
+  month: string;
+  price_index: number;
+  rainfall_mm: number;
+}
+
+export interface MarketIntelligenceDetail {
+  sub_type_id: string;
+  sub_type: string;
+  sector: string;
+  tracked_commodity: string;
+  price_trend_12m_pct: number;
+  productivity_outlook: string;
+  seasonal_pattern: string;
+  chart_data: MarketChartPoint[];
+  risks: MarketRiskCard[];
+}
+
+export async function fetchMarketCategories(): Promise<MarketCategory[]> {
+  return await apiClient.get<MarketCategory[]>("/market-intelligence/categories");
+}
+
+export async function fetchMarketIntelligence(subType?: string): Promise<MarketIntelligenceDetail> {
+  const params = subType ? { sub_type: subType } : {};
+  return await apiClient.get<MarketIntelligenceDetail>("/market-intelligence", { params });
+}
+
 export default api;
