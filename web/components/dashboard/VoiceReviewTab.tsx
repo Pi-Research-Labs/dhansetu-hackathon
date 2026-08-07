@@ -140,9 +140,9 @@ export default function VoiceReviewTab() {
   }
 
   return (
-    <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-hidden">
+    <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-visible lg:overflow-hidden">
       {/* Left panel: Queue list (Master) */}
-      <div className="lg:col-span-5 flex flex-col h-full min-h-0 overflow-hidden space-y-3 shrink-0">
+      <div className="lg:col-span-5 flex flex-col lg:h-full min-h-0 overflow-visible lg:overflow-hidden space-y-3 shrink-0">
         <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-3.5 py-2 rounded-xl flex items-center justify-between shrink-0">
           <div className="text-xs font-bold text-[#1A2016] flex items-center gap-1.5 uppercase tracking-wider">
             <Mic className="w-4 h-4 text-[#2E7D32]" />
@@ -168,7 +168,7 @@ export default function VoiceReviewTab() {
             </p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] space-y-2">
+          <div className="max-h-[40vh] lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] space-y-2">
             {queue.map((item) => {
               const itemId = item.extraction_id || item.voice_id || "";
               const isActive = itemId === selectedId;
@@ -230,7 +230,7 @@ export default function VoiceReviewTab() {
       </div>
 
       {/* Right panel: Detail Review Form (Detail) */}
-      <div className="lg:col-span-7 h-full min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] space-y-4">
+      <div className="lg:col-span-7 lg:h-full min-h-0 overflow-visible lg:overflow-y-auto pr-1 lg:[&::-webkit-scrollbar]:w-1.5 lg:[&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin] space-y-4">
         {!selectedItem ? (
           <div className="bg-white border border-[#E2E6D8] p-12 rounded-2xl text-center text-[#5F6656] text-xs h-full flex flex-col items-center justify-center gap-2 shadow-3xs">
             <Mic className="w-8 h-8 text-[#E2E6D8]" />
