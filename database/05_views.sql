@@ -102,7 +102,17 @@ SELECT
     ra.tier_cutoffs, ra.fusion_weights, ra.model_id, ra.rule_version,
     f.margin_gap_90d, f.cost_index_chg_90d, f.rev_index_chg_90d,
     f.dso_days, f.overdue_share, f.buyer_concentration,
-    f.zero_inflow_days_30d, f.digital_share, f.informal_debt,
+    f.zero_inflow_days_30d,
+    -- digital_share here is a trailing-90d average from daily_ledger, NOT
+    -- feature_snapshots.digital_share (which is a single most-recent-day
+    -- snapshot) - same recent_90d_digital_share pattern
+    -- v_merchant_payment_mix already uses, just window-safe against ra.as_of
+    -- rather than the panel's latest date, matching this view's own
+    -- point-in-time discipline (see emi180 below). Kept at this exact
+    -- position in the column list -- CREATE OR REPLACE VIEW can't reorder
+    -- existing columns, only append new ones at the end.
+    ROUND(digital90.digital_share_90d::numeric, 3)::double precision AS digital_share,
+    f.informal_debt,
     f.missed_emis_90d, f.thi_anomaly_90d, f.season_drop_3m,
     -- New columns appended at the end on purpose for CREATE OR REPLACE VIEW compatibility
     ra.net_buffer_days                                  AS savings_runway_days,
@@ -127,7 +137,14 @@ LEFT JOIN LATERAL (
               AND d.event_date > ra.as_of - 180) AS trailing_180d_emi
     FROM v_live_forecast lf
     WHERE lf.enterprise_id = ra.enterprise_id AND lf.horizon_days = 180
-) emi180 ON TRUE;
+) emi180 ON TRUE
+LEFT JOIN LATERAL (
+    SELECT AVG(d.digital_share) AS digital_share_90d
+    FROM daily_ledger d
+    WHERE d.enterprise_id = ra.enterprise_id
+      AND d.event_date > ra.as_of - 90
+      AND d.event_date <= ra.as_of
+) digital90 ON TRUE;
 
 -- Deepest point of the downside path = the shortfall, and the week it lands.
 CREATE OR REPLACE VIEW v_projected_shortfall AS
@@ -487,16 +504,123 @@ FROM scored
 ORDER BY enterprise_id, horizon_days;
 
 -- ===========================================================================
--- 13. SEVEN-WEEK NET INFLOW HEATMAP — net cash flow per ISO week, trailing
--- 7 weeks only (hardcoded window, unlike v_enterprise_weekly_cashflow's
--- caller-supplied one — this is a fixed, purpose-built data point, not a
--- general-purpose series). Built on top of v_enterprise_weekly_cashflow
--- rather than daily_ledger directly, so "a week" means the same thing in
--- both places. Flat {week, value} array — 7 cells, frontend lays it out.
+-- 13. NET INFLOW HEATMAP — net cash flow per ISO week, capped to a trailing
+-- 100-DAY pool here (~14 weeks + a few days' margin at the boundary — NOT
+-- 100 weeks; week_start rows are 7 days apart, so the cutoff is in days,
+-- not weeks. A prior version of this comment said "49-week pool" for a
+-- `- 49` cutoff, which was actually a 49-DAY / 7-week cap — silently
+-- capping the 14-week aggregate view to 7 rows). The API's `weeks` param
+-- (7 or 14 — the heatmap's two aggregate views) does the real windowing
+-- via LIMIT in get_net_inflow_heatmap, same pattern as
+-- v_enterprise_weekly_cashflow's caller-supplied window; this cap just
+-- needs to be wide enough to have 14 weeks available to LIMIT from. Built
+-- on top of v_enterprise_weekly_cashflow rather than daily_ledger
+-- directly, so "a week" means the same thing in both places. Flat
+-- {week, value} array, frontend lays it out.
 -- ===========================================================================
 
 CREATE OR REPLACE VIEW v_enterprise_net_inflow_heatmap AS
 SELECT enterprise_id, week_start, week_end, net AS net_inflow
 FROM v_enterprise_weekly_cashflow
-WHERE week_start > (SELECT MAX(week_start) FROM v_enterprise_weekly_cashflow) - 49
+WHERE week_start > (SELECT MAX(week_start) FROM v_enterprise_weekly_cashflow) - 100
 ORDER BY enterprise_id, week_start;
+
+-- ===========================================================================
+-- 14. ABSOLUTE ENTERPRISE LOCATIONS — enterprises.lat/lon are small WGS84
+-- degree offsets from the district centroid (district_geo), not usable as
+-- a real-world point on their own (same convention v_officer_worklist's
+-- km_from_centre and app/services/maps.get_enterprise_location rely on,
+-- the latter doing this exact sum for one enterprise at a time). This view
+-- does it for every enterprise: absolute lat/lon = district centroid +
+-- offset, in WGS84 decimal degrees, ready to plot directly.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_locations AS
+SELECT
+    e.enterprise_id,
+    e.proprietor_name,
+    e.business_name,
+    e.district_id,
+    e.district,
+    e.state,
+    g.lat + e.lat AS lat,
+    g.lon + e.lon AS lon
+FROM v_enterprises_safe e
+LEFT JOIN district_geo g ON g.district_id = e.district_id;
+
+-- ===========================================================================
+-- 15. MARKET INTELLIGENCE VIEWS
+-- Category dropdown, sector-level risk cards, commodity price series, and weather rainfall.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_market_intelligence_categories AS
+SELECT sub_type_id, sub_type, sector, typical_daily_turnover
+FROM sub_types
+ORDER BY sub_type_id;
+
+CREATE OR REPLACE VIEW v_market_risk_cards AS
+SELECT sector, risk_type, detail, severity
+FROM market_risk_cards
+ORDER BY sector, severity DESC;
+
+-- Dynamic 12-month chart data combining monthly commodity price index and rainfall
+CREATE OR REPLACE VIEW v_market_intelligence_chart AS
+WITH months AS (
+    SELECT generate_series(1, 12) AS month_num
+),
+weather_m AS (
+    SELECT EXTRACT(MONTH FROM obs_date)::int AS month_num,
+           ROUND(AVG(rainfall_mm)::numeric, 1) AS avg_rainfall_mm
+    FROM weather_daily
+    GROUP BY EXTRACT(MONTH FROM obs_date)
+),
+price_m AS (
+    SELECT c.commodity_id,
+           EXTRACT(MONTH FROM p.price_date)::int AS month_num,
+           ROUND(AVG(p.modal_price)::numeric, 1) AS avg_price_index
+    FROM mandi_prices p
+    JOIN commodities c USING (commodity_id)
+    GROUP BY c.commodity_id, EXTRACT(MONTH FROM p.price_date)
+)
+SELECT
+    st.sub_type_id,
+    st.sub_type,
+    st.sector,
+    m.month_num,
+    TO_CHAR(TO_DATE(m.month_num::text, 'MM'), 'Mon') AS month,
+    COALESCE(pm.avg_price_index, ROUND((c.base_price * (1 + c.seasonal_amplitude * SIN((m.month_num - c.seasonal_peak_month) * 0.5236)))::numeric, 1)) AS price_index,
+    COALESCE(wm.avg_rainfall_mm, 0) AS rainfall_mm
+FROM sub_types st
+CROSS JOIN months m
+LEFT JOIN commodities c ON (
+    (st.sector = 'DAIRY' AND c.commodity_id = 'CM01') OR
+    (st.sector = 'POULTRY' AND c.commodity_id = 'CM03') OR
+    (st.sector = 'HANDICRAFT' AND c.commodity_id = 'CM05') OR
+    (st.sector = 'FOODPROC' AND c.commodity_id = 'CM06') OR
+    (st.sector = 'RETAIL' AND c.commodity_id = 'CM08')
+)
+LEFT JOIN price_m pm ON pm.commodity_id = c.commodity_id AND pm.month_num = m.month_num
+LEFT JOIN weather_m wm ON wm.month_num = m.month_num
+ORDER BY st.sub_type_id, m.month_num;
+
+-- Dynamic market intelligence detail per sub_type
+CREATE OR REPLACE VIEW v_market_intelligence_detail AS
+SELECT
+    st.sub_type_id,
+    st.sub_type,
+    st.sector,
+    COALESCE(c.commodity || ' (' || c.unit || ')', st.sub_type || ' price index') AS tracked_commodity,
+    COALESCE(c.annual_trend_pct, 4.0) AS price_trend_12m_pct,
+    COALESCE(sec.failure_mode, 'Sector risk monitoring active') AS productivity_outlook,
+    'Peak seasonal demand in month ' || COALESCE(c.seasonal_peak_month, 10)::text || '; monsoon dip in Jul-Aug.' AS seasonal_pattern
+FROM sub_types st
+LEFT JOIN sectors sec ON sec.sector = st.sector
+LEFT JOIN commodities c ON (
+    (st.sector = 'DAIRY' AND c.commodity_id = 'CM01') OR
+    (st.sector = 'POULTRY' AND c.commodity_id = 'CM03') OR
+    (st.sector = 'HANDICRAFT' AND c.commodity_id = 'CM05') OR
+    (st.sector = 'FOODPROC' AND c.commodity_id = 'CM06') OR
+    (st.sector = 'RETAIL' AND c.commodity_id = 'CM08')
+);
+
+

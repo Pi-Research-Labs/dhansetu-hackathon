@@ -1,5 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Figtree:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+/* font-mono was unstyled, falling back to the browser's default monospace
+   stack (the "typewriter" look on every KPI card/stat across the app).
+   Retargeted to Figtree so all of them pick up a proper typeface without
+   touching every component that uses font-mono individually. */
+@theme {
+  --font-mono: 'Figtree', sans-serif;
+}
 
 :root {
   --background: #F4F5F0;

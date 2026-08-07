@@ -75,6 +75,8 @@ export interface TranslationDictionary {
     noAlerts: string;
     suggestedActions: string;
     marketIntelTab: string;
+    portfolioTab: string;
+    voiceReviewTab: string;
     creditHeadroom: string;
     headroomNote: (emi: number) => string;
     metrics: {
@@ -84,7 +86,55 @@ export interface TranslationDictionary {
       runway: string;
       dscr: string;
       missedEmi: string;
+      m3: string;
+      m6: string;
+      digital: string;
     };
+    noLoan: string;
+    proprietor: string;
+    id: string;
+    district: string;
+    riskTier: string;
+    bridgeHeadroom: string;
+    marginGap90d: string;
+    heatmapTitle: string;
+    heatmapTimeHorizon: string;
+    heatmapLoading: string;
+    heatmapWeeks: (weeks: number) => string;
+    heatmapNoData: string;
+    receivablesTitle: string;
+    totalBookValue: string;
+    outstandingBookValue: string;
+    writtenOff: string;
+    writeOffRatio: string;
+    highWriteOffBleed: (pct: number) => string;
+    colCounterparty: string;
+    colInvoices: string;
+    colTotal: string;
+    colOutstanding: string;
+    colWrittenOff: string;
+    colAvgDays: string;
+    colWorstDelay: string;
+    noReceivables: string;
+    loadingReceivables: string;
+    paymentMixTitle: string;
+    preferredChannel: string;
+    overallDistribution: string;
+    upiLabel: string;
+    walletLabel: string;
+    cashLabel: string;
+    trailing90DShift: string;
+    overallDigital: string;
+    recent90D: string;
+    recentCashShare: string;
+    shiftText: (pct: string) => string;
+    loadingPaymentMix: string;
+    heatmapStatus: string;
+    heatmapPositive: string;
+    heatmapNegative: string;
+    heatmapZero: string;
+    heatmapNetCashflow: string;
+    allMechanisms: string;
   };
   tiers: {
     GREEN: string;
@@ -93,6 +143,10 @@ export interface TranslationDictionary {
   };
   advice: Record<string, string>;
   flagTags: Record<string, string>;
+  mechanisms: Record<string, string>;
+  actionKeys: Record<string, string>;
+  sectors: Record<string, string>;
+  counterpartyTypes: Record<string, string>;
 }
 
 export const translations: Record<LanguageCode, TranslationDictionary> = {
@@ -171,6 +225,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       noAlerts: "No active risk warnings",
       suggestedActions: "Recommended Guidance Actions",
       marketIntelTab: "Market Intelligence",
+      portfolioTab: "My Portfolio",
+      voiceReviewTab: "Voice Review Queue",
       creditHeadroom: "Eligible Credit Headroom",
       headroomNote: (emi: number) => `Affordable at ≤₹${emi}/mo EMI · 24-month tenure pre-qualified`,
       metrics: {
@@ -180,12 +236,96 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         runway: "Savings Runway",
         dscr: "Projected DSCR",
         missedEmi: "Missed EMIs (90D)",
+        m3: "Next 3M net (proj.)",
+        m6: "Next 6M net (proj.)",
+        digital: "Digital visibility",
       },
+      noLoan: "no loan",
+      proprietor: "Proprietor",
+      id: "ID",
+      district: "District",
+      riskTier: "RISK TIER",
+      bridgeHeadroom: "Bridge Headroom",
+      marginGap90d: "90D Margin Gap",
+      heatmapTitle: "Net Cashflow Heatmap",
+      heatmapTimeHorizon: "Heatmap Time Horizon",
+      heatmapLoading: "Loading Heatmap...",
+      heatmapWeeks: (weeks: number) => `${weeks} Weeks`,
+      heatmapNoData: "No weekly cashflow data recorded for this enterprise.",
+      receivablesTitle: "Udhaar Book & Receivables Ageing",
+      totalBookValue: "Total Book Value",
+      outstandingBookValue: "Outstanding Book Value",
+      writtenOff: "Written Off",
+      writeOffRatio: "Write-Off Ratio",
+      highWriteOffBleed: (pct: number) => `High Write-Off Bleed Detected (${pct}%)`,
+      colCounterparty: "Counterparty Type",
+      colInvoices: "Invoices",
+      colTotal: "Total Amount",
+      colOutstanding: "Outstanding",
+      colWrittenOff: "Written Off",
+      colAvgDays: "Avg Days to Cash",
+      colWorstDelay: "Worst Delay",
+      noReceivables: "No recorded receivables or bad debts for this enterprise.",
+      loadingReceivables: "Loading Udhaar Book (Receivables)...",
+      paymentMixTitle: "Ledger Payment Channels & Digital Shift",
+      preferredChannel: "Channel",
+      overallDistribution: "Overall Payment Distribution",
+      upiLabel: "UPI",
+      walletLabel: "Wallet",
+      cashLabel: "Cash",
+      trailing90DShift: "Trailing 90D Digital Shift",
+      overallDigital: "Overall Digital",
+      recent90D: "Recent 90D",
+      recentCashShare: "Recent Cash Share",
+      shiftText: (pct: string) => `${pct}% shift`,
+      loadingPaymentMix: "Loading Payment Mix breakdown...",
+      heatmapStatus: "Status",
+      heatmapPositive: "Positive",
+      heatmapNegative: "Negative",
+      heatmapZero: "No activity",
+      heatmapNetCashflow: "Net Cashflow",
+      allMechanisms: "All Mechanisms",
     },
     tiers: {
       GREEN: "Stable",
-      AMBER: "Watchlist",
-      RED: "High Risk",
+      AMBER: "Watch",
+      RED: "Act Now",
+    },
+    mechanisms: {
+      margin_squeeze: "Margin squeeze",
+      working_capital_erosion: "Working capital erosion",
+      debt_overhang: "Debt overhang",
+      climate_shock: "Climate shock",
+      demand_trough: "Demand trough",
+      receivable_stretch: "Receivable stretch",
+    },
+    actionKeys: {
+      request_bridge_loan: "Request bridge loan",
+      defer_capex: "Defer capital expense",
+      prebook_input: "Pre-book input",
+      renegotiate_buyer_terms: "Renegotiate buyer terms",
+      diversify_buyer: "Diversify buyer",
+      collect_udhaar: "Collect udhaar",
+      stagger_batch: "Stagger batch",
+      restructure_emi: "Restructure EMI",
+      claim_scheme: "Claim scheme",
+      reduce_drawings: "Reduce drawings",
+      sell_slow_stock: "Sell slow stock",
+      on_track: "On track",
+    },
+    sectors: {
+      DAIRY: "Dairy",
+      POULTRY: "Poultry",
+      HANDICRAFT: "Handicrafts & handloom",
+      FOODPROC: "Food processing & agri-aggregation",
+      RETAIL: "Rural retail",
+    },
+    counterpartyTypes: {
+      cooperative: "Cooperative",
+      trader: "Trader",
+      exporter: "Exporter",
+      retailer: "Retailer",
+      village_credit: "Village credit",
     },
     advice: {
       repayment_stress: "Protect credit record: pay upcoming EMI first and contact bank for restructuring before missing another installment.",
@@ -282,6 +422,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       noAlerts: "कोई सक्रिय जोखिम चेतावनी नहीं",
       suggestedActions: "अनुशंसित मार्गदर्शन कार्यवाहियाँ",
       marketIntelTab: "बाज़ार जानकारी",
+      portfolioTab: "मेरा पोर्टफोलियो",
+      voiceReviewTab: "आवाज समीक्षा कतार",
       creditHeadroom: "अतिरिक्त ऋण क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/माह EMI पर वहनीय · 24-माह अवधि पूर्व-पात्र`,
       metrics: {
@@ -291,12 +433,96 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         runway: "बचत अवधि",
         dscr: "अनुमानित DSCR",
         missedEmi: "चूकी हुई EMI (90 दिन)",
+        m3: "अगले 3 माह का शुद्ध (अनुमानित)",
+        m6: "अगले 6 माह का शुद्ध (अनुमानित)",
+        digital: "डिजिटल दृश्यता",
       },
+      noLoan: "कोई ऋण नहीं",
+      proprietor: "प्रोप्राइटर",
+      id: "आईडी",
+      district: "ज़िला",
+      riskTier: "जोखिम स्तर",
+      bridgeHeadroom: "ब्रिज हेडरूम",
+      marginGap90d: "90D मार्जिन अंतर",
+      heatmapTitle: "नकदी प्रवाह हीटमैप",
+      heatmapTimeHorizon: "हीटमैप समय सीमा",
+      heatmapLoading: "हीटमैप लोड हो रहा है...",
+      heatmapWeeks: (weeks: number) => `${weeks} सप्ताह`,
+      heatmapNoData: "इस उद्यम के लिए कोई साप्ताहिक नकदी प्रवाह डेटा दर्ज नहीं है।",
+      receivablesTitle: "उधार बही और प्राप्य आयु (उधार बुक)",
+      totalBookValue: "कुल पुस्तक मूल्य (उधार)",
+      outstandingBookValue: "बकाया मूल्य",
+      writtenOff: "बट्टा खाता (लिखित बंद)",
+      writeOffRatio: "बट्टा अनुपात",
+      highWriteOffBleed: (pct: number) => `उच्च बट्टा हानि पाई गई (${pct}%)`,
+      colCounterparty: "लेनदार का प्रकार",
+      colInvoices: "इनवॉइस संख्या",
+      colTotal: "कुल राशि",
+      colOutstanding: "बकाया",
+      colWrittenOff: "लिखित बंद (बट्टा)",
+      colAvgDays: "औसत भुगतान दिन",
+      colWorstDelay: "अधिकतम देरी",
+      noReceivables: "इस उद्यम के लिए कोई प्राप्य या खराब ऋण दर्ज नहीं है।",
+      loadingReceivables: "उधार बुक (प्राप्य) लोड हो रहा है...",
+      paymentMixTitle: "लेजर भुगतान चैनल और डिजिटल बदलाव",
+      preferredChannel: "चैनल",
+      overallDistribution: "समग्र भुगतान वितरण",
+      upiLabel: "UPI",
+      walletLabel: "वॉलेट",
+      cashLabel: "नकद",
+      trailing90DShift: "पिछले 90 दिनों में डिजिटल बदलाव",
+      overallDigital: "कुल डिजिटल",
+      recent90D: "हालिया 90 दिन",
+      recentCashShare: "हालिया नकद हिस्सा",
+      shiftText: (pct: string) => `${pct}% बदलाव`,
+      loadingPaymentMix: "पेमेंट मिक्स विवरण लोड हो रहा है...",
+      heatmapStatus: "स्थिति",
+      heatmapPositive: "सकारात्मक",
+      heatmapNegative: "नकारात्मक",
+      heatmapZero: "कोई गतिविधि नहीं",
+      heatmapNetCashflow: "शुद्ध नकदी प्रवाह",
+      allMechanisms: "सभी कारण",
     },
     tiers: {
       GREEN: "स्थिर",
       AMBER: "निगरानी",
       RED: "उच्च जोखिम",
+    },
+    mechanisms: {
+      margin_squeeze: "मार्जिन संकुचन",
+      working_capital_erosion: "कार्यशील पूंजी क्षरण",
+      debt_overhang: "ऋण भार",
+      climate_shock: "मौसम झटका",
+      demand_trough: "मांग में गिरावट",
+      receivable_stretch: "प्राप्य राशियों में देरी",
+    },
+    actionKeys: {
+      request_bridge_loan: "ब्रिज लोन का आवेदन करें",
+      defer_capex: "पूंजीगत खर्च टालें",
+      prebook_input: "इनपुट पहले से बुक करें",
+      renegotiate_buyer_terms: "खरीदार की शर्तों पर पुनः बातचीत करें",
+      diversify_buyer: "खरीदार आधार बढ़ाएँ",
+      collect_udhaar: "उधार वसूल करें",
+      stagger_batch: "बैच को टालें",
+      restructure_emi: "EMI पुनर्गठित करें",
+      claim_scheme: "योजना का लाभ लें",
+      reduce_drawings: "घरेलू निकासी घटाएँ",
+      sell_slow_stock: "धीमे स्टॉक को बेचें",
+      on_track: "स्थिति सामान्य",
+    },
+    sectors: {
+      DAIRY: "डेयरी",
+      POULTRY: "पोल्ट्री",
+      HANDICRAFT: "हस्तशिल्प एवं हथकरघा",
+      FOODPROC: "खाद्य प्रसंस्करण एवं कृषि-एकत्रीकरण",
+      RETAIL: "ग्रामीण खुदरा",
+    },
+    counterpartyTypes: {
+      cooperative: "सहकारी समिति",
+      trader: "व्यापारी",
+      exporter: "निर्यातक",
+      retailer: "खुदरा विक्रेता",
+      village_credit: "गांव उधार",
     },
     advice: {
       repayment_stress: "क्रेडिट रिकॉर्ड बचाएँ: पहले अगली EMI चुकाएँ और किस्त चूकने से पहले बैंक से पुनर्गठन पर बात करें।",
@@ -393,6 +619,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       noAlerts: "సక్రియ హెచ్చరికలు లేవు",
       suggestedActions: "సూచించిన చర్యలు",
       marketIntelTab: "మార్కెట్ సమాచారం",
+      portfolioTab: "నా పోర్ట్‌ఫోలియో",
+      voiceReviewTab: "వాయిస్ సమీక్ష క్యూ",
       creditHeadroom: "అదనపు రుణ సామర్థ్యం",
       headroomNote: (emi: number) => `≤₹${emi}/నెల EMI వద్ద భరించగలిగేది · 24 నెలల కాలపరిమితి`,
       metrics: {
@@ -402,12 +630,96 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         runway: "పొదుపు వ్యవధి",
         dscr: "అంచనా DSCR",
         missedEmi: "తప్పిన EMIలు (90 రోజులు)",
+        m3: "తరువాతి 3 నెలల నికర (అంచనా)",
+        m6: "తరువాతి 6 నెలల నికర (అంచనా)",
+        digital: "డిజిటల్ దృశ్యత",
       },
+      noLoan: "రుణం లేదు",
+      proprietor: "యజమాని (ప్రోప్రైటర్)",
+      id: "ఐడీ",
+      district: "జిల్లా",
+      riskTier: "రిస్క్ వర్గం",
+      bridgeHeadroom: "బ్రిడ్జ్ హెడ్‌రూమ్",
+      marginGap90d: "90D మార్జిన్ నిష్పత్తి",
+      heatmapTitle: "నికర నగదు ప్రవాహ హీట్‌మ్యాప్",
+      heatmapTimeHorizon: "హీట్‌మ్యాప్ సమయ పరిమితి",
+      heatmapLoading: "హీట్‌మ్యాప్ లోడ్ అవుతోంది...",
+      heatmapWeeks: (weeks: number) => `${weeks} వారాలు`,
+      heatmapNoData: "ఈ సంస్థ కోసం వారపు నగదు ప్రవాహ డేటా నమోదు కాలేదు.",
+      receivablesTitle: "ఉధార్ బుక్ & వసూళ్లు వయస్సు విశ్లేషణ",
+      totalBookValue: "మొత్తం పుస్తక విలువ",
+      outstandingBookValue: "బాకీ ఉన్న విలువ",
+      writtenOff: "రద్దు చేయబడినవి",
+      writeOffRatio: "రద్దు నిష్పत्ति",
+      highWriteOffBleed: (pct: number) => `అధిక నష్టాలు గుర్తించబడ్డాయి (${pct}%)`,
+      colCounterparty: "కౌంటర్ పార్టీ రకం",
+      colInvoices: "ఇన్వాయిస్లు",
+      colTotal: "మొత్తం నగదు",
+      colOutstanding: "బాకీ ఉన్నది",
+      colWrittenOff: "రద్దు చేయబడినది",
+      colAvgDays: "వసూలు సगటు రోజులు",
+      colWorstDelay: "గరిష్ట ఆలస్యం",
+      noReceivables: "ఈ సంస్థకు ఎటువంటి బాకీలు లేదా నష్టాలు నమోదు కాలేదు.",
+      loadingReceivables: "ఉధార్ బుక్ (వసూళ్లు) లోడ్ అవుతోంది...",
+      paymentMixTitle: "లెడ్జర్ చెల్లింపు మార్గాలు & డిజిటల్ మార్పు",
+      preferredChannel: "ఛానల్",
+      overallDistribution: "మొత్తం చెల్లింపు పంపిణీ",
+      upiLabel: "UPI",
+      walletLabel: "వాలెట్",
+      cashLabel: "నగదు",
+      trailing90DShift: "గడిచిన 90 రోజుల డిజిటల్ మార్పు",
+      overallDigital: "మొత్తం డిజిటల్",
+      recent90D: "ఇటీవలి 90 రోజులు",
+      recentCashShare: "ఇటీవలి నగదు వాటా",
+      shiftText: (pct: string) => `${pct}% మార్పు`,
+      loadingPaymentMix: "చెల్లింపుల విభజన లోడ్ అవుతోంది...",
+      heatmapStatus: "స్థితి",
+      heatmapPositive: "సానుకూలం",
+      heatmapNegative: "ప్రతికూలం",
+      heatmapZero: "కార్యకలాపం లేదు",
+      heatmapNetCashflow: "నికర నగదు ప్రవాహం",
+      allMechanisms: "అన్ని కారణాలు",
     },
     tiers: {
       GREEN: "స్థిరం",
       AMBER: "గమనించండి",
       RED: "అధిక రిస్క్",
+    },
+    mechanisms: {
+      margin_squeeze: "మార్జిన్ ఒత్తిడి",
+      working_capital_erosion: "వర్కింగ్ కేపిటల్ క్షీణత",
+      debt_overhang: "అప్పుల భారం",
+      climate_shock: "వాతావరణ షాక్",
+      demand_trough: "డిమాండ్ పతనం",
+      receivable_stretch: "వసూళ్ల ఆలస్యం",
+    },
+    actionKeys: {
+      request_bridge_loan: "బ్రిడ్జ్ లోన్ కోసం అభ్యర్థించండి",
+      defer_capex: "మూలధన వ్యయాన్ని వాయిదా వేయండి",
+      prebook_input: "ఇన్‌పుట్‌ను ముందుగా బుక్ చేయండి",
+      renegotiate_buyer_terms: "కొనుగోలుదారు నిబంధనలను తిరిగి చర్చించండి",
+      diversify_buyer: "కొనుగోలుదారులను విస్తరించండి",
+      collect_udhaar: "ఉధార్ వసూలు చేయండి",
+      stagger_batch: "బ్యాచ్‌ను వాయిదా వేయండి",
+      restructure_emi: "EMI పునర్‌వ్యవస్థీకరించండి",
+      claim_scheme: "పథకం ప్రయోజనం పొందండి",
+      reduce_drawings: "ఇంటి ఖర్చులు తగ్గించండి",
+      sell_slow_stock: "నెమ్మదిగా అమ్ముడైన స్టాక్‌ను విక్రయించండి",
+      on_track: "సక్రమంగా ఉంది",
+    },
+    sectors: {
+      DAIRY: "పాడి పరిశ్రమ",
+      POULTRY: "పౌల్ట్రీ",
+      HANDICRAFT: "హస్తకళలు & చేనేత",
+      FOODPROC: "ఆహార ప్రాసెసింగ్ & వ్యవసాయ సమీకరణ",
+      RETAIL: "గ్రామీణ రిటైల్",
+    },
+    counterpartyTypes: {
+      cooperative: "సహకార సంఘం",
+      trader: "వ్యాపారి",
+      exporter: "ఎగుమతిదారు",
+      retailer: "రిటైలర్",
+      village_credit: "గ్రామ అప్పు",
     },
     advice: {
       repayment_stress: "క్రెడిట్ రికార్డును కాపాడుకోండి: ముందుగా EMI చెల్లించండి, లేకపోతే బ్యాంకుతో మాట్లాడండి.",
@@ -504,6 +816,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       noAlerts: "सक्रिय सूचना नाहीत",
       suggestedActions: "सुचवलेल्या कृती",
       marketIntelTab: "बाजार माहिती",
+      portfolioTab: "माझा पोर्टफोलिओ",
+      voiceReviewTab: "व्हॉइस पुनरावलोकन रांग",
       creditHeadroom: "अतिरिक्त कर्ज क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/महिना EMI वर परवडणारे · २४ महिने मुदत`,
       metrics: {
@@ -513,12 +827,96 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         runway: "बचत कालावधी",
         dscr: "अंदाजित DSCR",
         missedEmi: "चुकलेल्या EMI (९० दिवस)",
+        m3: "पुढील ३ महिने निव्वळ (अंदाजित)",
+        m6: "पुढील ६ महिने निव्वळ (अंदाजित)",
+        digital: "डिजिटल दृश्यमानता",
       },
+      noLoan: "कर्ज नाही",
+      proprietor: "प्रोप्रायटर",
+      id: "आयडी",
+      district: "जिल्हा",
+      riskTier: "जोखीम स्तर",
+      bridgeHeadroom: "ब्रिज हेडरूम",
+      marginGap90d: "90D मार्जिन फरक",
+      heatmapTitle: "निव्वळ रोख प्रवाह हीटमॅप",
+      heatmapTimeHorizon: "हीटमॅप कालावधी",
+      heatmapLoading: "हीटमॅप लोड होत आहे...",
+      heatmapWeeks: (weeks: number) => `${weeks} आठवडे`,
+      heatmapNoData: "या उद्योगासाठी साप्ताहिक रोख प्रवाह डेटा नोंदवलेला नाही.",
+      receivablesTitle: "उधारी खाते आणि येणे रक्कम विश्लेषण",
+      totalBookValue: "एकूण उधारी मूल्य",
+      outstandingBookValue: "थकीत मूल्य",
+      writtenOff: "रद्द केलेले (बुडीत)",
+      writeOffRatio: "बुडीत प्रमाण",
+      highWriteOffBleed: (pct: number) => `उच्च बुडीत प्रमाण आढळले (${pct}%)`,
+      colCounterparty: "व्यापारी/ग्राहक प्रकार",
+      colInvoices: "इनव्हॉइस संख्या",
+      colTotal: "एकूण रक्कम",
+      colOutstanding: "थकीत रक्कम",
+      colWrittenOff: "बुडीत रक्कम",
+      colAvgDays: "सरासरी वसुली दिवस",
+      colWorstDelay: "कमाल विलंब",
+      noReceivables: "या उद्योगासाठी कोणतीही येणे रक्कम किंवा बुडीत कर्ज नोंदवलेले नाही।",
+      loadingReceivables: "उधारी खाते (येणे रक्कम) लोड होत आहे...",
+      paymentMixTitle: "खातेवही पेमेंट चॅनेल्स आणि डिजिटल शिफ्ट",
+      preferredChannel: "चॅनेल",
+      overallDistribution: "एकूण पेमेंट वितरण",
+      upiLabel: "UPI",
+      walletLabel: "वॉलेट",
+      cashLabel: "रोख",
+      trailing90DShift: "मागील ९० दिवसांतील डिजिटल शिफ्ट",
+      overallDigital: "एकूण डिजिटल",
+      recent90D: "अलीकडील ९० दिवस",
+      recentCashShare: "अलीकडील रोख वाटा",
+      shiftText: (pct: string) => `${pct}% बदल`,
+      loadingPaymentMix: "पेमेंट मिक्स तपशील लोड होत आहे...",
+      heatmapStatus: "स्थिती",
+      heatmapPositive: "सकारात्मक",
+      heatmapNegative: "नकारात्मक",
+      heatmapZero: "कोणतीही हालचाल नाही",
+      heatmapNetCashflow: "निव्वळ रोख प्रवाह",
+      allMechanisms: "सर्व कारणे",
     },
     tiers: {
       GREEN: "स्थिर",
       AMBER: "लक्ष ठेवा",
       RED: "उच्च जोखीम",
+    },
+    mechanisms: {
+      margin_squeeze: "मार्जिन दबाव",
+      working_capital_erosion: "खेळते भांडवल क्षरण",
+      debt_overhang: "कर्जाचा भार",
+      climate_shock: "हवामान धोका",
+      demand_trough: "मागणीतील घट",
+      receivable_stretch: "येणे रकमेत विलंब",
+    },
+    actionKeys: {
+      request_bridge_loan: "ब्रिज लोनसाठी अर्ज करा",
+      defer_capex: "भांडवली खर्च पुढे ढकला",
+      prebook_input: "इनपुट आधीच बुक करा",
+      renegotiate_buyer_terms: "खरेदीदाराच्या अटींवर पुन्हा बोलणी करा",
+      diversify_buyer: "खरेदीदार वाढवा",
+      collect_udhaar: "उधारी वसूल करा",
+      stagger_batch: "बॅच पुढे ढकला",
+      restructure_emi: "EMI पुनर्रचना करा",
+      claim_scheme: "योजनेचा लाभ घ्या",
+      reduce_drawings: "घरगुती खर्च कमी करा",
+      sell_slow_stock: "साचलेला माल विका",
+      on_track: "स्थिती सामान्य आहे",
+    },
+    sectors: {
+      DAIRY: "दुग्धव्यवसाय",
+      POULTRY: "कुक्कुटपालन",
+      HANDICRAFT: "हस्तकला व हातमाग",
+      FOODPROC: "अन्न प्रक्रिया व कृषी-एकत्रीकरण",
+      RETAIL: "ग्रामीण किरकोळ विक्री",
+    },
+    counterpartyTypes: {
+      cooperative: "सहकारी संस्था",
+      trader: "व्यापारी",
+      exporter: "निर्यातदार",
+      retailer: "किरकोळ विक्रेता",
+      village_credit: "गाव उधारी",
     },
     advice: {
       repayment_stress: "क्रेडिट रेकॉर्ड सांभाळा: आधी EMI भरा व बँकेशी पुनर्रचनेबाबत बोला.",

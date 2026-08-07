@@ -15,23 +15,27 @@ export default function PortfolioMetrics({
   t,
 }: PortfolioMetricsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="bg-white border border-[#E2E6D8] p-3.5 rounded-xl shadow-2xs">
-        <div className="text-[11px] text-[#5F6656] flex items-center gap-1">
-          <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32]" />
-          <span>{t.dash.bankablePipeline}</span>
+    <div className="grid grid-cols-2 gap-2 shrink-0">
+      <div className="bg-white border border-[#E2E6D8] p-2 px-3 rounded-lg flex items-center justify-between shadow-3xs">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32] shrink-0" />
+          <span className="text-[10px] font-semibold text-[#5F6656] truncate">
+            {t.dash.bankablePipeline}
+          </span>
         </div>
-        <div className="text-lg font-bold text-[#2E7D32] font-mono mt-1">
-          {bankableCount} Units
+        <div className="text-sm font-bold text-[#2E7D32] font-mono shrink-0 ml-1">
+          {bankableCount}
         </div>
       </div>
-      <div className="bg-white border border-[#E2E6D8] p-3.5 rounded-xl shadow-2xs">
-        <div className="text-[11px] text-[#5F6656] flex items-center gap-1">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#C62828]" />
-          <span>{t.dash.atRiskExposure}</span>
+      <div className="bg-white border border-[#E2E6D8] p-2 px-3 rounded-lg flex items-center justify-between shadow-3xs">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <AlertTriangle className="w-3.5 h-3.5 text-[#C62828] shrink-0" />
+          <span className="text-[10px] font-semibold text-[#5F6656] truncate">
+            {t.dash.atRiskExposure}
+          </span>
         </div>
-        <div className="text-lg font-bold text-[#C62828] font-mono mt-1">
-          {atRiskCount} Units
+        <div className="text-sm font-bold text-[#C62828] font-mono shrink-0 ml-1">
+          {atRiskCount}
         </div>
       </div>
     </div>

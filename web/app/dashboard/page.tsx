@@ -19,16 +19,10 @@ import {
 } from "@/utils/api-config";
 import { worklistItemToEnterprise, enterpriseDetailsToEnterprise } from "@/utils/worklistAdapter";
 import { Enterprise } from "@/types/enterprise";
-import PortfolioMetrics from "@/components/dashboard/PortfolioMetrics";
-import SearchAndFilters from "@/components/dashboard/SearchAndFilters";
-import WorklistList from "@/components/dashboard/WorklistList";
-import OfficerVisitOutcomeBar from "@/components/dashboard/OfficerVisitOutcomeBar";
-import EnterpriseDetailCard from "@/components/dashboard/EnterpriseDetailCard";
-import FinancialChart from "@/components/dashboard/FinancialChart";
-import ReceivablesCard from "@/components/dashboard/ReceivablesCard";
-import PaymentMixCard from "@/components/dashboard/PaymentMixCard";
-import RiskAndAdvicePanel from "@/components/dashboard/RiskAndAdvicePanel";
-import { Lock, TrendingUp, Loader2 } from "lucide-react";
+import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
+import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
+import VoiceReviewTab from "@/components/dashboard/VoiceReviewTab";
+import { Lock } from "lucide-react";
 
 export default function OfficerDashboard() {
   const router = useRouter();
@@ -45,6 +39,7 @@ export default function OfficerDashboard() {
   const [segmentFilter, setSegmentFilter] = useState("ALL");
   const [tierFilter, setTierFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"portfolio" | "market" | "voice">("portfolio");
 
   // Detailed API States for selected enterprise
   const [enterpriseDetails, setEnterpriseDetails] = useState<EnterpriseDetailsResponse | null>(null);
@@ -143,6 +138,15 @@ export default function OfficerDashboard() {
     return Array.from(new Set(worklistItems.map((item) => item.sub_type).filter(Boolean)));
   }, [worklistItems]);
 
+  // Tier counts mapping for search and filter buttons
+  const tierCounts = useMemo(() => {
+    return worklistItems.reduce((acc, item) => {
+      const tier = item.risk_tier || "AMBER";
+      acc[tier] = (acc[tier] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [worklistItems]);
+
   // Filter worklist items based on search and filters
   const filteredWorklistItems = useMemo(() => {
     return worklistItems.filter((item) => {
@@ -232,33 +236,74 @@ export default function OfficerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F5F0] text-[#1A2016] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-[calc(100vh-62px)] lg:h-[calc(100vh-62px)] lg:max-h-[calc(100vh-62px)] bg-[#F4F5F0] text-[#1A2016] p-4 lg:p-5 flex flex-col overflow-y-auto lg:overflow-hidden">
       {/* Top Title Bar */}
-      <div className="max-w-6xl mx-auto mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2E6D8] pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32]"></span>
-            <h1 className="text-xl font-extrabold text-[#1A2016] font-['Poppins',sans-serif]">
+      <div className="w-full max-w-7xl mx-auto mb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-[#E2E6D8] pb-2 shrink-0">
+        <div className="flex items-baseline gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#2E7D32]"></span>
+            <h1 className="text-xs sm:text-sm font-extrabold text-[#1A2016] font-['Poppins',sans-serif] tracking-tight">
               {t.dash.title}
             </h1>
           </div>
-          <p className="text-xs text-[#5F6656] mt-0.5">{t.dash.tagline}</p>
+          <span className="text-[10px] text-[#5F6656] hidden sm:inline">| {t.dash.tagline}</span>
         </div>
 
-        {/* Backtest Stat Badge */}
-        <div className="bg-white border border-[#E2E6D8] px-3.5 py-1.5 rounded-xl text-xs font-mono font-semibold text-[#2E7D32] shadow-2xs flex items-center gap-1.5">
-          <TrendingUp className="w-4 h-4 text-[#2E7D32]" />
-          <span>{t.dash.backtestStat(29.2, 57.5)}</span>
+        {/* Navigation Tabs */}
+        <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-0.5 rounded-lg flex items-center shadow-2xs shrink-0 w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab("portfolio")}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+              activeTab === "portfolio"
+                ? "bg-[#2E7D32] text-white shadow-xs"
+                : "text-[#5F6656] hover:text-[#1A2016]"
+            }`}
+          >
+            {t.dash.portfolioTab || "My Portfolio"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("market")}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+              activeTab === "market"
+                ? "bg-[#2E7D32] text-white shadow-xs"
+                : "text-[#5F6656] hover:text-[#1A2016]"
+            }`}
+          >
+            {t.dash.marketIntelTab || "Market Intel"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("voice")}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+              activeTab === "voice"
+                ? "bg-[#2E7D32] text-white shadow-xs"
+                : "text-[#5F6656] hover:text-[#1A2016]"
+            }`}
+          >
+            {t.dash.voiceReviewTab || "Voice Review"}
+          </button>
         </div>
       </div>
 
-      {/* Dashboard Main Grid */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Sidebar: Officer Worklist & Metrics */}
-        <div className="lg:col-span-4 space-y-4">
-          <PortfolioMetrics bankableCount={bankableCount} atRiskCount={atRiskCount} t={t} />
-
-          <SearchAndFilters
+      {/* Tab Render Switch */}
+      <div className="w-full max-w-7xl mx-auto flex-1 min-h-0 overflow-visible lg:overflow-hidden flex flex-col">
+        {activeTab === "portfolio" ? (
+          <MyPortfolioTab
+            filteredWorklistItems={filteredWorklistItems}
+            selectedId={selectedId}
+            setSelectedId={setSelectedId}
+            selectedEnterprise={selectedEnterprise}
+            enterpriseDetails={enterpriseDetails}
+            loadingWorklist={loadingWorklist}
+            loadingDetails={loadingDetails}
+            worklistError={worklistError}
+            receivables={receivables}
+            paymentMix={paymentMix}
+            riskPrediction={riskPrediction}
+            bankableCount={bankableCount}
+            atRiskCount={atRiskCount}
             search={search}
             setSearch={setSearch}
             districtFilter={districtFilter}
@@ -269,66 +314,14 @@ export default function OfficerDashboard() {
             setTierFilter={setTierFilter}
             districts={districts}
             segments={segments}
+            tierCounts={tierCounts}
             t={t}
           />
-
-          <WorklistList
-            items={filteredWorklistItems}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            t={t}
-            isLoading={loadingWorklist}
-            error={worklistError}
-          />
-        </div>
-
-        {/* Right Detail Panel */}
-        <div className="lg:col-span-8 space-y-5">
-          {/* Top Officer Field Visit Outcome Checkbar */}
-          <OfficerVisitOutcomeBar
-            enterprise={selectedEnterprise}
-            latestAlert={enterpriseDetails?.latest_alert}
-          />
-
-          {/* Main Details Loading Animation or Content */}
-          {loadingDetails ? (
-            <div className="bg-white border border-[#E2E6D8] p-12 rounded-2xl shadow-2xs text-center flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 text-[#2E7D32] animate-spin" />
-              <div>
-                <h4 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-                  Loading Enterprise Analytics...
-                </h4>
-                <p className="text-[11px] text-[#5F6656] mt-1 font-mono">
-                  Fetching GCP Maps Static Tile, Udhaar Receivables & Live Forecasts
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <EnterpriseDetailCard
-                card={enterpriseDetails?.card}
-                enterprise={selectedEnterprise}
-              />
-
-              <FinancialChart
-                enterprise={selectedEnterprise}
-                liveForecast={enterpriseDetails?.live_forecast}
-                t={t}
-              />
-
-              <ReceivablesCard items={receivables} isLoading={loadingDetails} />
-
-              <PaymentMixCard data={paymentMix} isLoading={loadingDetails} />
-
-              <RiskAndAdvicePanel
-                enterprise={selectedEnterprise}
-                latestAlert={enterpriseDetails?.latest_alert}
-                prediction={riskPrediction}
-                t={t}
-              />
-            </>
-          )}
-        </div>
+        ) : activeTab === "market" ? (
+          <MarketIntelligenceTab />
+        ) : (
+          <VoiceReviewTab />
+        )}
       </div>
     </div>
   );
