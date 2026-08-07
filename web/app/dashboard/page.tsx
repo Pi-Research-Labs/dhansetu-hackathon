@@ -236,25 +236,25 @@ export default function OfficerDashboard() {
   }
 
   return (
-    <div className="h-[calc(100vh-62px)] bg-[#F4F5F0] text-[#1A2016] p-4 lg:p-5 flex flex-col overflow-hidden">
+    <div className="min-h-[calc(100vh-62px)] lg:h-[calc(100vh-62px)] lg:max-h-[calc(100vh-62px)] bg-[#F4F5F0] text-[#1A2016] p-4 lg:p-5 flex flex-col overflow-y-auto lg:overflow-hidden">
       {/* Top Title Bar */}
-      <div className="w-full max-w-7xl mx-auto mb-2 flex items-center justify-between gap-2 border-b border-[#E2E6D8] pb-1.5 shrink-0">
+      <div className="w-full max-w-7xl mx-auto mb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-[#E2E6D8] pb-2 shrink-0">
         <div className="flex items-baseline gap-2">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#2E7D32]"></span>
-            <h1 className="text-sm font-extrabold text-[#1A2016] font-['Poppins',sans-serif] tracking-tight">
+            <h1 className="text-xs sm:text-sm font-extrabold text-[#1A2016] font-['Poppins',sans-serif] tracking-tight">
               {t.dash.title}
             </h1>
           </div>
           <span className="text-[10px] text-[#5F6656] hidden sm:inline">| {t.dash.tagline}</span>
         </div>
 
-        {/* Navigation Tabs (Replaces Backtest Stat Badge) */}
-        <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-0.5 rounded-lg flex items-center shadow-2xs self-start md:self-center shrink-0">
+        {/* Navigation Tabs */}
+        <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-0.5 rounded-lg flex items-center shadow-2xs shrink-0 w-full md:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab("portfolio")}
-            className={`px-3 py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
               activeTab === "portfolio"
                 ? "bg-[#2E7D32] text-white shadow-xs"
                 : "text-[#5F6656] hover:text-[#1A2016]"
@@ -265,18 +265,18 @@ export default function OfficerDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab("market")}
-            className={`px-3 py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
               activeTab === "market"
                 ? "bg-[#2E7D32] text-white shadow-xs"
                 : "text-[#5F6656] hover:text-[#1A2016]"
             }`}
           >
-            {t.dash.marketIntelTab || "Market Intelligence"}
+            {t.dash.marketIntelTab || "Market Intel"}
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("voice")}
-            className={`px-3 py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
               activeTab === "voice"
                 ? "bg-[#2E7D32] text-white shadow-xs"
                 : "text-[#5F6656] hover:text-[#1A2016]"
@@ -288,7 +288,7 @@ export default function OfficerDashboard() {
       </div>
 
       {/* Tab Render Switch */}
-      <div className="w-full max-w-7xl mx-auto flex-1 min-h-0 overflow-hidden flex flex-col">
+      <div className="w-full max-w-7xl mx-auto flex-1 min-h-0 overflow-visible lg:overflow-hidden flex flex-col">
         {activeTab === "portfolio" ? (
           <MyPortfolioTab
             filteredWorklistItems={filteredWorklistItems}

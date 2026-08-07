@@ -78,9 +78,9 @@ export default function MyPortfolioTab({
   t,
 }: MyPortfolioTabProps) {
   return (
-    <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-hidden">
+    <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-visible lg:overflow-hidden">
       {/* Left Sidebar: Officer Worklist & Metrics */}
-      <div className="lg:col-span-5 flex flex-col h-full min-h-0 overflow-hidden space-y-3 shrink-0">
+      <div className="lg:col-span-5 flex flex-col lg:h-full min-h-0 overflow-visible lg:overflow-hidden space-y-3 shrink-0">
         <PortfolioMetrics bankableCount={bankableCount} atRiskCount={atRiskCount} t={t} />
 
         <SearchAndFilters
@@ -98,7 +98,7 @@ export default function MyPortfolioTab({
           t={t}
         />
 
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
+        <div className="max-h-[40vh] lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
           <WorklistList
             items={filteredWorklistItems}
             selectedId={selectedId}
@@ -111,7 +111,7 @@ export default function MyPortfolioTab({
       </div>
 
       {/* Right Detail Panel - Independent vertical scrolling */}
-      <div className="lg:col-span-7 h-full min-h-0 overflow-y-auto pr-1 space-y-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
+      <div className="lg:col-span-7 lg:h-full min-h-0 overflow-visible lg:overflow-y-auto pr-1 space-y-4 lg:[&::-webkit-scrollbar]:w-1.5 lg:[&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin]">
         {!selectedEnterprise ? (
           <div className="bg-white border border-[#E2E6D8] p-12 rounded-2xl shadow-3xs text-center flex flex-col items-center justify-center gap-2 h-full text-[#5F6656]">
             <Building2 className="w-8 h-8 text-[#E2E6D8] shrink-0" />

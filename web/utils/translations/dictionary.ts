@@ -288,8 +288,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     },
     tiers: {
       GREEN: "Stable",
-      AMBER: "Watchlist",
-      RED: "High Risk",
+      AMBER: "Watch",
+      RED: "Act Now",
     },
     mechanisms: {
       margin_squeeze: "Margin squeeze",
