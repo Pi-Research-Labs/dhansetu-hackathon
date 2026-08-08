@@ -1,424 +1,315 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  getVoiceReviewQueue,
-  postVoiceReview,
-  VoiceReviewQueueItem,
-  PostVoiceReviewPayload,
-} from "@/utils/api-config";
+import React, { useState, useEffect, useMemo } from "react";
+import { getVoiceReviewQueue, VoiceReviewQueueItem } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
 import {
-  Mic,
   Calendar,
   Globe,
-  Loader2,
-  CheckCircle2,
-  Play,
-  Check,
-  TrendingDown,
+  Coins,
   TrendingUp,
+  TrendingDown,
+  Search,
+  Loader2,
+  Filter,
+  CheckCircle2,
+  Smartphone,
+  CreditCard,
+  AlertCircle,
 } from "lucide-react";
 
-export default function VoiceReviewTab() {
+interface VoiceReviewTabProps {
+  initialTenderFilter?: string;
+  onTenderFilterChange?: (filter: string) => void;
+}
+
+export default function VoiceReviewTab({
+  initialTenderFilter = "all",
+  onTenderFilterChange,
+}: VoiceReviewTabProps) {
   const [queue, setQueue] = useState<VoiceReviewQueueItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Selected voice note details
-  const [selectedId, setSelectedId] = useState<string>("");
-  
-  // Form State
-  const [reviewedAmount, setReviewedAmount] = useState<string>("");
-  const [direction, setDirection] = useState<string>("inflow");
-  const [category, setCategory] = useState<string>("milk_sale");
-  const [isHousehold, setIsHousehold] = useState<boolean>(false);
-  const [tender, setTender] = useState<string>("cash");
-  
-  // Submission States
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // selectItem callback (defined before useEffect to avoid hoisting issues)
-  const selectItem = useCallback((item: VoiceReviewQueueItem) => {
-    const id = item.extraction_id || item.voice_id || "";
-    setSelectedId(id);
-    setReviewedAmount(item.amount ? String(item.amount) : "");
-    setDirection(item.direction || "inflow");
-    setCategory("milk_sale");
-    setIsHousehold(false);
-    setTender("cash");
-    setSuccessMsg(null);
-  }, []);
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [directionFilter, setDirectionFilter] = useState<string>("all");
+  const [tenderFilter, setTenderFilter] = useState<string>(initialTenderFilter);
+  const [prevInitialFilter, setPrevInitialFilter] = useState<string>(initialTenderFilter);
 
-  // Load review queue on mount
+  // Sync state if initialTenderFilter changes from parent (during render-phase)
+  if (initialTenderFilter !== prevInitialFilter) {
+    setTenderFilter(initialTenderFilter);
+    setPrevInitialFilter(initialTenderFilter);
+  }
+
+  const handleTenderFilterChange = (val: string) => {
+    setTenderFilter(val);
+    if (onTenderFilterChange) {
+      onTenderFilterChange(val);
+    }
+  };
+
+  // Load transactions queue on mount
   useEffect(() => {
     let isMounted = true;
     getVoiceReviewQueue()
       .then((data) => {
         if (!isMounted) return;
-        const activeQueue = (data || []).filter((item) => item.needs_review !== false);
-        setQueue(activeQueue);
-        if (activeQueue.length > 0) {
-          selectItem(activeQueue[0]);
-        } else {
-          setSelectedId("");
-        }
+        setQueue(data || []);
         setLoading(false);
       })
       .catch((err) => {
         if (!isMounted) return;
-        setError(err instanceof Error ? err.message : "Failed to load voice review queue");
+        setError(err instanceof Error ? err.message : "Failed to load paid transactions");
         setLoading(false);
       });
-
     return () => {
       isMounted = false;
     };
-  }, [selectItem]);
+  }, []);
 
-  const selectedItem = queue.find(
-    (item) => (item.extraction_id || item.voice_id) === selectedId
-  );
+  // Filtered Queue
+  const filteredQueue = useMemo(() => {
+    return queue.filter((item) => {
+      // 1. Business Name / Proprietor Name / ID search
+      const bizName = (item.proprietor_name || "").toLowerCase();
+      const entId = (item.enterprise_id || "").toLowerCase();
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" || bizName.includes(q) || entId.includes(q);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedItem) return;
-    const extractionId = selectedItem.extraction_id || selectedItem.voice_id;
-    if (!extractionId) return;
+      // 2. Direction filter
+      const matchesDirection =
+        directionFilter === "all" || item.direction === directionFilter;
 
-    setSubmitting(true);
-    setSuccessMsg(null);
+      // 3. Tender mode filter (checks both tender and channel fields)
+      const itemTender = String(item.tender || item.channel || "").toLowerCase();
+      const matchesTender =
+        tenderFilter === "all" || itemTender === tenderFilter;
 
-    const payload: PostVoiceReviewPayload = {
-      reviewed_amount: parseFloat(reviewedAmount) || 0,
-      direction,
-      category,
-      is_household: isHousehold,
-      tender,
-    };
+      return matchesSearch && matchesDirection && matchesTender;
+    });
+  }, [queue, searchQuery, directionFilter, tenderFilter]);
 
-    try {
-      await postVoiceReview(extractionId, payload);
-      setSuccessMsg("Transaction committed successfully to ledger!");
-      
-      // Remove item from queue list
-      const updatedQueue = queue.filter(
-        (item) => (item.extraction_id || item.voice_id) !== selectedId
-      );
-      setQueue(updatedQueue);
-      
-      // Auto-select next item
-      if (updatedQueue.length > 0) {
-        setTimeout(() => {
-          selectItem(updatedQueue[0]);
-        }, 1200);
-      } else {
-        setSelectedId("");
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to post voice review");
-    } finally {
-      setSubmitting(false);
-    }
+  // Clean filters helper
+  const resetFilters = () => {
+    setSearchQuery("");
+    setDirectionFilter("all");
+    handleTenderFilterChange("all");
   };
 
-  if (loading) {
-    return (
-      <div className="h-full flex-1 flex flex-col items-center justify-center bg-white border border-[#E2E6D8] rounded-2xl shadow-2xs p-12 text-center text-xs text-[#5F6656] gap-3">
-        <Loader2 className="w-8 h-8 text-[#2E7D32] animate-spin" />
-        <div>
-          <h4 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-            Loading Spoken Ledger Voice Notes...
-          </h4>
-          <p className="text-[10px] text-[#5F6656] mt-1 font-mono">
-            Calling Sarvam AI extraction pipeline queue
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const getTenderIcon = (tender?: string) => {
+    const tLower = (tender || "").toLowerCase();
+    if (tLower === "upi" || tLower === "wallet") {
+      return <Smartphone className="w-3.5 h-3.5 text-[#1565C0] shrink-0" />;
+    } else if (tLower === "cash") {
+      return <Coins className="w-3.5 h-3.5 text-[#2E7D32] shrink-0" />;
+    }
+    return <CreditCard className="w-3.5 h-3.5 text-[#5F6656] shrink-0" />;
+  };
 
   return (
-    <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-visible lg:overflow-hidden">
-      {/* Left panel: Queue list (Master) */}
-      <div className="lg:col-span-5 flex flex-col lg:h-full min-h-0 overflow-visible lg:overflow-hidden space-y-3 shrink-0">
-        <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-3.5 py-2 rounded-xl flex items-center justify-between shrink-0">
-          <div className="text-xs font-bold text-[#1A2016] flex items-center gap-1.5 uppercase tracking-wider">
-            <Mic className="w-4 h-4 text-[#2E7D32]" />
-            <span>Voice Review Queue</span>
-          </div>
-          <span className="font-mono text-[10px] font-bold bg-[#E2E6D8]/60 text-[#1A2016] px-2 py-0.5 rounded-full">
-            {queue.length} Pending
-          </span>
+    <div className="w-full flex-1 min-h-0 flex flex-col space-y-4">
+      {/* Interactive Audit Filters Panel */}
+      <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-3.5 rounded-2xl flex flex-wrap items-center gap-3 shadow-2xs">
+        <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#5F6656] uppercase tracking-wider mr-2 shrink-0">
+          <Filter className="w-3.5 h-3.5 text-[#2E7D32]" />
+          <span>Filters</span>
         </div>
 
-        {error && (
-          <div className="bg-[#FFEBEE] border border-[#C62828]/30 px-3.5 py-2 rounded-xl text-[10px] font-mono font-bold text-[#C62828]">
-            Error: {error}
-          </div>
-        )}
+        {/* Business Name Filter */}
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#5F6656]/60" />
+          <input
+            type="text"
+            placeholder="Filter by Business Name or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white border border-[#E2E6D8] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1A2016] placeholder-[#5F6656]/50 focus:outline-none focus:ring-1 focus:ring-[#2E7D32] transition-all shadow-2xs"
+          />
+        </div>
 
-        {queue.length === 0 ? (
-          <div className="flex-1 bg-white border border-[#E2E6D8] rounded-xl flex flex-col items-center justify-center p-6 text-center text-xs text-[#5F6656] space-y-1.5 shadow-3xs">
-            <CheckCircle2 className="w-8 h-8 text-[#2E7D32]" />
-            <h4 className="font-bold text-[#1A2016]">Queue Fully Cleared!</h4>
-            <p className="text-[10px] leading-tight">
-              All merchant spoken IVR and app voice notes have been reviewed and posted.
-            </p>
-          </div>
-        ) : (
-          <div className="max-h-[40vh] lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] space-y-2">
-            {queue.map((item) => {
-              const itemId = item.extraction_id || item.voice_id || "";
-              const isActive = itemId === selectedId;
-              const hasAmount = item.amount !== null && item.amount !== undefined;
-              const dateStr = item.spoken_at ? item.spoken_at.split("T")[0] : "";
+        {/* Transaction Direction Filter */}
+        <div className="min-w-[160px] flex-1 md:flex-none">
+          <select
+            value={directionFilter}
+            onChange={(e) => setDirectionFilter(e.target.value)}
+            className="w-full bg-white border border-[#E2E6D8] rounded-xl px-3 py-2 text-xs text-[#1A2016] focus:outline-none cursor-pointer shadow-2xs transition-all"
+          >
+            <option value="all">All Directions</option>
+            <option value="inflow">Inflow (Income)</option>
+            <option value="outflow">Outflow (Expense)</option>
+          </select>
+        </div>
 
-              return (
-                <button
-                  key={itemId}
-                  onClick={() => selectItem(item)}
-                  className={`w-full text-left bg-white border p-3 rounded-xl transition-all cursor-pointer shadow-3xs flex items-center justify-between gap-3 ${
-                    isActive
-                      ? "border-[#2E7D32] ring-1 ring-[#2E7D32]"
-                      : "border-[#E2E6D8] hover:border-[#2E7D32]/40"
-                  }`}
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="text-[11px] font-bold text-[#1A2016] truncate">
-                      {item.proprietor_name || `Merchant ID: ${item.enterprise_id}`}
-                    </div>
-                    <div className="text-[10px] text-[#5F6656] truncate italic font-serif">
-                      &quot;{item.transcript}&quot;
-                    </div>
-                    <div className="flex items-center gap-2 text-[9px] font-mono text-[#757575] pt-0.5">
-                      <span className="flex items-center gap-0.5">
-                        <Calendar className="w-2.5 h-2.5" /> {dateStr}
-                      </span>
-                      <span>·</span>
-                      <span className="flex items-center gap-0.5">
-                        <Globe className="w-2.5 h-2.5" /> {item.detected_lang || "unknown"}
-                      </span>
-                    </div>
-                  </div>
+        {/* Tender Mode Filter */}
+        <div className="min-w-[160px] flex-1 md:flex-none">
+          <select
+            value={tenderFilter}
+            onChange={(e) => handleTenderFilterChange(e.target.value)}
+            className="w-full bg-white border border-[#E2E6D8] rounded-xl px-3 py-2 text-xs text-[#1A2016] focus:outline-none cursor-pointer shadow-2xs transition-all"
+          >
+            <option value="all">All Tender Modes</option>
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="wallet">Wallet</option>
+          </select>
+        </div>
 
-                  <div className="shrink-0 text-right">
-                    {hasAmount ? (
-                      <div
-                        className={`text-xs font-mono font-bold flex items-center gap-0.5 ${
-                          item.direction === "inflow" ? "text-[#2E7D32]" : "text-[#C62828]"
-                        }`}
-                      >
-                        {item.direction === "inflow" ? "+" : "-"}
-                        {formatCurrency(item.amount || 0)}
-                      </div>
-                    ) : (
-                      <span className="text-[9.5px] font-mono bg-amber-50 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded">
-                        No extraction
-                      </span>
-                    )}
-                    <span className="text-[8.5px] font-mono text-[#9E9E9E] block mt-0.5">
-                      Conf: {Math.round((item.confidence || 0) * 100)}%
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        {/* Reset Button */}
+        {(searchQuery !== "" || directionFilter !== "all" || tenderFilter !== "all") && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="px-3.5 py-2 text-xs font-bold text-[#C62828] hover:bg-[#FFEBEE] rounded-xl transition-all border border-transparent hover:border-[#C62828]/20 cursor-pointer"
+          >
+            Reset Filters
+          </button>
         )}
       </div>
 
-      {/* Right panel: Detail Review Form (Detail) */}
-      <div className="lg:col-span-7 lg:h-full min-h-0 overflow-visible lg:overflow-y-auto pr-1 lg:[&::-webkit-scrollbar]:w-1.5 lg:[&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin] space-y-4">
-        {!selectedItem ? (
-          <div className="bg-white border border-[#E2E6D8] p-12 rounded-2xl text-center text-[#5F6656] text-xs h-full flex flex-col items-center justify-center gap-2 shadow-3xs">
-            <Mic className="w-8 h-8 text-[#E2E6D8]" />
-            <h4 className="font-bold text-[#1A2016]">No voice note selected</h4>
-            <p className="text-[10px] max-w-sm">
-              Please pick a recorded entry from the pending list on the left to verify and commit to ledger.
-            </p>
+      {/* Main Content Area */}
+      {loading ? (
+        <div className="bg-white border border-[#E2E6D8] rounded-2xl p-16 text-center text-xs text-[#5F6656] shadow-2xs flex flex-col items-center justify-center gap-2 flex-1">
+          <Loader2 className="w-8 h-8 text-[#2E7D32] animate-spin" />
+          <span>Loading Transactions Queue...</span>
+        </div>
+      ) : error ? (
+        <div className="bg-[#FFEBEE] border border-[#C62828]/20 rounded-2xl p-6 text-xs text-[#C62828] shadow-2xs flex items-center gap-2.5">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span>Failed to load transaction data: {error}</span>
+        </div>
+      ) : filteredQueue.length === 0 ? (
+        <div className="bg-white border border-[#E2E6D8] rounded-2xl p-12 text-center text-[#5F6656] text-xs flex flex-col items-center justify-center gap-3 shadow-2xs flex-1">
+          <CheckCircle2 className="w-10 h-10 text-[#E2E6D8]" />
+          <h4 className="font-bold text-[#1A2016] text-sm">No transactions match search criteria</h4>
+          <p className="text-[10px] max-w-sm leading-normal">
+            Try adjusting your direction, tender mode, or keyword filter settings.
+          </p>
+          {(searchQuery !== "" || directionFilter !== "all" || tenderFilter !== "all") && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs transition-all cursor-pointer mt-1"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      ) : (
+        /* Audit Table View */
+        <div className="bg-white border border-[#E2E6D8] rounded-2xl overflow-hidden shadow-2xs flex flex-col flex-1 min-h-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-[#FAFBF6] border-b border-[#E2E6D8] text-[9.5px] font-bold text-[#5F6656] uppercase tracking-wider">
+                  <th className="px-4 py-3">Business Name & ID</th>
+                  <th className="px-4 py-3">Spoken Transcript</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Lang</th>
+                  <th className="px-4 py-3">Tender</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
+                  <th className="px-4 py-3 text-center">Confidence</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E6D8]/60 text-xs text-[#1A2016]">
+                {filteredQueue.map((item, idx) => {
+                  const itemId = item.extraction_id || item.voice_id || `tx-${idx}`;
+                  const isInflow = item.direction === "inflow";
+                  const dateStr = item.spoken_at ? item.spoken_at.split("T")[0] : "";
+                  const tenderVal = String(item.tender || item.channel || "Unknown");
+                  const confidencePct = Math.round((item.confidence || 0) * 100);
+
+                  return (
+                    <tr key={itemId} className="hover:bg-[#FAFBF6]/45 transition-colors">
+                      {/* Business Name & ID */}
+                      <td className="px-4 py-3.5">
+                        <div className="font-semibold text-[#1A2016]">
+                          {item.proprietor_name || "Unknown proprietor"}
+                        </div>
+                        <div className="text-[10px] text-[#5F6656] font-mono mt-0.5">
+                          ID: {item.enterprise_id}
+                        </div>
+                      </td>
+
+                      {/* Transcript */}
+                      <td className="px-4 py-3.5 max-w-[280px]">
+                        <div className="text-[11.5px] font-serif italic text-[#1A2016] leading-relaxed break-words">
+                          &quot;{item.transcript || "No transcript available"}&quot;
+                        </div>
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-4 py-3.5 whitespace-nowrap font-mono text-[10.5px] text-[#5F6656]">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#5F6656]/70" />
+                          <span>{dateStr || "—"}</span>
+                        </div>
+                      </td>
+
+                      {/* Language */}
+                      <td className="px-4 py-3.5 whitespace-nowrap text-[10.5px] font-medium text-[#5F6656]">
+                        <div className="flex items-center gap-1 uppercase">
+                          <Globe className="w-3.5 h-3.5 text-[#5F6656]/70" />
+                          <span>{item.detected_lang || "—"}</span>
+                        </div>
+                      </td>
+
+                      {/* Tender Mode */}
+                      <td className="px-4 py-3.5 whitespace-nowrap text-[10.5px] font-semibold text-[#5F6656] capitalize">
+                        <div className="flex items-center gap-1.5">
+                          {getTenderIcon(tenderVal)}
+                          <span>{tenderVal}</span>
+                        </div>
+                      </td>
+
+                      {/* Amount & Direction */}
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap font-mono font-bold">
+                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]">
+                          {isInflow ? (
+                            <span className="text-[#2E7D32] flex items-center gap-0.5">
+                              <TrendingUp className="w-3.5 h-3.5" />
+                              <span>+{formatCurrency(item.amount || 0)}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[#C62828] flex items-center gap-0.5">
+                              <TrendingDown className="w-3.5 h-3.5" />
+                              <span>-{formatCurrency(item.amount || 0)}</span>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Confidence */}
+                      <td className="px-4 py-3.5 whitespace-nowrap text-center">
+                        <div className="inline-flex flex-col items-center justify-center">
+                          <span className="font-mono font-bold text-[10.5px] text-[#1A2016]">
+                            {confidencePct}%
+                          </span>
+                          {/* Small visual bar */}
+                          <div className="w-16 bg-[#E2E6D8] h-1.5 rounded-full overflow-hidden mt-1">
+                            <div
+                              className={`h-full rounded-full ${
+                                confidencePct >= 80
+                                  ? "bg-[#2E7D32]"
+                                  : confidencePct >= 50
+                                  ? "bg-[#E65100]"
+                                  : "bg-[#C62828]"
+                              }`}
+                              style={{ width: `${confidencePct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div className="bg-white border border-[#E2E6D8] p-5 rounded-2xl shadow-3xs space-y-4">
-            <div className="border-b border-[#E2E6D8] pb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-                  Review & Verification Panel
-                </h3>
-                <p className="text-[10px] text-[#5F6656] font-mono mt-0.5">
-                  Confirm Spoken Transaction for <strong>{selectedItem.proprietor_name || selectedItem.enterprise_id}</strong>
-                </p>
-              </div>
-            </div>
-
-            {/* Audio Transcript & Details Card */}
-            <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-3.5 rounded-xl space-y-3 relative overflow-hidden">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#E8F5E9] border border-[#2E7D32]/20 flex items-center justify-center shrink-0">
-                  <Play className="w-3.5 h-3.5 text-[#2E7D32]" />
-                </div>
-                <div className="space-y-1 flex-1 min-w-0">
-                  <span className="text-[9px] font-bold text-[#2E7D32] uppercase tracking-wider block">Spoken Transcript</span>
-                  <p className="text-sm font-serif italic font-medium text-[#1A2016] leading-snug break-words">
-                    &quot;{selectedItem.transcript}&quot;
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-[10px] font-mono border-t border-[#E2E6D8]/60 pt-3">
-                <div>
-                  <span className="text-[#757575] block">Detected Language:</span>
-                  <strong className="text-[#1A2016]">{selectedItem.detected_lang || "unknown"}</strong>
-                </div>
-                <div>
-                  <span className="text-[#757575] block">Confidence:</span>
-                  <strong className="text-[#1A2016]">{Math.round((selectedItem.confidence || 0) * 100)}%</strong>
-                </div>
-              </div>
-            </div>
-
-            {/* Verification Form */}
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Reviewed Amount */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#5F6656] uppercase tracking-wider block">
-                    Reviewed Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={reviewedAmount}
-                    onChange={(e) => setReviewedAmount(e.target.value)}
-                    placeholder="Enter confirmed amount"
-                    className="w-full bg-[#FAFBF6] border border-[#E2E6D8] rounded-lg p-2 text-xs text-[#1A2016] focus:outline-none focus:ring-1 focus:ring-[#2E7D32] font-mono font-bold"
-                  />
-                </div>
-
-                {/* Category selection */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#5F6656] uppercase tracking-wider block">
-                    Category Type
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-[#FAFBF6] border border-[#E2E6D8] rounded-lg p-2 text-xs text-[#1A2016] focus:outline-none cursor-pointer"
-                  >
-                    <option value="milk_sale">Milk Sale (Dairy)</option>
-                    <option value="feed_purchase">Feed / Fodder Purchase</option>
-                    <option value="store_sale">Retail Store Sale</option>
-                    <option value="groceries">Groceries / Consumables</option>
-                    <option value="vendor_payment">Vendor Payment</option>
-                    <option value="loan_repayment">Loan Repayment</option>
-                    <option value="other">Other Transaction</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Direction selector */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[#5F6656] uppercase tracking-wider block">
-                  Direction
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setDirection("inflow")}
-                    className={`p-2 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      direction === "inflow"
-                        ? "bg-[#E8F5E9] border-[#2E7D32] text-[#2E7D32]"
-                        : "bg-[#FAFBF6] border-[#E2E6D8] text-[#5F6656] hover:bg-[#FAFBF6]"
-                    }`}
-                  >
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span>Inflow (Income)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDirection("outflow")}
-                    className={`p-2 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      direction === "outflow"
-                        ? "bg-[#FFEBEE] border-[#C62828] text-[#C62828]"
-                        : "bg-[#FAFBF6] border-[#E2E6D8] text-[#5F6656] hover:bg-[#FAFBF6]"
-                    }`}
-                  >
-                    <TrendingDown className="w-3.5 h-3.5" />
-                    <span>Outflow (Expense)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Tender selector */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[#5F6656] uppercase tracking-wider block">
-                  Tender Mode
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {["cash", "upi", "wallet"].map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setTender(mode)}
-                      className={`p-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer capitalize text-center ${
-                        tender === mode
-                          ? "bg-[#E8F5E9] border-[#2E7D32] text-[#2E7D32]"
-                          : "bg-[#FAFBF6] border-[#E2E6D8] text-[#5F6656]"
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Household checkbox */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="household"
-                  checked={isHousehold}
-                  onChange={(e) => setIsHousehold(e.target.checked)}
-                  className="rounded border-[#E2E6D8] text-[#2E7D32] focus:ring-[#2E7D32] w-4 h-4 cursor-pointer"
-                />
-                <label htmlFor="household" className="text-xs text-[#5F6656] select-none cursor-pointer">
-                  Household / Personal (Not related to Business Operations)
-                </label>
-              </div>
-
-              {/* Status or Submission Message */}
-              {successMsg && (
-                <div className="bg-[#E8F5E9] border border-[#2E7D32]/30 p-2.5 rounded-lg text-[10.5px] font-bold text-[#2E7D32] flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#2E7D32] shrink-0" />
-                  <span>{successMsg}</span>
-                </div>
-              )}
-
-              {/* Submit Buttons */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] disabled:bg-[#FAFBF6] text-white disabled:text-[#9E9E9E] border border-transparent disabled:border-[#E2E6D8] py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:cursor-not-allowed"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Verifying & Posting Entry...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>Confirm & Post Entry</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -36,20 +36,15 @@ export default function NetworkIllustration({ t }: NetworkIllustrationProps) {
           opacity="0.55"
         />
       ))}
-      <circle className="pulse" cx={hub.x} cy={hub.y} r="34" fill="url(#hubg)" opacity="0.35" />
-      <circle className="pulse pulse2" cx={hub.x} cy={hub.y} r="34" fill="url(#hubg)" opacity="0.25" />
-      <circle cx={hub.x} cy={hub.y} r="34" fill="url(#hubg)" />
-      <text
-        x={hub.x}
-        y={hub.y + 6}
-        textAnchor="middle"
-        fontSize="17"
-        fontWeight="700"
-        fill="#fff"
-        fontFamily="'Poppins', sans-serif"
-      >
-        AI
-      </text>
+      <circle className="pulse" cx={hub.x} cy={hub.y} r="45" fill="url(#hubg)" opacity="0.35" />
+      <circle className="pulse pulse2" cx={hub.x} cy={hub.y} r="45" fill="url(#hubg)" opacity="0.25" />
+      <image
+        href="/logo.png"
+        x={hub.x - 50}
+        y={hub.y - 50}
+        width="100"
+        height="100"
+      />
       <circle cx={hub.x + 26} cy={hub.y - 26} r="4" fill="#D84315" />
       <circle cx={hub.x - 30} cy={hub.y + 24} r="3" fill="#D84315" opacity="0.8" />
       {nodes.map((n, i) => {

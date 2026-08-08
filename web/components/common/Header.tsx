@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout, setCredentials, OfficerUser } from "@/redux/slices/authSlice";
@@ -92,12 +93,14 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
         {/* Brand Logo & Name */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-[#E8F5E9] border border-[#2E7D32]/30 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 30 30">
-              <path d="M3 22 Q15 6 27 22" fill="none" stroke="#2E7D32" strokeWidth="3" strokeLinecap="round" />
-              <path d="M7 22 Q15 12 23 22" fill="none" stroke="#D84315" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="3" y1="24" x2="27" y2="24" stroke="#1565C0" strokeWidth="2.4" strokeLinecap="round" />
-            </svg>
+          <div className="w-9 h-9 rounded-full border border-[#2E7D32]/30 overflow-hidden group-hover:scale-105 transition-transform">
+            <Image
+              src="/logo.png"
+              alt="Dhansetu Logo"
+              width={36}
+              height={36}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="flex items-baseline gap-1.5 font-['Poppins',sans-serif] font-bold text-xl tracking-tight text-[#1A2016]">
             <span>DHANSETU</span>

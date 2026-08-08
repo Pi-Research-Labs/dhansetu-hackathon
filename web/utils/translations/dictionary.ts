@@ -226,7 +226,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "Recommended Guidance Actions",
       marketIntelTab: "Market Intelligence",
       portfolioTab: "My Portfolio",
-      voiceReviewTab: "Voice Review Queue",
+      voiceReviewTab: "Paid Transactions Queue",
       creditHeadroom: "Eligible Credit Headroom",
       headroomNote: (emi: number) => `Affordable at ≤₹${emi}/mo EMI · 24-month tenure pre-qualified`,
       metrics: {
@@ -423,7 +423,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "अनुशंसित मार्गदर्शन कार्यवाहियाँ",
       marketIntelTab: "बाज़ार जानकारी",
       portfolioTab: "मेरा पोर्टफोलियो",
-      voiceReviewTab: "आवाज समीक्षा कतार",
+      voiceReviewTab: "भुगतान लेनदेन कतार",
       creditHeadroom: "अतिरिक्त ऋण क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/माह EMI पर वहनीय · 24-माह अवधि पूर्व-पात्र`,
       metrics: {
@@ -620,7 +620,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "సూచించిన చర్యలు",
       marketIntelTab: "మార్కెట్ సమాచారం",
       portfolioTab: "నా పోర్ట్‌ఫోలియో",
-      voiceReviewTab: "వాయిస్ సమీక్ష క్యూ",
+      voiceReviewTab: "చెల్లించిన లావాదేవీల క్యూ",
       creditHeadroom: "అదనపు రుణ సామర్థ్యం",
       headroomNote: (emi: number) => `≤₹${emi}/నెల EMI వద్ద భరించగలిగేది · 24 నెలల కాలపరిమితి`,
       metrics: {
@@ -817,7 +817,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "सुचवलेल्या कृती",
       marketIntelTab: "बाजार माहिती",
       portfolioTab: "माझा पोर्टफोलिओ",
-      voiceReviewTab: "व्हॉइस पुनरावलोकन रांग",
+      voiceReviewTab: "भरलेल्या व्यवहारांची रांग",
       creditHeadroom: "अतिरिक्त कर्ज क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/महिना EMI वर परवडणारे · २४ महिने मुदत`,
       metrics: {

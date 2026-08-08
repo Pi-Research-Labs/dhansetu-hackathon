@@ -9,9 +9,10 @@ interface PaymentMixCardProps {
   data?: PaymentMixResponse | null;
   isLoading?: boolean;
   t?: TranslationDictionary;
+  onSelectTender?: (tender: string) => void;
 }
 
-export default function PaymentMixCard({ data, isLoading = false, t }: PaymentMixCardProps) {
+export default function PaymentMixCard({ data, isLoading = false, t, onSelectTender }: PaymentMixCardProps) {
   const tMix = t?.dash;
 
   if (isLoading) {
@@ -70,53 +71,71 @@ export default function PaymentMixCard({ data, isLoading = false, t }: PaymentMi
           {/* Segmented Stacked Progress Bar */}
           <div className="h-3.5 w-full rounded-full bg-[#E2E6D8] overflow-hidden flex shadow-inner">
             {upiVal > 0 && (
-              <div
+              <button
+                type="button"
+                onClick={() => onSelectTender?.("upi")}
                 style={{ width: `${upiVal}%` }}
-                className="bg-[#2E7D32] h-full transition-all"
-                title={`UPI: ${upiPct}%`}
+                className="bg-[#2E7D32] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
+                title={`UPI: ${upiPct}% - Click to filter queue`}
               />
             )}
             {walletVal > 0 && (
-              <div
+              <button
+                type="button"
+                onClick={() => onSelectTender?.("wallet")}
                 style={{ width: `${walletVal}%` }}
-                className="bg-[#1565C0] h-full transition-all"
-                title={`Wallet: ${walletPct}%`}
+                className="bg-[#1565C0] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
+                title={`Wallet: ${walletPct}% - Click to filter queue`}
               />
             )}
             {cashVal > 0 && (
-              <div
+              <button
+                type="button"
+                onClick={() => onSelectTender?.("cash")}
                 style={{ width: `${cashVal}%` }}
-                className="bg-[#E65100] h-full transition-all"
-                title={`Cash: ${cashPct}%`}
+                className="bg-[#E65100] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
+                title={`Cash: ${cashPct}% - Click to filter queue`}
               />
             )}
           </div>
 
           {/* Legend detailing the distribution */}
           <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-            <div className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60">
+            <button
+              type="button"
+              onClick={() => onSelectTender?.("upi")}
+              className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 hover:bg-[#E8F5E9] hover:border-[#2E7D32]/30 cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center focus:outline-none"
+            >
               <div className="text-[#5F6656] flex items-center justify-center gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32]" />
                 {tMix?.upiLabel || "UPI"}
               </div>
               <div className="font-mono font-bold text-[#2E7D32] mt-0.5">{upiPct}%</div>
-            </div>
+            </button>
 
-            <div className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60">
+            <button
+              type="button"
+              onClick={() => onSelectTender?.("wallet")}
+              className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 hover:bg-[#E3F2FD] hover:border-[#1565C0]/30 cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center focus:outline-none"
+            >
               <div className="text-[#5F6656] flex items-center justify-center gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1565C0]" />
                 {tMix?.walletLabel || "Wallet"}
               </div>
               <div className="font-mono font-bold text-[#1565C0] mt-0.5">{walletPct}%</div>
-            </div>
+            </button>
 
-            <div className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60">
+            <button
+              type="button"
+              onClick={() => onSelectTender?.("cash")}
+              className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 hover:bg-[#FFF3E0] hover:border-[#E65100]/30 cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center focus:outline-none"
+            >
               <div className="text-[#5F6656] flex items-center justify-center gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#E65100]" />
                 {tMix?.cashLabel || "Cash"}
               </div>
               <div className="font-mono font-bold text-[#E65100] mt-0.5">{cashPct}%</div>
-            </div>
+            </button>
           </div>
         </div>
 
