@@ -1,34 +1,68 @@
-# DhanSetu Mobile (Expo / React Native)
+# DhanSetu Merchant Portal
 
-## Setup
+A modern cross-platform mobile and web merchant portal application built with Expo SDK 57, React Native, and TypeScript.
 
-```bash
-cd mobile
-npm install
-npm start
-```
+---
 
-Then press `i` (iOS simulator), `a` (Android emulator), or `w` (web) — or scan the QR code with Expo Go.
+##  Technology Stack
 
-## Stack
+### Core Framework & Runtime
+* **[Expo SDK 57](https://expo.dev/)** - Core cross-platform development framework
+* **[React Native 0.86](https://reactnative.dev/)** - Native UI framework
+* **[React 19 & React DOM 19](https://react.dev/)** - UI library & Web support (`react-native-web`)
+* **[TypeScript](https://www.typescriptlang.org/)** - Static typing
 
-- **Routing**: [expo-router](https://docs.expo.dev/router/introduction/) — file-based routes live in `app/`
-- **Styling**: [NativeWind](https://www.nativewind.dev/) (Tailwind for React Native) — config in `tailwind.config.js`, global styles in `global.css`
-- **State**: [Redux Toolkit](https://redux-toolkit.js.org/) + [redux-persist](https://github.com/rt2zz/redux-persist) (AsyncStorage) — store in `store/`
-- **Server state**: [TanStack Query](https://tanstack.com/query) — client in `lib/queryClient.ts`
-- **HTTP**: [axios](https://axios-http.com/) — instance in `lib/api.ts`, base URL from `app.json` (`expo.extra.apiUrl`)
-- **Forms**: [react-hook-form](https://react-hook-form.com/) + [zod](https://zod.dev/) via `@hookform/resolvers`
-- **Icons**: [lucide-react-native](https://lucide.dev/)
-- **Utils**: `dayjs`, `clsx` + `tailwind-merge` (see `lib/cn.ts`)
+### Navigation & Routing
+* **[Expo Router](https://docs.expo.dev/router/introduction/)** - File-based routing for React Native & Web
 
-## Pointing at the backend
+### Styling & UI Components
+* **[NativeWind v4](https://www.nativewind.dev/)** - Tailwind CSS for React Native
+* **[Tailwind CSS v3](https://tailwindcss.com/)** - Utility-first styling framework
+* **[Lucide React Native](https://lucide.dev/)** & **[React Native SVG](https://github.com/software-mansion/react-native-svg)** - Iconography
+* **[React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/)** & **[Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/)** - Smooth animations and gesture interactions
 
-`app.json` sets `expo.extra.apiUrl` to the live backend on the GCP VM
-(`https://dhansetu-api.piresearchlabs.com/api/v1`, up 9AM–9PM daily) — works from any
-device (simulator, physical phone, emulator) with no LAN setup needed. Full
-endpoint docs: [`../API.md`](../API.md).
+### State Management
+* **[Redux Toolkit](https://redux-toolkit.js.org/)** (`react-redux`, `redux-persist`) - Global state management with persistence
+* **[Zustand](https://zustand-demo.pmnd.rs/)** - Lightweight state management
 
-To point at a backend running on your own machine instead (`backend/README.md`),
-change `apiUrl` to your machine's LAN IP (`localhost` only resolves to your
-machine from the iOS simulator and web; use `10.0.2.2` for the Android
-emulator, or your LAN IP for a physical device).
+### Data Fetching & Networking
+* **[TanStack React Query v5](https://tanstack.com/query/latest)** - Server state management & caching
+* **[Axios](https://axios-http.com/)** - HTTP client
+
+### Forms & Validation
+* **[React Hook Form](https://react-hook-form.com/)** - Performance-focused form state management
+* **[Zod](https://zod.dev/)** & **[@hookform/resolvers](https://github.com/react-hook-form/resolvers)** - Schema validation
+
+### Utilities
+* **[Day.js](https://day.js.org/)** - Date and time parsing
+
+---
+
+##  Quick Start
+
+### Prerequisites
+* Node.js (>= 18)
+* npm (or yarn / pnpm)
+
+### Setup
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Start Development Server**
+   ```bash
+   npm start
+   ```
+
+---
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm start` | Starts the Expo development server |
+| `npm run web` | Launches the app in the web browser |
+| `npm run android` | Runs the app on an Android device or emulator |
+| `npm run ios` | Runs the app on an iOS simulator |
