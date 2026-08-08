@@ -40,6 +40,7 @@ export default function OfficerDashboard() {
   const [tierFilter, setTierFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"portfolio" | "market" | "voice">("portfolio");
+  const [selectedTenderFilter, setSelectedTenderFilter] = useState<string>("all");
 
   // Detailed API States for selected enterprise
   const [enterpriseDetails, setEnterpriseDetails] = useState<EnterpriseDetailsResponse | null>(null);
@@ -282,7 +283,7 @@ export default function OfficerDashboard() {
                 : "text-[#5F6656] hover:text-[#1A2016]"
             }`}
           >
-            {t.dash.voiceReviewTab || "Voice Review"}
+            {t.dash.voiceReviewTab || "Paid Transactions Queue"}
           </button>
         </div>
       </div>
@@ -316,11 +317,18 @@ export default function OfficerDashboard() {
             segments={segments}
             tierCounts={tierCounts}
             t={t}
+            onSelectTenderFilter={(tender: string) => {
+              setSelectedTenderFilter(tender);
+              setActiveTab("voice");
+            }}
           />
         ) : activeTab === "market" ? (
           <MarketIntelligenceTab />
         ) : (
-          <VoiceReviewTab />
+          <VoiceReviewTab
+            initialTenderFilter={selectedTenderFilter}
+            onTenderFilterChange={setSelectedTenderFilter}
+          />
         )}
       </div>
     </div>

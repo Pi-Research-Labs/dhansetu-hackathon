@@ -13,7 +13,6 @@ import {
   Activity,
   TrendingUp,
   TrendingDown,
-  Clock,
   Loader2,
   Calendar,
   AlertTriangle,
@@ -33,9 +32,15 @@ import {
   CartesianGrid,
 } from "recharts";
 
+interface TooltipPayloadEntry {
+  dataKey: string | number;
+  value: string | number;
+  [key: string]: unknown;
+}
+
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipPayloadEntry[];
   label?: string;
 }
 
@@ -44,7 +49,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     return (
       <div className="bg-white border border-[#E2E6D8] p-3 rounded-xl shadow-md text-xs font-sans">
         <p className="font-bold text-[#1A2016] mb-1.5">{label}</p>
-        {payload.map((entry: any, index: number) => {
+        {payload.map((entry: TooltipPayloadEntry, index: number) => {
           const isPrice = entry.dataKey === "price_index";
           const color = isPrice ? "#2E7D32" : "#1565C0";
           const labelName = isPrice ? "Price Index" : "Rainfall";
@@ -70,9 +75,17 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 export default function MarketIntelligenceTab() {
   const [categories, setCategories] = useState<MarketCategory[]>([]);
   const [selectedSubType, setSelectedSubType] = useState<string>("Dairy Producer");
+  const [prevSelectedSubType, setPrevSelectedSubType] = useState<string>("Dairy Producer");
   const [intel, setIntel] = useState<MarketIntelligenceDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync loading and error states during render-phase when selectedSubType changes
+  if (selectedSubType !== prevSelectedSubType) {
+    setLoading(true);
+    setError(null);
+    setPrevSelectedSubType(selectedSubType);
+  }
 
   // 1. Fetch categories list once on mount
   useEffect(() => {
@@ -99,8 +112,6 @@ export default function MarketIntelligenceTab() {
   // 2. Fetch market intel whenever selectedSubType changes
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    setError(null);
     fetchMarketIntelligence(selectedSubType)
       .then((data) => {
         if (isMounted) {
@@ -374,7 +385,7 @@ export default function MarketIntelligenceTab() {
             </div>
             <div className="text-xs text-[#1A2016] leading-relaxed flex-1 flex items-center">
               <p className="bg-[#FAFBF6] border border-[#E2E6D8]/60 p-3 rounded-lg w-full font-medium italic">
-                "{intel?.productivity_outlook || "N/A"}"
+                &quot;{intel?.productivity_outlook || "N/A"}&quot;
               </p>
             </div>
           </div>
@@ -387,7 +398,7 @@ export default function MarketIntelligenceTab() {
             </div>
             <div className="text-xs text-[#1A2016] leading-relaxed flex-1 flex items-center">
               <p className="bg-[#E3F2FD]/40 border border-[#BBDEFB]/60 p-3 rounded-lg w-full font-medium italic">
-                "{intel?.seasonal_pattern || "N/A"}"
+                &quot;{intel?.seasonal_pattern || "N/A"}&quot;
               </p>
             </div>
           </div>

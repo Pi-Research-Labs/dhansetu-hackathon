@@ -130,6 +130,11 @@ export interface WorklistItem {
   deadline_date: string;
   rupees_at_risk: number;
   km_from_centre: number;
+  weekly_trend?: {
+    week_start: string;
+    week_end: string;
+    net: string | number;
+  }[];
 }
 
 // Enterprise Detail types

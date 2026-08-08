@@ -3,7 +3,6 @@
 import React from "react";
 import { WorklistItem } from "@/utils/api-config";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
-import { getWorklistSparkData } from "@/utils/mockData";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface WorklistListProps {
@@ -67,7 +66,9 @@ function Spark({
       <rect x={zx} y={0} width={w - zx} height={h} fill={col} opacity={0.08} />
       {min < 0 && <line x1={0} x2={w} y1={y(0)} y2={y(0)} stroke="#E2E6D8" />}
       <polyline points={histPts} fill="none" stroke={col} strokeWidth="1.6" />
-      <polyline points={fcPts} fill="none" stroke={col} strokeWidth="1.6" strokeDasharray="3 3" />
+      {fcVals.length > 0 && (
+        <polyline points={fcPts} fill="none" stroke={col} strokeWidth="1.6" strokeDasharray="3 3" />
+      )}
       <circle cx={zx} cy={y(nets[nets.length - 1])} r="2.2" fill={col} />
     </svg>
   );
@@ -122,13 +123,9 @@ export default function WorklistList({
         const tier = tierConfig[tierKey] || tierConfig.AMBER;
         const formattedScore = Math.round(item.score <= 1 ? item.score * 100 : item.score);
 
-        // Fetch detachable sparkline graph data
-        const sparkData = getWorklistSparkData(
-          item.enterprise_id,
-          item.risk_tier,
-          item.rupees_at_risk,
-          item.projected_shortfall
-        );
+        // Extract real trend data from the item's weekly_trend API field
+        const trend = (item.weekly_trend || []) as { week_start: string; week_end: string; net: string | number }[];
+        const history = trend.map((t) => ({ net: typeof t.net === "string" ? parseFloat(t.net) : t.net }));
 
         return (
           <button
@@ -153,8 +150,8 @@ export default function WorklistList({
               </div>
             </div>
 
-            {/* Sparkline Chart SVG (Sourced from detachable mockData helper) */}
-            <Spark hist={sparkData.history} fc={sparkData.fc} tier={tierKey} />
+            {/* Sparkline Chart SVG (Sourced from API weekly_trend data) */}
+            <Spark hist={history} fc={[]} tier={tierKey} />
 
             {/* Tier Status Label & Score */}
             <div

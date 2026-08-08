@@ -204,8 +204,8 @@ export default function EnterpriseDetailCard({
     tier === "GREEN"
       ? "bg-[#E8F5E9] border-[#2E7D32]/40 text-[#2E7D32]"
       : tier === "AMBER"
-      ? "bg-[#FFF3E0] border-[#E65100]/40 text-[#E65100]"
-      : "bg-[#FFEBEE] border-[#C62828]/40 text-[#C62828]";
+        ? "bg-[#FFF3E0] border-[#E65100]/40 text-[#E65100]"
+        : "bg-[#FFEBEE] border-[#C62828]/40 text-[#C62828]";
 
   const translatedTier = t?.tiers?.[tier as "GREEN" | "AMBER" | "RED"] || tier;
   const riskTierLabel = t?.dash?.riskTier || "RISK TIER";
@@ -216,9 +216,8 @@ export default function EnterpriseDetailCard({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
         {/* Enterprise Details Text Column */}
         <div
-          className={`space-y-2.5 ${
-            isExpandedMap ? "md:col-span-12" : "md:col-span-7 lg:col-span-8"
-          }`}
+          className={`space-y-2.5 ${isExpandedMap ? "md:col-span-12" : "md:col-span-7 lg:col-span-8"
+            }`}
         >
           <div className="flex flex-wrap items-center gap-2.5">
             <h2 className="text-lg font-bold text-[#1A2016] flex items-center gap-2">
@@ -276,14 +275,12 @@ export default function EnterpriseDetailCard({
 
         {/* Interactive Map Tile Container */}
         <div
-          className={`transition-all duration-300 ${
-            isExpandedMap ? "md:col-span-12" : "md:col-span-5 lg:col-span-4"
-          }`}
+          className={`transition-all duration-300 ${isExpandedMap ? "md:col-span-12" : "md:col-span-5 lg:col-span-4"
+            }`}
         >
           <div
-            className={`relative w-full rounded-xl overflow-hidden border border-[#E2E6D8] bg-[#1A2016] shadow-inner transition-all duration-300 flex items-center justify-center ${
-              isExpandedMap ? "h-72 sm:h-80" : "h-36 sm:h-40"
-            }`}
+            className={`relative w-full rounded-xl overflow-hidden border border-[#E2E6D8] bg-[#1A2016] shadow-inner transition-all duration-300 flex items-center justify-center ${isExpandedMap ? "h-72 sm:h-80" : "h-36 sm:h-40"
+              }`}
           >
             {isLoadingMap && (
               <div className="absolute inset-0 bg-[#1A2016]/70 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center text-white gap-1.5">
@@ -360,7 +357,7 @@ export default function EnterpriseDetailCard({
       {/* Core Metrics & Heatmap Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-3 border-t border-[#E2E6D8] items-stretch">
         {/* 1. Next 3 months net (proj.) */}
-        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-[88px] space-y-2">
           <div className="flex items-start gap-1.5 min-w-0">
             <TrendingUp className="w-3.5 h-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
             <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
@@ -368,16 +365,15 @@ export default function EnterpriseDetailCard({
             </div>
           </div>
           <div
-            className={`text-xs font-mono font-bold ${
-              forecast90d < 0 ? "text-[#C62828]" : "text-[#1A2016]"
-            }`}
+            className={`text-base sm:text-lg font-mono font-bold ${forecast90d < 0 ? "text-[#C62828]" : "text-[#1A2016]"
+              }`}
           >
             {formatCurrency(forecast90d)}
           </div>
         </div>
 
         {/* 2. Next 6 months net (proj.) */}
-        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-[88px] space-y-2">
           <div className="flex items-start gap-1.5 min-w-0">
             <TrendingUp className="w-3.5 h-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
             <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
@@ -385,16 +381,15 @@ export default function EnterpriseDetailCard({
             </div>
           </div>
           <div
-            className={`text-xs font-mono font-bold ${
-              forecast180d < 0 ? "text-[#C62828]" : "text-[#1A2016]"
-            }`}
+            className={`text-base sm:text-lg font-mono font-bold ${forecast180d < 0 ? "text-[#C62828]" : "text-[#1A2016]"
+              }`}
           >
             {formatCurrency(forecast180d)}
           </div>
         </div>
 
         {/* 3. Savings runway */}
-        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-[88px] space-y-2">
           <div className="flex items-start gap-1.5 min-w-0">
             <Clock className="w-3.5 h-3.5 text-[#E65100] shrink-0 mt-0.5" />
             <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
@@ -402,16 +397,15 @@ export default function EnterpriseDetailCard({
             </div>
           </div>
           <div
-            className={`text-xs font-mono font-bold ${
-              savingsRunwayDays < 30 ? "text-[#C62828]" : "text-[#1A2016]"
-            }`}
+            className={`text-base sm:text-lg font-mono font-bold ${savingsRunwayDays < 30 ? "text-[#C62828]" : "text-[#1A2016]"
+              }`}
           >
             {runwayDisplay}
           </div>
         </div>
 
         {/* 4. Missed EMIs (90d) */}
-        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-[88px] space-y-2">
           <div className="flex items-start gap-1.5 min-w-0">
             <AlertCircle className="w-3.5 h-3.5 text-[#C62828] shrink-0 mt-0.5" />
             <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
@@ -419,16 +413,15 @@ export default function EnterpriseDetailCard({
             </div>
           </div>
           <div
-            className={`text-xs font-mono font-bold ${
-              missedEmi >= 1 ? "text-[#C62828]" : "text-[#1A2016]"
-            }`}
+            className={`text-base sm:text-lg font-mono font-bold ${missedEmi >= 1 ? "text-[#C62828]" : "text-[#1A2016]"
+              }`}
           >
             {missedEmiDisplay}
           </div>
         </div>
 
         {/* 5. DSCR (projected) */}
-        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-[88px] space-y-2">
           <div className="flex items-start gap-1.5 min-w-0">
             <Activity className="w-3.5 h-3.5 text-[#1565C0] shrink-0 mt-0.5" />
             <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
@@ -436,29 +429,28 @@ export default function EnterpriseDetailCard({
             </div>
           </div>
           <div
-            className={`text-xs font-mono font-bold ${
-              dscrVal !== null && dscrVal < 1.25 ? "text-[#E65100]" : "text-[#1A2016]"
-            }`}
+            className={`text-base sm:text-lg font-mono font-bold ${dscrVal !== null && dscrVal < 1.25 ? "text-[#E65100]" : "text-[#1A2016]"
+              }`}
           >
             {dscrDisplay}
           </div>
         </div>
 
         {/* 6. Digital visibility */}
-        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-full space-y-2">
+        <div className="bg-[#FAFBF6] p-2.5 rounded-xl border border-[#E2E6D8] flex flex-col justify-between h-[88px] space-y-2">
           <div className="flex items-start gap-1.5 min-w-0">
             <CreditCard className="w-3.5 h-3.5 text-[#2E7D32] shrink-0 mt-0.5" />
             <div className="text-[10px] text-[#5F6656] font-semibold leading-tight min-w-0 break-words">
               {t?.dash?.metrics?.digital || "Digital visibility"}
             </div>
           </div>
-          <div className="text-xs font-mono font-bold text-[#2E7D32]">
+          <div className="text-base sm:text-lg font-mono font-bold text-[#2E7D32]">
             {digitalVisibilityPct}%
           </div>
         </div>
 
         {/* 7. Trailing Digital Heatmap Scroll Widget (Spanning 4 columns on row 2, matching KPI card height) */}
-        <div className="bg-[#FAFBF6] px-2.5 py-2 rounded-xl border border-[#E2E6D8] col-span-2 sm:col-span-3 lg:col-span-4 flex flex-col justify-between min-w-0 h-full relative">
+        <div className="bg-[#FAFBF6] px-2.5 py-2 rounded-xl border border-[#E2E6D8] col-span-2 sm:col-span-3 lg:col-span-4 flex flex-col justify-between min-w-0 h-[88px] relative">
           {/* Header Row: Title, Period Selector Toggle & Legend */}
           <div className="flex items-center justify-between text-[10px] text-[#5F6656] leading-none mb-1 gap-1">
             <div className="flex items-center gap-1.5 font-medium truncate">
@@ -469,7 +461,7 @@ export default function EnterpriseDetailCard({
               <button
                 type="button"
                 onClick={() => setIsPeriodOpen(!isPeriodOpen)}
-                className="px-1.5 py-0.5 rounded border border-[#E2E6D8] text-[9px] font-mono font-bold text-[#2E7D32] bg-white hover:bg-[#FAFBF6] flex items-center gap-0.5 cursor-pointer shadow-2xs transition-all"
+                className="px-1.5 py-0.5 rounded border border-[#E2E6D8] text-[12px] font-mono font-bold text-[#2E7D32] bg-white hover:bg-[#FAFBF6] flex items-center gap-0.5 cursor-pointer shadow-2xs transition-all"
                 title={t?.dash?.heatmapTimeHorizon || "Select Heatmap Time Horizon"}
               >
                 <span>{t?.dash?.heatmapWeeks ? t.dash.heatmapWeeks(timePeriod) : `${timePeriod}W`}</span>
@@ -509,11 +501,10 @@ export default function EnterpriseDetailCard({
                       setTimePeriod(weeks as 7 | 14);
                       setIsPeriodOpen(false);
                     }}
-                    className={`py-1.5 px-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border text-center ${
-                      timePeriod === weeks
+                    className={`py-1.5 px-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border text-center ${timePeriod === weeks
                         ? "bg-[#2E7D32] border-[#4CAF50] text-white shadow-sm"
                         : "bg-white/10 border-white/20 text-white/90 hover:bg-white/25"
-                    }`}
+                      }`}
                   >
                     {t?.dash?.heatmapWeeks ? t.dash.heatmapWeeks(weeks) : `${weeks} Weeks`}
                   </button>
@@ -544,9 +535,8 @@ export default function EnterpriseDetailCard({
               {/* Unified Scrollable Tiles Track */}
               <div
                 ref={heatmapScrollRef}
-                className={`overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex items-center gap-1.5 py-0.5 flex-1 min-w-0 ${
-                  timePeriod === 7 ? "justify-between" : ""
-                }`}
+                className={`overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex items-center gap-1.5 py-0.5 flex-1 min-w-0 ${timePeriod === 7 ? "justify-between" : ""
+                  }`}
               >
                 {heatmapData.map((item) => {
                   const net = item.net_inflow || 0;
@@ -572,7 +562,7 @@ export default function EnterpriseDetailCard({
                       onMouseLeave={() => setHoveredItem(null)}
                     >
                       <div
-                        className={`w-full h-4.5 rounded-xs flex items-center justify-center text-[7.5px] sm:text-[8.5px] font-mono font-bold px-0.5 ${bgCol} ${textCol} transition-transform group-hover:scale-105`}
+                        className={`w-full h-9 rounded-xs flex items-center justify-center text-[8.5px] sm:text-[10px] font-mono font-bold px-0.5 ${bgCol} ${textCol} transition-transform group-hover:scale-105`}
                       >
                         {formatCurrencyCompact(net)}
                       </div>
@@ -624,15 +614,15 @@ export default function EnterpriseDetailCard({
                     hoveredItem.net_inflow > 0
                       ? "text-[#81C784] font-bold"
                       : hoveredItem.net_inflow < 0
-                      ? "text-[#FF8A80] font-bold"
-                      : "text-white/80 font-bold"
+                        ? "text-[#FF8A80] font-bold"
+                        : "text-white/80 font-bold"
                   }
                 >
                   {hoveredItem.net_inflow > 0
                     ? t?.dash?.heatmapPositive || "Positive"
                     : hoveredItem.net_inflow < 0
-                    ? t?.dash?.heatmapNegative || "Negative"
-                    : t?.dash?.heatmapZero || "No activity"}
+                      ? t?.dash?.heatmapNegative || "Negative"
+                      : t?.dash?.heatmapZero || "No activity"}
                 </span>
               </div>
               <div className="flex justify-between gap-4">
