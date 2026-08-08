@@ -185,7 +185,22 @@ CATEGORY_METADATA = {
 }
 
 
-async def get_market_categories() -> list[dict]:
+async def get_market_categories(enterprise_id: str | None = None) -> list[dict]:
+    merchant_sub_type_id = None
+    if enterprise_id:
+        try:
+            pool = get_pool()
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT sub_type_id FROM dhansetu.v_enterprises_safe WHERE enterprise_id = $1",
+                    enterprise_id,
+                )
+                if row:
+                    merchant_sub_type_id = row["sub_type_id"]
+        except Exception:
+            pass
+
+    cats = []
     try:
         pool = get_pool()
         async with pool.acquire() as conn:
@@ -193,28 +208,48 @@ async def get_market_categories() -> list[dict]:
                 "SELECT sub_type_id, sub_type, sector, typical_daily_turnover FROM dhansetu.v_market_intelligence_categories"
             )
             if rows:
-                return [dict(row) for row in rows]
+                cats = [dict(row) for row in rows]
     except Exception:
         pass
         
-    # Fallback if DB not loaded
-    return [
-        {"sub_type_id": "ST01", "sub_type": "Dairy Producer", "sector": "DAIRY", "typical_daily_turnover": 1400},
-        {"sub_type_id": "ST02", "sub_type": "Poultry Unit (broiler)", "sector": "POULTRY", "typical_daily_turnover": 3200},
-        {"sub_type_id": "ST03", "sub_type": "Handloom Weaver", "sector": "HANDICRAFT", "typical_daily_turnover": 900},
-        {"sub_type_id": "ST04", "sub_type": "Pottery / Terracotta Unit", "sector": "HANDICRAFT", "typical_daily_turnover": 650},
-        {"sub_type_id": "ST05", "sub_type": "Tailoring Unit", "sector": "HANDICRAFT", "typical_daily_turnover": 750},
-        {"sub_type_id": "ST06", "sub_type": "FPO / Agri Aggregator", "sector": "FOODPROC", "typical_daily_turnover": 6500},
-        {"sub_type_id": "ST07", "sub_type": "SHG Food Processing Unit", "sector": "FOODPROC", "typical_daily_turnover": 2100},
-        {"sub_type_id": "ST08", "sub_type": "Kirana Store", "sector": "RETAIL", "typical_daily_turnover": 4200},
-        {"sub_type_id": "ST09", "sub_type": "Vegetable Vendor", "sector": "RETAIL", "typical_daily_turnover": 2600},
-    ]
+    if not cats:
+        # Fallback if DB not loaded
+        cats = [
+            {"sub_type_id": "ST01", "sub_type": "Dairy Producer", "sector": "DAIRY", "typical_daily_turnover": 1400},
+            {"sub_type_id": "ST02", "sub_type": "Poultry Unit (broiler)", "sector": "POULTRY", "typical_daily_turnover": 3200},
+            {"sub_type_id": "ST03", "sub_type": "Handloom Weaver", "sector": "HANDICRAFT", "typical_daily_turnover": 900},
+            {"sub_type_id": "ST04", "sub_type": "Pottery / Terracotta Unit", "sector": "HANDICRAFT", "typical_daily_turnover": 650},
+            {"sub_type_id": "ST05", "sub_type": "Tailoring Unit", "sector": "HANDICRAFT", "typical_daily_turnover": 750},
+            {"sub_type_id": "ST06", "sub_type": "FPO / Agri Aggregator", "sector": "FOODPROC", "typical_daily_turnover": 6500},
+            {"sub_type_id": "ST07", "sub_type": "SHG Food Processing Unit", "sector": "FOODPROC", "typical_daily_turnover": 2100},
+            {"sub_type_id": "ST08", "sub_type": "Kirana Store", "sector": "RETAIL", "typical_daily_turnover": 4200},
+            {"sub_type_id": "ST09", "sub_type": "Vegetable Vendor", "sector": "RETAIL", "typical_daily_turnover": 2600},
+        ]
+
+    for c in cats:
+        c["is_merchant_primary"] = (c["sub_type_id"] == merchant_sub_type_id)
+
+    return cats
 
 
-async def get_market_intelligence(sub_type_query: str | None = None) -> dict:
-    categories = await get_market_categories()
+async def get_market_intelligence(sub_type_query: str | None = None, enterprise_id: str | None = None) -> dict:
+    merchant_info = None
+    if enterprise_id:
+        try:
+            pool = get_pool()
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT enterprise_id, sub_type_id, sub_type, sector, district_id, district FROM dhansetu.v_enterprises_safe WHERE enterprise_id = $1",
+                    enterprise_id,
+                )
+                if row:
+                    merchant_info = dict(row)
+        except Exception:
+            pass
+
+    categories = await get_market_categories(enterprise_id)
     
-    # Match selected sub_type or default to "Dairy Producer"
+    # Match selected sub_type or merchant's primary sub_type or default to "Dairy Producer"
     selected = None
     if sub_type_query:
         query_norm = sub_type_query.strip().lower()
@@ -222,13 +257,19 @@ async def get_market_intelligence(sub_type_query: str | None = None) -> dict:
             if cat["sub_type"].lower() == query_norm or cat["sub_type_id"].lower() == query_norm or cat["sector"].lower() == query_norm:
                 selected = cat
                 break
-    
+    elif merchant_info:
+        for cat in categories:
+            if cat["sub_type_id"] == merchant_info["sub_type_id"]:
+                selected = cat
+                break
+
     if not selected:
         selected = categories[0]
     
     sub_type_name = selected["sub_type"]
     sector_name = selected["sector"]
     sub_type_id = selected["sub_type_id"]
+    district_name = merchant_info["district"] if merchant_info else None
     
     meta = None
     chart_data = []
@@ -316,6 +357,8 @@ async def get_market_intelligence(sub_type_query: str | None = None) -> dict:
         "sub_type_id": sub_type_id,
         "sub_type": sub_type_name,
         "sector": sector_name,
+        "enterprise_id": enterprise_id,
+        "district": district_name,
         "tracked_commodity": meta["tracked_commodity"],
         "price_trend_12m_pct": meta["price_trend_12m_pct"],
         "productivity_outlook": meta["productivity_outlook"],
