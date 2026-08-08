@@ -22,12 +22,6 @@ export function HomeScreen() {
   const {
     lang,
     name,
-    segment,
-    district,
-    phone,
-    gstin,
-    tier,
-    score,
     net90,
     savings,
     runwayMonths,
@@ -89,14 +83,9 @@ export function HomeScreen() {
               <ShieldCheck size={14} color="#2E7D32" />
               <Text style={styles.verifiedText}>GST Verified</Text>
             </View>
-            <View style={[styles.tierBadge, tier === 'AMBER' && styles.tierAmber, tier === 'GREEN' && styles.tierGreen, tier === 'RED' && styles.tierRed]}>
-              <Text style={styles.tierText}>{t.tiers[tier]} · {score}/100</Text>
-            </View>
           </View>
 
           <Text style={styles.merchantName}>{name}</Text>
-          <Text style={styles.locationText}>{segment} · {district} · GSTIN: {gstin}</Text>
-          <Text style={styles.phoneText}>Phone: {phone}</Text>
 
           {/* 4 Financial Core Metrics */}
           <View style={styles.statsGrid}>
@@ -327,40 +316,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
-  tierBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  tierAmber: {
-    backgroundColor: '#FBF0D9',
-  },
-  tierGreen: {
-    backgroundColor: '#E7F2E7',
-  },
-  tierRed: {
-    backgroundColor: '#F8E6E2',
-  },
-  tierText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#1D261F',
-  },
   merchantName: {
     color: '#1D261F',
     fontSize: 18,
     fontWeight: '700',
     marginTop: 4,
-  },
-  locationText: {
-    color: '#6F6B5E',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  phoneText: {
-    color: '#6F6B5E',
-    fontSize: 11,
-    marginTop: 2,
+    marginBottom: 8,
   },
   statsGrid: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Animated, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X } from 'lucide-react-native';
+import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X, Calendar } from 'lucide-react-native';
 import { useMerchantStore, Entry } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
@@ -22,18 +22,18 @@ const VoiceAgentL: Record<string, {
   en: {
     title: 'Voice Transaction Agent',
     sub: 'Speak in English, Hindi, Marathi, or Telugu (max 30s). e.g., "Received 1,200 rupees for crop sale"',
-    listening: 'Listening... Tap to stop',
+    listening: 'Recording...',
     transcribing: 'Processing voice note with AI...',
     success: 'AI Agent Extracted',
     error: 'Speech-to-text failed. Please try again.',
     noMatch: 'Could not extract amount/direction, but transcript populated.',
     cancel: 'Cancel',
-    speakBtn: 'Tap to Speak Entry',
+    speakBtn: 'Tap to Speak',
   },
   hi: {
     title: 'वॉइस लेनदेन एजेंट (AI)',
     sub: 'हिंदी, अंग्रेजी, मराठी या तेलुगु में बोलें (अधिकतम 30s)। जैसे, "फसल बिक्री के लिए 1,200 रुपये मिले"',
-    listening: 'सुन रहा है... रोकने के लिए टैप करें',
+    listening: 'रिकॉर्डिंग... ',
     transcribing: 'एआई द्वारा वॉइस नोट को संसाधित किया जा रहा है...',
     success: 'एआई एजेंट द्वारा निकाला गया',
     error: 'भाषण-से-पाठ विफल रहा। कृपया पुनः प्रयास करें।',
@@ -44,18 +44,18 @@ const VoiceAgentL: Record<string, {
   mr: {
     title: 'व्हॉइस ट्रान्झॅक्शन एजंट (AI)',
     sub: 'मराठी, हिंदी, इंग्रजी किंवा तेलगू मध्ये बोला (कमाल ३० सेकंद). उदा., "पीक विक्रीसाठी १,२०० रुपये मिळाले"',
-    listening: 'ऐकत आहे... थांबवण्यासाठी टॅप करा',
+    listening: 'रेकॉर्डिंग...',
     transcribing: 'एआय व्हॉइस नोटवर प्रक्रिया करत आहे...',
     success: 'एआय एजंटने शोधले',
     error: 'व्हॉइस रेकॉर्डिंग अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
     noMatch: 'रक्कम/दिशा शोधता आली नाही, पण मजकूर भरला गेला आहे.',
     cancel: 'रद्द करा',
-    speakBtn: 'नोंद बोलण्यासाठी टॅप करा',
+    speakBtn: 'बोलण्यासाठी टॅप करा',
   },
   te: {
     title: 'వాయిస్ లావాదేవీ ఏజెంట్ (AI)',
     sub: 'తెలుగు, హిందీ, మరాఠీ లేదా ఇంగ్లీషులో మాట్లాడండి (గరిష్టంగా 30 సెకన్లు). ఉదా., "పంట అమ్మకం కోసం 1,200 రూపాయలు వచ్చాయి"',
-    listening: 'వింటున్నది... ఆపడానికి ట్యాప్ చేయండి',
+    listening: 'రికార్డింగ్... ',
     transcribing: 'ఏఐ వాయిస్ నోట్‌ని ప్రాసెస్ చేస్తోంది...',
     success: 'ఏఐ ఏజెంట్ సంగ్రహించారు',
     error: 'వాయిస్ ప్రాసెసింగ్ విఫలమైంది. మళ్లీ ప్రయత్నించండి.',
@@ -122,6 +122,36 @@ const VoiceModalL: Record<string, {
   }
 };
 
+const formatInputValue = (text: string) => {
+  const clean = text.replace(/,/g, '');
+  if (!clean) return '';
+  const parts = clean.split('.');
+  const intPart = parts[0];
+  const decPart = parts[1];
+  const num = parseInt(intPart, 10);
+  if (isNaN(num)) return clean.startsWith('.') ? '0.' : '';
+  const formattedInt = num.toLocaleString('en-IN');
+  if (decPart !== undefined) {
+    return `${formattedInt}.${decPart.slice(0, 2)}`;
+  }
+  return clean.endsWith('.') ? `${formattedInt}.` : formattedInt;
+};
+
+const getEntryTimestamp = (en: Entry) => {
+  const parts = en.id.split('_');
+  if (parts.length > 1) {
+    const ts = parseInt(parts[1], 10);
+    if (!isNaN(ts)) return ts;
+  }
+  return Date.now();
+};
+
+const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 export function AddEntryScreen() {
   const insets = useSafeAreaInsets();
   const { lang, entries, addEntry } = useMerchantStore();
@@ -131,6 +161,90 @@ export function AddEntryScreen() {
   const [type, setType] = useState<Entry['type']>('income');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | '7days' | 'month' | 'custom'>('all');
+
+  // Custom date picker states
+  const [customDatePickerVisible, setCustomDatePickerVisible] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+
+  const handlePrevMonth = () => {
+    if (calendarMonth === 0) {
+      setCalendarMonth(11);
+      setCalendarYear(prev => prev - 1);
+    } else {
+      setCalendarMonth(prev => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calendarMonth === 11) {
+      setCalendarMonth(0);
+      setCalendarYear(prev => prev + 1);
+    } else {
+      setCalendarMonth(prev => prev + 1);
+    }
+  };
+
+  const handleDayPress = (day: number) => {
+    const clickedDate = new Date(calendarYear, calendarMonth, day);
+    if (!customStartDate || (customStartDate && customEndDate)) {
+      setCustomStartDate(clickedDate);
+      setCustomEndDate(null);
+    } else if (customStartDate && !customEndDate) {
+      if (clickedDate >= customStartDate) {
+        setCustomEndDate(clickedDate);
+      } else {
+        setCustomStartDate(clickedDate);
+      }
+    }
+  };
+
+  const getCustomPillLabel = () => {
+    if (!customStartDate) return 'Custom range';
+    const startStr = customStartDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    if (!customEndDate) return `Custom: ${startStr}`;
+    const endStr = customEndDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    return `${startStr} - ${endStr}`;
+  };
+
+  const filteredEntries = entries.filter((en) => {
+    if (dateFilter === 'all') return true;
+    const ts = getEntryTimestamp(en);
+    const entryDate = new Date(ts);
+    const now = new Date();
+
+    if (dateFilter === 'today') {
+      return (
+        entryDate.getDate() === now.getDate() &&
+        entryDate.getMonth() === now.getMonth() &&
+        entryDate.getFullYear() === now.getFullYear()
+      );
+    }
+    if (dateFilter === '7days') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      return entryDate >= sevenDaysAgo;
+    }
+    if (dateFilter === 'month') {
+      return (
+        entryDate.getMonth() === now.getMonth() &&
+        entryDate.getFullYear() === now.getFullYear()
+      );
+    }
+    if (dateFilter === 'custom' && customStartDate) {
+      const entryDay = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+      const startDay = new Date(customStartDate.getFullYear(), customStartDate.getMonth(), customStartDate.getDate());
+      if (customEndDate) {
+        const endDay = new Date(customEndDate.getFullYear(), customEndDate.getMonth(), customEndDate.getDate());
+        return entryDay >= startDay && entryDay <= endDay;
+      }
+      return entryDay.getTime() === startDay.getTime();
+    }
+    return true;
+  });
 
   // Voice recording using new expo-audio SDK 57 hooks
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -149,6 +263,39 @@ export function AddEntryScreen() {
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Animated value for toast horizontal translation
+  const toastTranslateX = useRef(new Animated.Value(0)).current;
+
+  // PanResponder to handle swiping the toast left/right
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (evt, gestureState) => {
+        toastTranslateX.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        // Swipe threshold is 80 pixels in either direction
+        if (Math.abs(gestureState.dx) > 80) {
+          Animated.timing(toastTranslateX, {
+            toValue: gestureState.dx > 0 ? 450 : -450,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            setToastMessage(null);
+            toastTranslateX.setValue(0);
+          });
+        } else {
+          // Snap back
+          Animated.spring(toastTranslateX, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   // Custom Alert State
   const [alertVisible, setAlertVisible] = useState(false);
@@ -233,7 +380,7 @@ export function AddEntryScreen() {
     setIsTranscribing(true);
     try {
       const data = await postVoiceEntry(uri, 'app');
-      
+
       if (data.error) {
         showAlert('Transcription Error', data.error, 'error');
         setIsTranscribing(false);
@@ -242,8 +389,8 @@ export function AddEntryScreen() {
 
       // Populate modal state
       setModalTranscript(data.transcript || '');
-      setModalAmount(data.amount && data.amount > 0 ? data.amount.toString() : '');
-      
+      setModalAmount(data.amount && data.amount > 0 ? formatInputValue(data.amount.toString()) : '');
+
       if (data.direction === 'inflow') {
         setModalType('income');
       } else if (data.direction === 'outflow') {
@@ -257,7 +404,7 @@ export function AddEntryScreen() {
         setNote(data.transcript);
       }
       if (data.amount && data.amount > 0) {
-        setAmount(data.amount.toString());
+        setAmount(formatInputValue(data.amount.toString()));
       }
       if (data.direction === 'inflow') {
         setType('income');
@@ -287,7 +434,7 @@ export function AddEntryScreen() {
   };
 
   const handleModalSave = () => {
-    const numAmount = parseFloat(modalAmount);
+    const numAmount = parseFloat(modalAmount.replace(/,/g, ''));
     if (!numAmount || numAmount <= 0) {
       showAlert('Invalid Amount', 'Please enter a valid positive number for the amount.', 'warning');
       return;
@@ -319,14 +466,23 @@ export function AddEntryScreen() {
     if (toastTimerRef.current) {
       clearTimeout(toastTimerRef.current);
     }
+    toastTranslateX.setValue(0); // Reset animation state
     setToastMessage(message);
     toastTimerRef.current = setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
+      // Auto dismiss with slide-out animation
+      Animated.timing(toastTranslateX, {
+        toValue: 450,
+        duration: 250,
+        useNativeDriver: true,
+      }).start(() => {
+        setToastMessage(null);
+        toastTranslateX.setValue(0);
+      });
+    }, 5000); // Auto close in 5 seconds
   };
 
   const handleSave = () => {
-    const numAmount = parseFloat(amount);
+    const numAmount = parseFloat(amount.replace(/,/g, ''));
     if (!numAmount || numAmount <= 0) {
       showAlert('Invalid Amount', 'Please enter a valid positive number for the amount.', 'warning');
       return;
@@ -362,7 +518,7 @@ export function AddEntryScreen() {
             <Text style={styles.voiceCardTitle}>{(VoiceAgentL[lang] || VoiceAgentL.en).title}</Text>
           </View>
           <Text style={styles.voiceCardSub}>{(VoiceAgentL[lang] || VoiceAgentL.en).sub}</Text>
-          
+
           <View style={styles.voiceActionContainer}>
             {isTranscribing ? (
               <View style={styles.voiceLoadingRow}>
@@ -371,15 +527,21 @@ export function AddEntryScreen() {
               </View>
             ) : isRecording ? (
               <View style={styles.recordingRow}>
-                <View style={styles.pulsingMicContainer}>
-                  <TouchableOpacity style={styles.stopMicBtn} onPress={stopRecording} activeOpacity={0.8}>
-                    <Square size={16} color="#FFFFFF" fill="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.recordingInfo}>
-                  <Text style={styles.listeningText}>{(VoiceAgentL[lang] || VoiceAgentL.en).listening}</Text>
-                  <Text style={styles.timerText}>0:{recordDuration < 10 ? `0${recordDuration}` : recordDuration} / 0:30</Text>
-                </View>
+                <TouchableOpacity
+                  style={styles.stopTapArea}
+                  onPress={stopRecording}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.pulsingMicContainer}>
+                    <View style={styles.stopMicBtn}>
+                      <Square size={16} color="#FFFFFF" fill="#FFFFFF" />
+                    </View>
+                  </View>
+                  <View style={styles.recordingInfo}>
+                    <Text style={styles.listeningText}>{(VoiceAgentL[lang] || VoiceAgentL.en).listening}</Text>
+                    <Text style={styles.timerText}>0:{recordDuration < 10 ? `0${recordDuration}` : recordDuration} / 0:30</Text>
+                  </View>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.cancelBtn} onPress={cancelRecording} activeOpacity={0.7}>
                   <Trash2 size={16} color="#C0392B" />
                   <Text style={styles.cancelBtnText}>{(VoiceAgentL[lang] || VoiceAgentL.en).cancel}</Text>
@@ -428,7 +590,7 @@ export function AddEntryScreen() {
                 placeholderTextColor="#94A3B8"
                 keyboardType="numeric"
                 value={amount}
-                onChangeText={setAmount}
+                onChangeText={(val) => setAmount(formatInputValue(val))}
               />
             </View>
           </View>
@@ -457,25 +619,194 @@ export function AddEntryScreen() {
         <View style={styles.historyCard}>
           <View style={styles.historyHeader}>
             <History size={16} color="#1D261F" />
-            <Text style={styles.historyTitle}>{t.recentLedgerEntries} ({entries.length})</Text>
+            <Text style={styles.historyTitle}>{t.recentLedgerEntries} ({filteredEntries.length})</Text>
           </View>
 
-          {entries.map((en) => (
-            <View key={en.id} style={styles.entryRowItem}>
-              <View style={styles.entryMainInfo}>
-                <Text style={styles.entryTypeTitle}>{t.entryTypes[en.type] || en.type}</Text>
-                <Text style={styles.entryNoteText}>{en.note}</Text>
+          {/* Date Range Selector */}
+          <View style={styles.filterContainer}>
+            {(['all', 'today', '7days', 'month', 'custom'] as const).map((f) => {
+              const label = f === 'custom' ? getCustomPillLabel() : {
+                all: 'All',
+                today: 'Today',
+                '7days': '7 Days',
+                month: 'Month',
+              }[f];
+              const isActive = dateFilter === f;
+              return (
+                <TouchableOpacity
+                  key={f}
+                  style={[styles.filterPill, isActive && styles.filterPillActive]}
+                  onPress={() => {
+                    if (f === 'custom') {
+                      setDateFilter('custom');
+                      setCustomDatePickerVisible(true);
+                    } else {
+                      setDateFilter(f);
+                    }
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    {f === 'custom' && <Calendar size={12} color={isActive ? '#2E7D32' : '#6F6B5E'} />}
+                    <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                      {label}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {filteredEntries.length === 0 ? (
+            <Text style={styles.emptyLedgerText}>
+              No transaction entries found for the selected range.
+            </Text>
+          ) : (
+            filteredEntries.map((en) => (
+              <View key={en.id} style={styles.entryRowItem}>
+                <View style={styles.entryMainInfo}>
+                  <Text style={styles.entryTypeTitle}>{t.entryTypes[en.type] || en.type}</Text>
+                  <Text style={styles.entryNoteText}>{en.note}</Text>
+                </View>
+                <View style={styles.entryAmountInfo}>
+                  <Text style={[styles.entryAmtText, en.type === 'expense' || en.type === 'emi' ? styles.textRed : styles.textGreen]}>
+                    {en.type === 'expense' || en.type === 'emi' ? `-₹ ${en.amount.toLocaleString('en-IN')}` : `+₹ ${en.amount.toLocaleString('en-IN')}`}
+                  </Text>
+                  <Text style={styles.entryDateText}>{en.date}</Text>
+                </View>
               </View>
-              <View style={styles.entryAmountInfo}>
-                <Text style={[styles.entryAmtText, en.type === 'expense' || en.type === 'emi' ? styles.textRed : styles.textGreen]}>
-                  {en.type === 'expense' || en.type === 'emi' ? `-₹ ${en.amount.toLocaleString('en-IN')}` : `+₹ ${en.amount.toLocaleString('en-IN')}`}
-                </Text>
-                <Text style={styles.entryDateText}>{en.date}</Text>
-              </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
       </ScrollView>
+
+      {/* Custom Date Picker Modal */}
+      <Modal
+        visible={customDatePickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCustomDatePickerVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarModalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Custom Range</Text>
+              <TouchableOpacity onPress={() => setCustomDatePickerVisible(false)} style={styles.modalCloseBtn}>
+                <X size={18} color="#6F6B5E" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Selected Range Preview */}
+            <View style={styles.rangePreviewContainer}>
+              <Text style={styles.rangePreviewText}>
+                {customStartDate ? (
+                  customEndDate ? (
+                    `${customStartDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} to ${customEndDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`
+                  ) : (
+                    `Start Date: ${customStartDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} (Tap end date)`
+                  )
+                ) : (
+                  'Select start and end dates'
+                )}
+              </Text>
+            </View>
+
+            {/* Month Header Navigation */}
+            <View style={styles.calendarMonthHeader}>
+              <TouchableOpacity onPress={handlePrevMonth} style={styles.monthNavBtn}>
+                <Text style={styles.monthNavBtnText}>&lt;</Text>
+              </TouchableOpacity>
+              <Text style={styles.calendarMonthTitle}>
+                {monthNames[calendarMonth]} {calendarYear}
+              </Text>
+              <TouchableOpacity onPress={handleNextMonth} style={styles.monthNavBtn}>
+                <Text style={styles.monthNavBtnText}>&gt;</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Weekdays Row */}
+            <View style={styles.weekdaysRow}>
+              {weekDays.map((wd) => (
+                <Text key={wd} style={styles.weekdayText}>
+                  {wd}
+                </Text>
+              ))}
+            </View>
+
+            {/* Calendar Days Grid */}
+            <View style={styles.daysGrid}>
+              {(() => {
+                const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+                const firstDayIndex = new Date(calendarYear, calendarMonth, 1).getDay();
+
+                const calendarDays: (number | null)[] = [];
+                for (let i = 0; i < firstDayIndex; i++) {
+                  calendarDays.push(null);
+                }
+                for (let i = 1; i <= daysInMonth; i++) {
+                  calendarDays.push(i);
+                }
+
+                return calendarDays.map((day, idx) => {
+                  if (day === null) {
+                    return <View key={`empty_${idx}`} style={styles.dayCellEmpty} />;
+                  }
+
+                  const dayDate = new Date(calendarYear, calendarMonth, day);
+                  const isSelectedStart = customStartDate && dayDate.getTime() === customStartDate.getTime();
+                  const isSelectedEnd = customEndDate && dayDate.getTime() === customEndDate.getTime();
+                  const isInRange = customStartDate && customEndDate && dayDate > customStartDate && dayDate < customEndDate;
+
+                  return (
+                    <TouchableOpacity
+                      key={`day_${day}`}
+                      style={[
+                        styles.dayCell,
+                        isSelectedStart && styles.dayCellStart,
+                        isSelectedEnd && styles.dayCellEnd,
+                        isInRange && styles.dayCellInRange,
+                      ]}
+                      onPress={() => handleDayPress(day)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.dayText,
+                          (isSelectedStart || isSelectedEnd) && styles.dayTextActive,
+                          isInRange && styles.dayTextInRange,
+                        ]}
+                      >
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                });
+              })()}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.calendarActions}>
+              <TouchableOpacity
+                style={styles.calendarResetBtn}
+                onPress={() => {
+                  setCustomStartDate(null);
+                  setCustomEndDate(null);
+                }}
+              >
+                <Text style={styles.calendarResetBtnText}>Reset</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.calendarApplyBtn}
+                onPress={() => {
+                  setCustomDatePickerVisible(false);
+                }}
+              >
+                <Text style={styles.calendarApplyBtnText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Voice Result Modal */}
       <Modal
@@ -528,7 +859,7 @@ export function AddEntryScreen() {
                         placeholderTextColor="#94A3B8"
                         keyboardType="numeric"
                         value={modalAmount}
-                        onChangeText={setModalAmount}
+                        onChangeText={(val) => setModalAmount(formatInputValue(val))}
                       />
                     </View>
                   </View>
@@ -593,10 +924,35 @@ export function AddEntryScreen() {
       </Modal>
 
       {toastMessage && (
-        <View style={styles.toastContainer}>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.toastContainer,
+            {
+              top: insets.top + 16,
+              transform: [{ translateX: toastTranslateX }],
+            },
+          ]}
+        >
           <CheckCircle2 size={16} color="#FFFFFF" />
           <Text style={styles.toastText}>{toastMessage}</Text>
-        </View>
+          <TouchableOpacity
+            style={styles.toastCloseBtn}
+            onPress={() => {
+              Animated.timing(toastTranslateX, {
+                toValue: 450,
+                duration: 200,
+                useNativeDriver: true,
+              }).start(() => {
+                setToastMessage(null);
+                toastTranslateX.setValue(0);
+              });
+            }}
+            activeOpacity={0.7}
+          >
+            <X size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+        </Animated.View>
       )}
 
       <CustomAlert
@@ -645,7 +1001,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -875,6 +1231,11 @@ const styles = StyleSheet.create({
     borderColor: '#C8E6C9',
     justifyContent: 'space-between',
   },
+  stopTapArea: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   pulsingMicContainer: {
     width: 36,
     height: 36,
@@ -1051,7 +1412,6 @@ const styles = StyleSheet.create({
   },
   toastContainer: {
     position: 'absolute',
-    bottom: 90,
     left: 20,
     right: 20,
     backgroundColor: '#2E7D32',
@@ -1073,5 +1433,191 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     flex: 1,
+    marginRight: 4,
+  },
+  toastCloseBtn: {
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7E5DA',
+    backgroundColor: '#FAFAF5',
+    flexWrap: 'wrap',
+  },
+  filterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+  },
+  filterPillActive: {
+    backgroundColor: '#E7F2E7',
+    borderColor: '#2E7D32',
+  },
+  filterPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6F6B5E',
+  },
+  filterPillTextActive: {
+    color: '#2E7D32',
+    fontWeight: '700',
+  },
+  emptyLedgerText: {
+    color: '#6F6B5E',
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 24,
+  },
+  calendarModalCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  rangePreviewContainer: {
+    backgroundColor: '#FAFAF5',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  rangePreviewText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2E7D32',
+    textAlign: 'center',
+  },
+  calendarMonthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  calendarMonthTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1D261F',
+  },
+  monthNavBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#FAFAF5',
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+  },
+  monthNavBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6F6B5E',
+  },
+  weekdaysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7E5DA',
+    marginBottom: 4,
+  },
+  weekdayText: {
+    width: 38,
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#6F6B5E',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    width: 308, // 7 days * 44px
+    alignSelf: 'center',
+  },
+  dayCell: {
+    width: 44,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  dayCellEmpty: {
+    width: 44,
+    height: 38,
+  },
+  dayCellStart: {
+    backgroundColor: '#2E7D32',
+    borderTopLeftRadius: 19,
+    borderBottomLeftRadius: 19,
+  },
+  dayCellEnd: {
+    backgroundColor: '#2E7D32',
+    borderTopRightRadius: 19,
+    borderBottomRightRadius: 19,
+  },
+  dayCellInRange: {
+    backgroundColor: '#E7F2E7',
+  },
+  dayText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1D261F',
+  },
+  dayTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  dayTextInRange: {
+    color: '#2E7D32',
+  },
+  calendarActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E7E5DA',
+    paddingTop: 12,
+  },
+  calendarResetBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#FAFAF5',
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+  },
+  calendarResetBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6F6B5E',
+  },
+  calendarApplyBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#2E7D32',
+  },
+  calendarApplyBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

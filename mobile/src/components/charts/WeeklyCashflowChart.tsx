@@ -40,19 +40,39 @@ export function WeeklyCashflowChart({ data }: Props) {
   const displayData = data.slice(-5); // Last 5 weeks
   const activeItem = selectedIndex !== null ? displayData[selectedIndex] : displayData[displayData.length - 1];
 
-  // Scale calculations
-  const maxVal = Math.max(...displayData.map((d) => Math.max(d.inflow, d.outflow))) || 500000;
-  const minNet = Math.min(...displayData.map((d) => d.net), 0);
-  const maxNet = Math.max(...displayData.map((d) => d.net), 300000);
+  // Scale calculations (unified scale for inflow, outflow, and net cashflow)
+  const allValues = displayData.flatMap((d) => [d.inflow, d.outflow, d.net]);
+  const minVal = Math.min(0, ...allValues);
+  const maxVal = Math.max(...allValues) || 500000;
 
   const formatK = (val: number) => {
-    if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
-    return `${Math.round(val / 1000)}k`;
+    if (val === 0) return '0';
+    const isNeg = val < 0;
+    const absVal = Math.abs(val);
+    let formatted = '';
+    if (absVal >= 100000) {
+      formatted = `${(absVal / 100000).toFixed(1)}L`;
+    } else if (absVal >= 1000) {
+      formatted = `${(absVal / 1000).toFixed(1)}k`;
+    } else {
+      formatted = `${Math.round(absVal)}`;
+    }
+    // Remove trailing .0 if present
+    if (formatted.endsWith('.0')) {
+      formatted = formatted.slice(0, -2);
+    }
+    return isNeg ? `-${formatted}` : formatted;
   };
 
   const chartWidth = 320 - paddingLeft - paddingRight;
   const step = chartWidth / displayData.length;
   const usableH = chartHeight - paddingTop - paddingBottom;
+
+  const getPrefY = (val: number) => {
+    const pct = (val - minVal) / (maxVal - minVal || 1);
+    return paddingTop + (1 - pct) * usableH;
+  };
+  const zeroY = getPrefY(0);
 
   return (
     <View style={styles.container}>
@@ -78,7 +98,7 @@ export function WeeklyCashflowChart({ data }: Props) {
           {/* Y Axis Gridlines */}
           {[0, 0.33, 0.66, 1].map((pct, i) => {
             const y = paddingTop + (1 - pct) * usableH;
-            const val = maxVal * pct;
+            const val = minVal + pct * (maxVal - minVal);
             return (
               <G key={i}>
                 <Line
@@ -103,20 +123,33 @@ export function WeeklyCashflowChart({ data }: Props) {
             );
           })}
 
+          {/* Zero Baseline Line */}
+          <Line
+            x1={paddingLeft}
+            y1={zeroY}
+            x2={320 - paddingRight}
+            y2={zeroY}
+            stroke="#6F6B5E"
+            strokeWidth="1.5"
+            opacity="0.8"
+          />
+
           {/* Grouped Inflow / Outflow Bars */}
           {displayData.map((item, idx) => {
             const isSelected = selectedIndex === idx;
             const xCenter = paddingLeft + step * idx + step / 2;
 
-            const inflowH = Math.max((item.inflow / maxVal) * usableH, 4);
-            const outflowH = Math.max((item.outflow / maxVal) * usableH, 4);
+            const inflowY = getPrefY(item.inflow);
+            const inflowH = Math.max(zeroY - inflowY, 4);
+            const inY = zeroY - inflowH;
+
+            const outflowY = getPrefY(item.outflow);
+            const outflowH = Math.max(zeroY - outflowY, 4);
+            const outY = zeroY - outflowH;
 
             const barW = 10;
             const inX = xCenter - barW - 1;
             const outX = xCenter + 1;
-
-            const inY = paddingTop + usableH - inflowH;
-            const outY = paddingTop + usableH - outflowH;
 
             return (
               <G key={idx}>
@@ -171,8 +204,7 @@ export function WeeklyCashflowChart({ data }: Props) {
           {(() => {
             const points = displayData.map((item, idx) => {
               const xCenter = paddingLeft + step * idx + step / 2;
-              const netNormalized = (item.net - minNet) / (maxNet - minNet || 1);
-              const netY = paddingTop + (1 - netNormalized) * usableH;
+              const netY = getPrefY(item.net);
               return `${xCenter},${netY}`;
             });
 
@@ -183,8 +215,7 @@ export function WeeklyCashflowChart({ data }: Props) {
           {displayData.map((item, idx) => {
             const isSelected = selectedIndex === idx;
             const xCenter = paddingLeft + step * idx + step / 2;
-            const netNormalized = (item.net - minNet) / (maxNet - minNet || 1);
-            const netY = paddingTop + (1 - netNormalized) * usableH;
+            const netY = getPrefY(item.net);
 
             return (
               <Circle

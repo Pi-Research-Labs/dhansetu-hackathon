@@ -16,7 +16,6 @@ import {
   X,
   PhoneCall,
   KeyRound,
-  AlertTriangle,
   CheckCircle2,
   MapPin,
   Plus,
@@ -48,7 +47,6 @@ export default function AccountScreen() {
     district,
     phone,
     gstin,
-    tier,
     score,
     logout,
     token,
@@ -112,8 +110,8 @@ export default function AccountScreen() {
       }
 
       base64 += chars.charAt(enc1) + chars.charAt(enc2) +
-                (enc3 === 64 ? '=' : chars.charAt(enc3)) +
-                (enc4 === 64 ? '=' : chars.charAt(enc4));
+        (enc3 === 64 ? '=' : chars.charAt(enc3)) +
+        (enc4 === 64 ? '=' : chars.charAt(enc4));
     }
     return base64;
   };
@@ -125,16 +123,16 @@ export default function AccountScreen() {
       apiClient.get(`/enterprise/${enterpriseId}/map-tile?zoom=${zoom}&size=500x250`, {
         responseType: 'arraybuffer'
       })
-      .then(response => {
-        const base64 = arrayBufferToBase64(response.data);
-        setMapImageUri(`data:image/png;base64,${base64}`);
-        setMapLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to fetch map tile:', err);
-        setMapError(true);
-        setMapLoading(false);
-      });
+        .then(response => {
+          const base64 = arrayBufferToBase64(response.data);
+          setMapImageUri(`data:image/png;base64,${base64}`);
+          setMapLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch map tile:', err);
+          setMapError(true);
+          setMapLoading(false);
+        });
     }
   }, [enterpriseId, token, zoom]);
 
@@ -168,9 +166,7 @@ export default function AccountScreen() {
               <Text style={styles.merchantName}>{name}</Text>
               <Text style={styles.merchantMeta}>{segment} · {district}</Text>
             </View>
-            <View style={[styles.tierBadge, tier === 'GREEN' && styles.tierGreen, tier === 'AMBER' && styles.tierAmber, tier === 'RED' && styles.tierRed]}>
-              <Text style={styles.tierText}>{t.tiers[tier]} · {score}/100</Text>
-            </View>
+
           </View>
 
           <View style={styles.divider} />
@@ -515,7 +511,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 110,
+    paddingBottom: 120,
   },
   headerSection: {
     marginBottom: 16,
