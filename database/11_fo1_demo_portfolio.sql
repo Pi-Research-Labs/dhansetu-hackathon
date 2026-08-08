@@ -4,11 +4,13 @@
 -- statement targets fixed enterprise_ids with fixed values.
 --
 -- WHY
--- Prakash Nair (FO1) is the field officer used for live walkthroughs. The
--- officer worklist (v_officer_worklist) deliberately shows only enterprises
--- that need action -- `WHERE risk_tier <> 'GREEN'` -- so the dashboard's
--- segment dropdown is built from the *non-GREEN* slice of the book, not the
--- whole book. Before this file FO1's book was 42 enterprises across 8 of the
+-- Prakash Nair (FO1) is the field officer used for live walkthroughs. At the
+-- time this file was written v_officer_worklist ended in
+-- `WHERE risk_tier <> 'GREEN'`, so the dashboard's segment dropdown was built
+-- from the *non-GREEN* slice of the book rather than the whole book. (That
+-- filter was since dropped -- see 12_fo1_pottery_and_stable.sql -- but the
+-- shaping below is what gives the action list its spread either way.)
+-- Before this file FO1's book was 42 enterprises across 8 of the
 -- 9 sub_types, but only 7 of them were non-GREEN and those 7 spanned just
 -- 2 sub_types (Dairy Producer x6, Poultry Unit x1). Result: the demo's
 -- segment filter offered 2 options out of 9.
@@ -182,7 +184,10 @@ COMMIT;
 -- ===========================================================================
 -- VERIFY -- FO1 must end up with 9 selectable segments
 -- ===========================================================================
-\echo '--> FO1 worklist by segment (expect 9 rows)'
+-- The at-risk filter is spelled out here rather than relying on the view to
+-- apply it: v_officer_worklist returns the officer's whole book (see the
+-- comment on its ORDER BY in 05_views.sql), so these checks scope themselves.
+\echo '--> FO1 at-risk cases by segment (expect 9 rows)'
 SELECT sub_type,
        count(*)                                    AS items,
        count(*) FILTER (WHERE risk_tier = 'RED')   AS red,
@@ -190,16 +195,16 @@ SELECT sub_type,
        round(min(score), 3)                        AS min_score,
        round(max(score), 3)                        AS max_score
 FROM v_officer_worklist
-WHERE officer_id = 'FO1'
+WHERE officer_id = 'FO1' AND risk_tier <> 'GREEN'
 GROUP BY sub_type
 ORDER BY items DESC, sub_type;
 
-\echo '--> FO1 totals (expect 9 segments / 18 items, and 9 sub_types in the full book)'
-SELECT count(*)                  AS worklist_items,
-       count(DISTINCT sub_type)  AS selectable_segments,
+\echo '--> FO1 totals (expect 9 segments / 18 at-risk, and 9 sub_types in the full book)'
+SELECT count(*)                  AS at_risk_items,
+       count(DISTINCT sub_type)  AS segments_with_action,
        (SELECT count(DISTINCT sub_type) FROM enterprises WHERE officer_id = 'FO1') AS segments_in_book
 FROM v_officer_worklist
-WHERE officer_id = 'FO1';
+WHERE officer_id = 'FO1' AND risk_tier <> 'GREEN';
 
 \echo '--> internal consistency (expect 0 rows: fused = 0.45p + 0.55r, tier matches cutoffs)'
 SELECT enterprise_id, prob_stress, rule_score, fused_score, risk_tier

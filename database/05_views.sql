@@ -458,7 +458,13 @@ LEFT JOIN LATERAL (
         LIMIT 7
     ) wc
 ) trend ON TRUE
-WHERE ra.risk_tier <> 'GREEN'
+-- No tier filter: the officer's whole book, highest score first, so the
+-- cases needing action sort to the top on their own. GREEN used to be
+-- excluded here, but the dashboard reads this one endpoint for both halves
+-- of the portfolio — the "Stable" tier pill (SearchAndFilters.tsx) and the
+-- "Bankable Pipeline" KPI (PortfolioMetrics.tsx) are both counted off it —
+-- so filtering GREEN out server-side pinned both to 0 with no way to show
+-- stable-vs-at-risk. Tier filtering is the client's job.
 ORDER BY ra.fused_score DESC;
 
 -- ===========================================================================
