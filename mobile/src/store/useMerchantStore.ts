@@ -387,8 +387,8 @@ export const useMerchantStore = create<MerchantStore>()(
                 (parseFloat(card.net_buffer_days) > 0 ? parseFloat(card.net_buffer_days) * 3500 : 85000)),
         runwayMonths: Number((card.savings_runway_days ? parseFloat(card.savings_runway_days) / 30 : (card.net_buffer_days ? parseFloat(card.net_buffer_days) / 30 : 0)).toFixed(2)),
         missedEmi: card.missed_emis_90d ?? card.missed_emi ?? (parseFloat(card.net_buffer_days) < -10 ? 2 : 0),
-        loan: card.informal_debt ?? card.loan ?? (parseFloat(card.bridge_headroom) > 0 ? 350000 : 0),
-        emi: (card.emi ?? card.monthly_emi ?? parseFloat(card.suggested_max_emi)) || 0,
+        loan: parseFloat(card.informal_debt ?? card.loan) || (parseFloat(card.bridge_headroom) > 0 ? 350000 : 0),
+        emi: parseFloat(card.emi ?? card.monthly_emi ?? card.suggested_max_emi) || 0,
 
         // Payment Shares
         upiShare: paymentMix.avg_digital_share ?? 0.5,
@@ -399,7 +399,12 @@ export const useMerchantStore = create<MerchantStore>()(
         digitalHeatmap: digitalData,
         netInflowHeatmap: netInflowData,
         cashflowForecast: forecastData,
-        receivables: receivablesData || [],
+        receivables: (receivablesData || []).map((item: any) => ({
+          ...item,
+          total: parseFloat(item.total) || 0,
+          written_off: parseFloat(item.written_off) || 0,
+          write_off_pct: parseFloat(item.write_off_pct) || 0,
+        })),
         riskPrediction: riskPredictData || null,
         flags,
         advice: adviceList,
