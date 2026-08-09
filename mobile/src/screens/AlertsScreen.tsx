@@ -60,9 +60,6 @@ export function AlertsScreen() {
               <ShieldCheck size={18} color="#2E7D32" />
               <Text style={styles.healthLabel}>{t.healthStatusLabel}</Text>
             </View>
-            <View style={[styles.tierChip, tier === 'AMBER' && styles.tierAmber, tier === 'GREEN' && styles.tierGreen, tier === 'RED' && styles.tierRed]}>
-              <Text style={styles.tierChipText}>{t.tiers[tier]} · {score}/100</Text>
-            </View>
           </View>
           <Text style={styles.businessNameText}>{name}</Text>
           <Text style={styles.healthSubtext}>{t.healthDesc}</Text>

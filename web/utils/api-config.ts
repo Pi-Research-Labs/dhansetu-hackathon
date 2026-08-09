@@ -517,6 +517,7 @@ export interface MarketCategory {
   sub_type: string;
   sector: string;
   typical_daily_turnover?: number;
+  is_merchant_primary?: boolean;
 }
 
 export interface MarketRiskCard {
@@ -535,6 +536,8 @@ export interface MarketIntelligenceDetail {
   sub_type_id: string;
   sub_type: string;
   sector: string;
+  enterprise_id?: string | null;
+  district?: string | null;
   tracked_commodity: string;
   price_trend_12m_pct: number;
   productivity_outlook: string;

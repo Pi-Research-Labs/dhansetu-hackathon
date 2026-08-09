@@ -19,6 +19,12 @@ import {
   Layers,
   Sparkles,
   DollarSign,
+  ShieldAlert,
+  CloudRain,
+  Flame,
+  Zap,
+  Bug,
+  Eye,
 } from "lucide-react";
 import {
   ComposedChart,
@@ -72,7 +78,29 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-export default function MarketIntelligenceTab() {
+/* ---------- Risk icon helper ---------- */
+function getRiskIcon(riskType: string, className: string) {
+  const lower = riskType.toLowerCase();
+  if (lower.includes("flood") || lower.includes("rain") || lower.includes("water") || lower.includes("drought")) {
+    return <CloudRain className={className} />;
+  }
+  if (lower.includes("heat") || lower.includes("fire") || lower.includes("temperature")) {
+    return <Flame className={className} />;
+  }
+  if (lower.includes("pest") || lower.includes("disease") || lower.includes("infestation")) {
+    return <Bug className={className} />;
+  }
+  if (lower.includes("price") || lower.includes("market") || lower.includes("demand") || lower.includes("supply")) {
+    return <Zap className={className} />;
+  }
+  return <ShieldAlert className={className} />;
+}
+
+interface MarketIntelligenceTabProps {
+  initialSubType?: string;
+}
+
+export default function MarketIntelligenceTab({ initialSubType }: MarketIntelligenceTabProps = {}) {
   const [categories, setCategories] = useState<MarketCategory[]>([]);
   const [selectedSubType, setSelectedSubType] = useState<string>("Dairy Producer");
   const [prevSelectedSubType, setPrevSelectedSubType] = useState<string>("Dairy Producer");
@@ -95,10 +123,6 @@ export default function MarketIntelligenceTab() {
         if (isMounted) {
           const list = Array.isArray(data) ? data : [];
           setCategories(list);
-          const hasDairy = list.some((cat) => cat.sub_type === "Dairy Producer");
-          if (!hasDairy && list.length > 0) {
-            setSelectedSubType(list[0].sub_type);
-          }
         }
       })
       .catch((err) => {
@@ -108,6 +132,45 @@ export default function MarketIntelligenceTab() {
       isMounted = false;
     };
   }, []);
+
+  const [prevInitialSubType, setPrevInitialSubType] = useState<string | undefined>(undefined);
+  const [prevCategories, setPrevCategories] = useState<MarketCategory[]>([]);
+
+  // Sync selectedSubType during render-phase when initialSubType changes
+  if (initialSubType !== prevInitialSubType) {
+    setPrevInitialSubType(initialSubType);
+    if (initialSubType && categories.length > 0) {
+      const match = categories.find(
+        (cat) => cat.sub_type.toLowerCase() === initialSubType.toLowerCase()
+      );
+      if (match) {
+        setSelectedSubType(match.sub_type);
+      }
+    }
+  }
+
+  // Sync selectedSubType during render-phase when categories load/change
+  if (categories !== prevCategories) {
+    setPrevCategories(categories);
+    if (initialSubType) {
+      const match = categories.find(
+        (cat) => cat.sub_type.toLowerCase() === initialSubType.toLowerCase()
+      );
+      if (match) {
+        setSelectedSubType(match.sub_type);
+      }
+    } else {
+      const currentIsValid = categories.some((cat) => cat.sub_type === selectedSubType);
+      if (!currentIsValid) {
+        const hasDairy = categories.some((cat) => cat.sub_type === "Dairy Producer");
+        if (hasDairy) {
+          setSelectedSubType("Dairy Producer");
+        } else if (categories.length > 0) {
+          setSelectedSubType(categories[0].sub_type);
+        }
+      }
+    }
+  }
 
   // 2. Fetch market intel whenever selectedSubType changes
   useEffect(() => {
@@ -179,8 +242,52 @@ export default function MarketIntelligenceTab() {
     );
   }
 
+  /* ---------- Severity helpers for risk cards ---------- */
+  const severityConfig = (severity: string) => {
+    const s = severity.toLowerCase();
+    if (s === "high") return {
+      gradient: "from-[#C62828]/8 via-[#FFEBEE]/40 to-white",
+      border: "border-[#EF9A9A]",
+      accentBar: "bg-gradient-to-b from-[#C62828] to-[#E53935]",
+      iconColor: "text-[#C62828]",
+      badgeBg: "bg-[#C62828]",
+      badgeText: "text-white",
+      textColor: "text-[#880E4F]",
+      dotPulse: "bg-[#C62828]",
+      barWidth: "100%",
+      barColor: "bg-gradient-to-r from-[#C62828] to-[#E53935]",
+      label: "HIGH",
+    };
+    if (s === "medium") return {
+      gradient: "from-[#E65100]/6 via-[#FFF3E0]/40 to-white",
+      border: "border-[#FFCC80]",
+      accentBar: "bg-gradient-to-b from-[#E65100] to-[#FB8C00]",
+      iconColor: "text-[#E65100]",
+      badgeBg: "bg-[#E65100]",
+      badgeText: "text-white",
+      textColor: "text-[#BF360C]",
+      dotPulse: "bg-[#E65100]",
+      barWidth: "60%",
+      barColor: "bg-gradient-to-r from-[#E65100] to-[#FB8C00]",
+      label: "MEDIUM",
+    };
+    return {
+      gradient: "from-[#2E7D32]/4 via-[#E8F5E9]/30 to-white",
+      border: "border-[#C8E6C9]",
+      accentBar: "bg-gradient-to-b from-[#43A047] to-[#66BB6A]",
+      iconColor: "text-[#2E7D32]",
+      badgeBg: "bg-[#2E7D32]",
+      badgeText: "text-white",
+      textColor: "text-[#1B5E20]",
+      dotPulse: "bg-[#2E7D32]",
+      barWidth: "30%",
+      barColor: "bg-gradient-to-r from-[#43A047] to-[#66BB6A]",
+      label: "LOW",
+    };
+  };
+
   return (
-    <div className="w-full h-full flex flex-col min-h-0 overflow-y-auto space-y-5 pb-4 pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
+    <div className="w-full h-full flex flex-col min-h-0 overflow-y-auto space-y-5 pb-4 pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-neutral-400/50 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgba(163,163,163,0.5)_transparent]">
       {/* Dropdown Selector row */}
       <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div className="flex flex-col gap-1">
@@ -201,7 +308,7 @@ export default function MarketIntelligenceTab() {
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#5F6656]">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>
           </div>
@@ -217,6 +324,12 @@ export default function MarketIntelligenceTab() {
               <span className="text-[10px] font-bold text-[#5F6656] uppercase">ID:</span>
               <span className="font-mono font-bold text-[#5F6656]">{selectedCategory.sub_type_id}</span>
             </div>
+            {intel?.district && (
+              <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <span className="text-[10px] font-bold text-[#5F6656] uppercase">District:</span>
+                <span className="font-mono font-bold text-[#1565C0] uppercase">{intel.district}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -281,192 +394,279 @@ export default function MarketIntelligenceTab() {
         </div>
       </div>
 
-      {/* Chart & Narrative Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Chart Panel */}
-        <div className="lg:col-span-8 bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col min-h-[350px]">
-          <div className="flex items-center justify-between border-b border-[#E2E6D8] pb-2 mb-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#2E7D32]" />
-              <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-                12-Month Price Index & Rainfall Chart
-              </h3>
-            </div>
-            <span className="text-[9px] font-mono text-[#5F6656] bg-[#FAFBF6] border border-[#E2E6D8] px-2 py-0.5 rounded-sm uppercase">
-              Dual-Axis Index
-            </span>
+      {/* Chart — full width */}
+      <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col min-h-[370px] shrink-0">
+        <div className="flex items-center justify-between border-b border-[#E2E6D8] pb-2 mb-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#2E7D32]" />
+            <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
+              12-Month Price Index & Rainfall Chart
+            </h3>
           </div>
-          
-          <div className="flex-1 w-full min-h-[280px]">
-            {intel?.chart_data && intel.chart_data.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <ComposedChart
-                  data={intel.chart_data}
-                  margin={{ top: 15, right: 10, left: 10, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F2EB" vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fill: "#5F6656", fontSize: 10, fontFamily: "monospace" }}
-                    tickLine={{ stroke: "#E2E6D8" }}
-                    axisLine={{ stroke: "#E2E6D8" }}
-                  />
-                  <YAxis
-                    yAxisId="price"
-                    orientation="left"
-                    domain={["dataMin - 5", "dataMax + 5"]}
-                    tick={{ fill: "#2E7D32", fontSize: 10, fontFamily: "monospace" }}
-                    tickLine={{ stroke: "#E2E6D8" }}
-                    axisLine={{ stroke: "#E2E6D8" }}
-                    label={{
-                      value: "Price Index",
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: -5,
-                      style: { fill: "#2E7D32", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
-                    }}
-                  />
-                  <YAxis
-                    yAxisId="rainfall"
-                    orientation="right"
-                    domain={[0, "auto"]}
-                    tick={{ fill: "#1565C0", fontSize: 10, fontFamily: "monospace" }}
-                    tickLine={{ stroke: "#E2E6D8" }}
-                    axisLine={{ stroke: "#E2E6D8" }}
-                    label={{
-                      value: "Rainfall (mm)",
-                      angle: 90,
-                      position: "insideRight",
-                      offset: 5,
-                      style: { fill: "#1565C0", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
-                    }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    verticalAlign="top"
-                    height={30}
-                    wrapperStyle={{ fontSize: 10, fontFamily: "sans-serif", paddingBottom: 10 }}
-                  />
-                  <Bar
-                    yAxisId="rainfall"
-                    dataKey="rainfall_mm"
-                    name="Rainfall (mm)"
-                    fill="#BBDEFB"
-                    radius={[2, 2, 0, 0]}
-                    barSize={16}
-                  />
-                  <Line
-                    yAxisId="price"
-                    type="monotone"
-                    dataKey="price_index"
-                    name="Price Index"
-                    stroke="#2E7D32"
-                    strokeWidth={2.5}
-                    dot={{ r: 3.5, stroke: "#2E7D32", strokeWidth: 1.5, fill: "#fff" }}
-                    activeDot={{ r: 5, stroke: "#2E7D32", strokeWidth: 2, fill: "#2E7D32" }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-xs text-[#5F6656] italic">
-                No chart data available
+          <span className="text-[9px] font-mono text-[#5F6656] bg-[#FAFBF6] border border-[#E2E6D8] px-2 py-0.5 rounded-sm uppercase">
+            Dual-Axis Index
+          </span>
+        </div>
+        <div className="flex-1 w-full min-h-[300px]">
+          {intel?.chart_data && intel.chart_data.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart
+                data={intel.chart_data}
+                margin={{ top: 15, right: 10, left: 10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F2EB" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "#5F6656", fontSize: 10, fontFamily: "monospace" }}
+                  tickLine={{ stroke: "#E2E6D8" }}
+                  axisLine={{ stroke: "#E2E6D8" }}
+                />
+                <YAxis
+                  yAxisId="price"
+                  orientation="left"
+                  domain={["dataMin - 5", "dataMax + 5"]}
+                  tick={{ fill: "#2E7D32", fontSize: 10, fontFamily: "monospace" }}
+                  tickLine={{ stroke: "#E2E6D8" }}
+                  axisLine={{ stroke: "#E2E6D8" }}
+                  label={{
+                    value: "Price Index",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: -5,
+                    style: { fill: "#2E7D32", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
+                  }}
+                />
+                <YAxis
+                  yAxisId="rainfall"
+                  orientation="right"
+                  domain={[0, "auto"]}
+                  tick={{ fill: "#1565C0", fontSize: 10, fontFamily: "monospace" }}
+                  tickLine={{ stroke: "#E2E6D8" }}
+                  axisLine={{ stroke: "#E2E6D8" }}
+                  label={{
+                    value: "Rainfall (mm)",
+                    angle: 90,
+                    position: "insideRight",
+                    offset: 5,
+                    style: { fill: "#1565C0", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
+                  }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  height={30}
+                  wrapperStyle={{ fontSize: 10, fontFamily: "sans-serif", paddingBottom: 10 }}
+                />
+                <Bar
+                  yAxisId="rainfall"
+                  dataKey="rainfall_mm"
+                  name="Rainfall (mm)"
+                  fill="#BBDEFB"
+                  radius={[2, 2, 0, 0]}
+                  barSize={18}
+                />
+                <Line
+                  yAxisId="price"
+                  type="monotone"
+                  dataKey="price_index"
+                  name="Price Index"
+                  stroke="#2E7D32"
+                  strokeWidth={2.5}
+                  dot={{ r: 3.5, stroke: "#2E7D32", strokeWidth: 1.5, fill: "#fff" }}
+                  activeDot={{ r: 5, stroke: "#2E7D32", strokeWidth: 2, fill: "#2E7D32" }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-xs text-[#5F6656] italic">
+              No chart data available
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ===== Insights Row: Productivity Outlook + Seasonal Pattern ===== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 shrink-0">
+        {/* Productivity Outlook Card */}
+        <div className="bg-white border border-[#E2E6D8] rounded-xl shadow-3xs hover:shadow-sm transition-shadow duration-200">
+          <div className="p-5">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 mb-4 border-b border-[#E2E6D8]/60 pb-3">
+              <div className="w-7 h-7 rounded-md bg-[#F1F8F2] border border-[#C8E6C9] flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-[#2E7D32]" />
               </div>
-            )}
+              <div>
+                <h3 className="text-[11px] font-bold text-[#1A2016] uppercase tracking-wider">
+                  Productivity Outlook
+                </h3>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="bg-[#FAFBF6] border border-[#E2E6D8]/40 rounded-lg p-3.5">
+              <p className="text-[12px] text-[#1A2016] leading-relaxed font-medium">
+                {intel?.productivity_outlook || "N/A"}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center gap-2 mt-3.5">
+              <Eye className="w-3.5 h-3.5 text-[#8C9385]" />
+              <span className="text-[10px] text-[#5F6656]">
+                Analysis based on regional production data and climate models
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Narrative Panel */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          {/* Productivity Outlook */}
-          <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex-1 flex flex-col">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5F6656] uppercase tracking-wider border-b border-[#E2E6D8] pb-1.5 mb-2.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#2E7D32]" />
-              <span>Productivity Outlook</span>
+        {/* Seasonal Pattern & Demand Card */}
+        <div className="bg-white border border-[#E2E6D8] rounded-xl shadow-3xs hover:shadow-sm transition-shadow duration-200">
+          <div className="p-5">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 mb-4 border-b border-[#E2E6D8]/60 pb-3">
+              <div className="w-7 h-7 rounded-md bg-[#F0F7FF] border border-[#BBDEFB] flex items-center justify-center">
+                <Calendar className="w-3.5 h-3.5 text-[#1565C0]" />
+              </div>
+              <div>
+                <h3 className="text-[11px] font-bold text-[#1A2016] uppercase tracking-wider">
+                  Seasonal Pattern & Demand
+                </h3>
+              </div>
             </div>
-            <div className="text-xs text-[#1A2016] leading-relaxed flex-1 flex items-center">
-              <p className="bg-[#FAFBF6] border border-[#E2E6D8]/60 p-3 rounded-lg w-full font-medium italic">
-                &quot;{intel?.productivity_outlook || "N/A"}&quot;
-              </p>
-            </div>
-          </div>
 
-          {/* Seasonal Pattern */}
-          <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex-1 flex flex-col">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5F6656] uppercase tracking-wider border-b border-[#E2E6D8] pb-1.5 mb-2.5">
-              <Calendar className="w-3.5 h-3.5 text-[#1565C0]" />
-              <span>Seasonal Pattern & Demand</span>
-            </div>
-            <div className="text-xs text-[#1A2016] leading-relaxed flex-1 flex items-center">
-              <p className="bg-[#E3F2FD]/40 border border-[#BBDEFB]/60 p-3 rounded-lg w-full font-medium italic">
-                &quot;{intel?.seasonal_pattern || "N/A"}&quot;
+            {/* Content */}
+            <div className="bg-[#FAFBF6] border border-[#E2E6D8]/40 rounded-lg p-3.5">
+              <p className="text-[12px] text-[#1A2016] leading-relaxed font-medium">
+                {intel?.seasonal_pattern || "N/A"}
               </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center gap-2 mt-3.5">
+              <Eye className="w-3.5 h-3.5 text-[#8C9385]" />
+              <span className="text-[10px] text-[#5F6656]">
+                Analysis based on historical seasonal demand cycles
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Climate & Market Risk Cards */}
-      <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col gap-3">
-        <div className="flex items-center gap-2 border-b border-[#E2E6D8] pb-2 shrink-0">
-          <AlertTriangle className="w-4 h-4 text-[#C62828]" />
-          <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-            Climate & Market Risk Assessment
-          </h3>
+      {/* ===== Climate & Market Risk Assessment ===== */}
+      <div className="bg-white border border-[#E2E6D8] rounded-xl shadow-3xs shrink-0">
+        {/* Section Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E6D8] bg-[#FAFBF6] rounded-t-xl">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-[#FFF5F5] border border-[#FFCDD2] flex items-center justify-center">
+              <ShieldAlert className="w-3.5 h-3.5 text-[#C62828]" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
+                Climate & Market Risk Assessment
+              </h3>
+              <p className="text-[10px] text-[#5F6656] mt-0.5">Identified threats and vulnerability indicators</p>
+            </div>
+          </div>
+          {intel?.risks && intel.risks.length > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-[#E2E6D8]">
+              <span className="text-[10px] font-bold text-[#1A2016]">
+                {intel.risks.length} Active Risks
+              </span>
+            </div>
+          )}
         </div>
 
-        {intel?.risks && intel.risks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
-            {intel.risks.map((risk: MarketRiskCard, idx: number) => {
-              const isHigh = risk.severity.toLowerCase() === "high";
-              const isMedium = risk.severity.toLowerCase() === "medium";
-              
-              let bgClass = "bg-[#FAFBF6]";
-              let borderClass = "border-[#E2E6D8]";
-              let textClass = "text-[#1A2016]";
-              let badgeBg = "bg-[#E2E6D8]";
-              let badgeText = "text-[#5F6656]";
-              
-              if (isHigh) {
-                bgClass = "bg-[#FFEBEE]/60";
-                borderClass = "border-[#FFCDD2]";
-                textClass = "text-[#880E4F]";
-                badgeBg = "bg-[#FFCDD2]";
-                badgeText = "text-[#C62828]";
-              } else if (isMedium) {
-                bgClass = "bg-[#FFF3E0]/60";
-                borderClass = "border-[#FFE0B2]";
-                textClass = "text-[#E65100]";
-                badgeBg = "bg-[#FFE0B2]";
-                badgeText = "text-[#E65100]";
-              }
-              
-              return (
-                <div key={idx} className={`p-3 border rounded-xl flex items-start gap-3 transition-colors ${bgClass} ${borderClass}`}>
-                  <div className="mt-0.5">
-                    <AlertTriangle className={`w-4.5 h-4.5 ${isHigh ? "text-[#C62828]" : isMedium ? "text-[#E65100]" : "text-[#5F6656]"}`} />
-                  </div>
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs uppercase tracking-tight text-[#1A2016]">
-                        {risk.risk_type}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${badgeBg} ${badgeText}`}>
+        {/* Risk Cards */}
+        <div className="p-5">
+          {intel?.risks && intel.risks.length > 0 ? (
+            <div className={`grid gap-4 ${intel.risks.length === 1
+              ? "grid-cols-1 max-w-xl"
+              : intel.risks.length === 2
+                ? "grid-cols-1 md:grid-cols-2"
+                : intel.risks.length === 3
+                  ? "grid-cols-1 md:grid-cols-3"
+                  : "grid-cols-1 md:grid-cols-2"
+              }`}>
+              {intel.risks.map((risk: MarketRiskCard, idx: number) => {
+                const s = risk.severity.toLowerCase();
+
+                let borderClass = "border-[#E2E6D8]";
+                let iconColor = "text-[#5F6656]";
+                let badgeClass = "bg-[#F5F6F2] text-[#5F6656] border-[#E2E6D8]";
+                let barColor = "bg-[#E2E6D8]";
+                let barWidth = "30%";
+
+                if (s === "high") {
+                  borderClass = "border-[#FFCDD2]";
+                  iconColor = "text-[#C62828]";
+                  badgeClass = "bg-[#FFF5F5] text-[#C62828] border-[#FFCDD2]";
+                  barColor = "bg-[#C62828]";
+                  barWidth = "100%";
+                } else if (s === "medium") {
+                  borderClass = "border-[#FFE0B2]";
+                  iconColor = "text-[#E65100]";
+                  badgeClass = "bg-[#FFF8F0] text-[#E65100] border-[#FFE0B2]";
+                  barColor = "bg-[#E65100]";
+                  barWidth = "60%";
+                } else if (s === "low") {
+                  borderClass = "border-[#C8E6C9]";
+                  iconColor = "text-[#2E7D32]";
+                  badgeClass = "bg-[#F1F8F2] text-[#2E7D32] border-[#C8E6C9]";
+                  barColor = "bg-[#2E7D32]";
+                  barWidth = "30%";
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    className={`bg-white rounded-lg border ${borderClass} p-4 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col`}
+                  >
+                    {/* Risk header */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`shrink-0 w-6 h-6 rounded-md bg-[#FAFBF6] border border-[#E2E6D8] flex items-center justify-center`}>
+                          {getRiskIcon(risk.risk_type, `w-3 h-3 ${iconColor}`)}
+                        </div>
+                        <span className="font-bold text-[11px] uppercase tracking-wide text-[#1A2016] leading-tight">
+                          {risk.risk_type}
+                        </span>
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${badgeClass}`}>
                         {risk.severity}
                       </span>
                     </div>
-                    <p className={`text-[11px] leading-relaxed font-sans ${textClass}`}>
+
+                    {/* Detail text */}
+                    <p className="text-[11px] leading-relaxed text-[#5F6656] flex-1 mb-4">
                       {risk.detail}
                     </p>
+
+                    {/* Severity progress bar */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-medium text-[#8C9385]">Severity</span>
+                      <div className="flex-1 h-1 bg-[#F5F6F2] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${barColor}`}
+                          style={{ width: barWidth }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-xs text-[#5F6656] italic text-center p-6 bg-[#FAFBF6] border border-[#E2E6D8] rounded-lg">
-            No active risks identified for this enterprise type.
-          </div>
-        )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center bg-[#FAFBF6] border border-[#E2E6D8] rounded-lg">
+              <div className="w-10 h-10 rounded-full bg-[#F1F8F2] border border-[#C8E6C9] flex items-center justify-center mb-3">
+                <ShieldAlert className="w-4 h-4 text-[#2E7D32]" />
+              </div>
+              <p className="text-[11px] font-bold text-[#1A2016] mb-1">No Active Risks</p>
+              <p className="text-[10px] text-[#5F6656] max-w-xs">
+                No climate or market risks have been identified for this enterprise type at this time.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

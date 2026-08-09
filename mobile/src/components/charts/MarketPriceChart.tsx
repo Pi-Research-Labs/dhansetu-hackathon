@@ -1,13 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Rect, Path, Circle, Line, Text as SvgText, G } from 'react-native-svg';
+import { MarketChartPoint } from '@/utils/api-config';
 
-export function MarketPriceChart() {
-  const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+interface MarketPriceChartProps {
+  chartData?: MarketChartPoint[];
+}
+
+export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
+  const months = chartData && chartData.length > 0
+    ? chartData.map((d) => d.month)
+    : ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
   // Rainfall in mm
-  const rainfallData = [185, 210, 145, 60, 15, 5, 0, 10, 25, 40, 85, 160];
+  const rainfallData = chartData && chartData.length > 0
+    ? chartData.map((d) => d.rainfall_mm)
+    : [185, 210, 145, 60, 15, 5, 0, 10, 25, 40, 85, 160];
+
   // Price Index (100 base)
-  const priceIndexData = [102, 104, 107, 112, 118, 122, 120, 119, 123, 125, 128, 131];
+  const priceIndexData = chartData && chartData.length > 0
+    ? chartData.map((d) => d.price_index)
+    : [102, 104, 107, 112, 118, 122, 120, 119, 123, 125, 128, 131];
 
   const chartHeight = 170;
   const paddingLeft = 32;
@@ -15,9 +28,17 @@ export function MarketPriceChart() {
   const paddingTop = 15;
   const paddingBottom = 25;
 
-  const maxRain = 250;
-  const minPrice = 90;
-  const maxPrice = 140;
+  const maxRain = chartData && chartData.length > 0
+    ? Math.max(...rainfallData, 50)
+    : 250;
+
+  const minPrice = chartData && chartData.length > 0
+    ? Math.max(0, Math.min(...priceIndexData) - 5)
+    : 90;
+
+  const maxPrice = chartData && chartData.length > 0
+    ? Math.max(...priceIndexData) + 5
+    : 140;
 
   return (
     <View style={styles.container}>

@@ -83,7 +83,7 @@ export default function MyPortfolioTab({
     <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-visible lg:overflow-hidden">
       {/* Left Sidebar: Officer Worklist & Metrics */}
       <div className="lg:col-span-5 flex flex-col lg:h-full min-h-0 overflow-visible lg:overflow-hidden space-y-3 shrink-0">
-        <PortfolioMetrics bankableCount={bankableCount} atRiskCount={atRiskCount} t={t} />
+        <PortfolioMetrics bankableCount={bankableCount} atRiskCount={atRiskCount} t={t} isLoading={loadingWorklist} />
 
         <SearchAndFilters
           search={search}
@@ -100,7 +100,7 @@ export default function MyPortfolioTab({
           t={t}
         />
 
-        <div className="max-h-[40vh] lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin]">
+        <div className="max-h-[40vh] lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-neutral-400/50 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgba(163,163,163,0.5)_transparent]">
           <WorklistList
             items={filteredWorklistItems}
             selectedId={selectedId}
@@ -113,8 +113,20 @@ export default function MyPortfolioTab({
       </div>
 
       {/* Right Detail Panel - Independent vertical scrolling */}
-      <div className="lg:col-span-7 lg:h-full min-h-0 overflow-visible lg:overflow-y-auto pr-1 space-y-4 lg:[&::-webkit-scrollbar]:w-1.5 lg:[&::-webkit-scrollbar-thumb]:bg-[#2E7D32]/15 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin]">
-        {!selectedEnterprise ? (
+      <div className="lg:col-span-7 lg:h-full min-h-0 overflow-visible lg:overflow-y-auto pr-1 space-y-4 lg:[&::-webkit-scrollbar]:w-1 lg:[&::-webkit-scrollbar-thumb]:bg-neutral-400/50 lg:hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(163,163,163,0.5)_transparent]">
+        {loadingWorklist ? (
+          <div className="bg-white border border-[#E2E6D8] p-12 rounded-2xl shadow-3xs text-center flex flex-col items-center justify-center gap-3 h-full">
+            <Loader2 className="w-8 h-8 text-[#2E7D32] animate-spin" />
+            <div>
+              <h4 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
+                Loading Portfolio...
+              </h4>
+              <p className="text-[11px] text-[#5F6656] mt-1 font-mono">
+                Please wait while we fetch the enterprise data
+              </p>
+            </div>
+          </div>
+        ) : !selectedEnterprise ? (
           <div className="bg-white border border-[#E2E6D8] p-12 rounded-2xl shadow-3xs text-center flex flex-col items-center justify-center gap-2 h-full text-[#5F6656]">
             <Building2 className="w-8 h-8 text-[#E2E6D8] shrink-0" />
             <h4 className="font-bold text-[#1A2016]">No Enterprise Selected</h4>

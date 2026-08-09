@@ -163,3 +163,65 @@ export const postVoiceEntry = async (
   });
   return response.data;
 };
+
+/* ==========================================================================
+   Market Intelligence APIs & Types
+   ========================================================================== */
+
+export interface MarketCategory {
+  sub_type_id: string;          // e.g. "ST02"
+  sub_type: string;             // e.g. "Poultry Unit (broiler)"
+  sector: string;               // e.g. "POULTRY"
+  typical_daily_turnover?: number;
+  is_merchant_primary?: boolean; // true if this is the logged-in merchant's category
+}
+
+export interface MarketRiskCard {
+  risk_type: string;   // e.g. "Demand cliff"
+  detail: string;      // e.g. "Festival demand collapse during Shrawan & Navratri"
+  severity: 'high' | 'medium' | 'low' | string;
+}
+
+export interface MarketChartPoint {
+  month: string;       // e.g. "Aug", "Sep"
+  price_index: number; // e.g. 92.0
+  rainfall_mm: number; // e.g. 380.0
+}
+
+export interface MarketIntelligenceDetail {
+  sub_type_id: string;
+  sub_type: string;
+  sector: string;
+  enterprise_id?: string | null; // e.g. "ENT-10492" (if merchant-scoped)
+  district?: string | null;      // e.g. "Solapur" (if merchant-scoped)
+  tracked_commodity: string;
+  price_trend_12m_pct: number;
+  productivity_outlook: string;
+  seasonal_pattern: string;
+  chart_data: MarketChartPoint[];
+  risks: MarketRiskCard[];
+}
+
+/**
+ * Fetch Categories (Pass enterpriseId if in Merchant Portal)
+ */
+export const getMarketCategories = async (enterpriseId?: string): Promise<MarketCategory[]> => {
+  const params = enterpriseId ? { enterprise_id: enterpriseId } : {};
+  const response = await apiClient.get<MarketCategory[]>('/market-intelligence/categories', { params });
+  return response.data;
+};
+
+/**
+ * Fetch Market Intelligence Details (Supports subType OR enterpriseId)
+ */
+export const getMarketIntelligence = async (options?: {
+  subType?: string;
+  enterpriseId?: string;
+}): Promise<MarketIntelligenceDetail> => {
+  const params: Record<string, string> = {};
+  if (options?.subType) params.sub_type = options.subType;
+  if (options?.enterpriseId) params.enterprise_id = options.enterpriseId;
+
+  const response = await apiClient.get<MarketIntelligenceDetail>('/market-intelligence', { params });
+  return response.data;
+};
