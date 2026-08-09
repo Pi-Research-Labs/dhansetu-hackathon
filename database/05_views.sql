@@ -569,10 +569,15 @@ SELECT sector, risk_type, detail, severity
 FROM market_risk_cards
 ORDER BY sector, severity DESC;
 
--- Dynamic 12-month chart data combining monthly commodity price index and rainfall
+-- Dynamic 12-month trailing chart data combining monthly commodity price index and rainfall
 CREATE OR REPLACE VIEW v_market_intelligence_chart AS
-WITH months AS (
-    SELECT generate_series(1, 12) AS month_num
+WITH trailing_months AS (
+    SELECT 
+        i AS seq,
+        (CURRENT_DATE - (11 - i) * INTERVAL '1 month')::date AS month_date,
+        EXTRACT(MONTH FROM (CURRENT_DATE - (11 - i) * INTERVAL '1 month'))::int AS month_num,
+        TO_CHAR(CURRENT_DATE - (11 - i) * INTERVAL '1 month', 'MM-YYYY') AS month
+    FROM generate_series(0, 11) AS i
 ),
 weather_m AS (
     SELECT EXTRACT(MONTH FROM obs_date)::int AS month_num,
@@ -592,12 +597,12 @@ SELECT
     st.sub_type_id,
     st.sub_type,
     st.sector,
-    m.month_num,
-    TO_CHAR(TO_DATE(m.month_num::text, 'MM'), 'Mon') AS month,
-    COALESCE(pm.avg_price_index, ROUND((c.base_price * (1 + c.seasonal_amplitude * SIN((m.month_num - c.seasonal_peak_month) * 0.5236)))::numeric, 1)) AS price_index,
+    tm.seq AS month_num,
+    tm.month,
+    COALESCE(pm.avg_price_index, ROUND((c.base_price * (1 + c.seasonal_amplitude * SIN((tm.month_num - c.seasonal_peak_month) * 0.5236)))::numeric, 1)) AS price_index,
     COALESCE(wm.avg_rainfall_mm, 0) AS rainfall_mm
 FROM sub_types st
-CROSS JOIN months m
+CROSS JOIN trailing_months tm
 LEFT JOIN commodities c ON (
     (st.sector = 'DAIRY' AND c.commodity_id = 'CM01') OR
     (st.sector = 'POULTRY' AND c.commodity_id = 'CM03') OR
@@ -605,9 +610,9 @@ LEFT JOIN commodities c ON (
     (st.sector = 'FOODPROC' AND c.commodity_id = 'CM06') OR
     (st.sector = 'RETAIL' AND c.commodity_id = 'CM08')
 )
-LEFT JOIN price_m pm ON pm.commodity_id = c.commodity_id AND pm.month_num = m.month_num
-LEFT JOIN weather_m wm ON wm.month_num = m.month_num
-ORDER BY st.sub_type_id, m.month_num;
+LEFT JOIN price_m pm ON pm.commodity_id = c.commodity_id AND pm.month_num = tm.month_num
+LEFT JOIN weather_m wm ON wm.month_num = tm.month_num
+ORDER BY st.sub_type_id, tm.seq;
 
 -- Dynamic market intelligence detail per sub_type
 CREATE OR REPLACE VIEW v_market_intelligence_detail AS
