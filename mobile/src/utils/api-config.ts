@@ -225,3 +225,79 @@ export const getMarketIntelligence = async (options?: {
   const response = await apiClient.get<MarketIntelligenceDetail>('/market-intelligence', { params });
   return response.data;
 };
+
+/* ==========================================================================
+   Ledger & Daily Totals APIs & Types
+   ========================================================================== */
+
+export interface Transaction {
+  entry_id: string;
+  enterprise_id: string;
+  event_date: string;
+  recorded_at: string;
+  direction: 'inflow' | 'outflow' | string;
+  amount: string; // Note: amount is returned as a string from the backend (e.g. "1250.00")
+  category: string;
+  tender: string;
+  is_household: boolean;
+  source: string;
+  confidence: string;
+  voice_id: string | null;
+  transcript: string | null;
+  detected_lang: string | null;
+  channel: string | null;
+}
+
+
+export interface GetTransactionsResponse {
+  transactions: Transaction[];
+  total: number; // Unpaged total count of transactions for the filter
+}
+
+export interface DailyTotalsResponse {
+  enterprise_id: string;
+  event_date: string;
+  total_inflow: string;
+  total_expenses: string; // Backend uses total_expenses
+  net: string;
+  txn_count: number;
+  live_inflow: string;
+  live_outflow: string;
+  live_txn_count: number;
+  has_live_entries: boolean;
+  inflow_count: number;
+  outflow_count: number;
+}
+
+/**
+ * Fetch paged, real transactions from the ledger (voided rows & superseded corrections removed)
+ * @param id Enterprise ID
+ * @param params Optional page, limit, and date_from/date_to filters
+ */
+export const getTransactions = async (
+  id: string,
+  params: {
+    page?: number;
+    limit?: number;
+    date_from?: string;
+    date_to?: string;
+  } = {}
+): Promise<GetTransactionsResponse> => {
+  const response = await apiClient.get<GetTransactionsResponse>(`/enterprise/${id}/transactions`, { params });
+  return response.data;
+};
+
+/**
+ * Fetch daily cashflow totals (money in/out) for the enterprise
+ * @param id Enterprise ID
+ * @param date Optional ISO date string (YYYY-MM-DD), defaults to today
+ */
+export const getDailyTotals = async (
+  id: string,
+  date?: string
+): Promise<DailyTotalsResponse> => {
+  const params = date ? { date } : {};
+  const response = await apiClient.get<DailyTotalsResponse>(`/enterprise/${id}/daily-totals`, { params });
+  return response.data;
+};
+

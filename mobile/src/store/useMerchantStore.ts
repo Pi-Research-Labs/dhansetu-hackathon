@@ -14,6 +14,8 @@ import {
   getReceivables,
   getRiskPredict,
   setAuthTokenLoader,
+  getDailyTotals,
+  DailyTotalsResponse,
 } from '@/utils/api-config';
 
 export interface Entry {
@@ -24,10 +26,12 @@ export interface Entry {
   date: string;
 }
 
-export interface MarketRisk {
-  tag: string;
-  severity: 'high' | 'medium' | 'low';
-  desc: string;
+export interface TodaysTotals {
+  date: string;
+  total_inflow: number;
+  total_outflow: number;
+  live_inflow: number;
+  live_outflow: number;
 }
 
 export interface MerchantStore {
@@ -75,6 +79,7 @@ export interface MerchantStore {
   cashflowForecast: Array<{ enterprise_id: string; horizon_days: number; horizon_label: string; p10: number; p50: number; p90: number; confidence_score: number; confidence_label: string }>;
   receivables: any[];
   riskPrediction: any | null;
+  todaysTotals: TodaysTotals;
 
   // Risk Flags & Advice
   flags: { key: string; tag: string; detail: string }[];
@@ -140,6 +145,13 @@ export const useMerchantStore = create<MerchantStore>()(
   advice: [],
   hasUnreadAlerts: true,
   entries: [],
+  todaysTotals: {
+    date: new Date().toISOString().split('T')[0],
+    total_inflow: 0,
+    total_outflow: 0,
+    live_inflow: 0,
+    live_outflow: 0,
+  },
 
   // Login Action
   login: async (phone, token, enterpriseId, proprietorName) => {
@@ -233,7 +245,7 @@ export const useMerchantStore = create<MerchantStore>()(
 
     try {
       // Call endpoints in parallel for fast loading
-      const [entData, paymentMix, weeklyData, digitalData, netInflowData, forecastData, receivablesData, riskPredictData] = await Promise.all([
+      const [entData, paymentMix, weeklyData, digitalData, netInflowData, forecastData, receivablesData, riskPredictData, dailyTotalsRaw] = await Promise.all([
         getEnterprise(enterpriseId),
         getPaymentMix(enterpriseId),
         getWeeklyCashflow(enterpriseId, 26),
@@ -242,7 +254,22 @@ export const useMerchantStore = create<MerchantStore>()(
         getCashflowForecast(enterpriseId),
         getReceivables(enterpriseId).catch(() => []),
         getRiskPredict(enterpriseId).catch(() => null),
+        getDailyTotals(enterpriseId).catch(() => null),
       ]);
+
+      const dailyTotalsData: TodaysTotals = dailyTotalsRaw ? {
+        date: dailyTotalsRaw.event_date,
+        total_inflow: parseFloat(dailyTotalsRaw.total_inflow) || 0,
+        total_outflow: parseFloat(dailyTotalsRaw.total_expenses) || 0,
+        live_inflow: parseFloat(dailyTotalsRaw.live_inflow) || 0,
+        live_outflow: parseFloat(dailyTotalsRaw.live_outflow) || 0,
+      } : {
+        date: new Date().toISOString().split('T')[0],
+        total_inflow: 0,
+        total_outflow: 0,
+        live_inflow: 0,
+        live_outflow: 0,
+      };
 
       const card = entData.card || {};
       const latestAlert = entData.latest_alert;
@@ -409,6 +436,7 @@ export const useMerchantStore = create<MerchantStore>()(
         flags,
         advice: adviceList,
         hasUnreadAlerts: flags.length > 0,
+        todaysTotals: dailyTotalsData,
       });
     } catch (error) {
       console.error('Error fetching merchant data:', error);
