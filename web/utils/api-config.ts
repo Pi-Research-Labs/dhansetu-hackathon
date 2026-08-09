@@ -291,37 +291,32 @@ export interface RiskPredictionResponse {
   source: string;
 }
 
-// Voice Review Queue & Confirm types
-export interface VoiceReviewQueueItem {
-  extraction_id?: string;
-  voice_id?: string;
-  enterprise_id: string;
-  proprietor_name?: string;
-  channel?: string;
-  detected_lang?: string;
-  transcript?: string;
-  spoken_at?: string;
-  amount?: number;
-  direction?: string;
-  confidence?: number;
-  needs_review?: boolean;
-  [key: string]: unknown;
-}
-
-export interface PostVoiceReviewPayload {
-  reviewed_amount: number;
-  direction: "inflow" | "outflow" | string;
-  category: string;
-  is_household: boolean;
-  tender: string;
-}
-
-export interface PostVoiceReviewResponse {
+// Ledger Transaction types
+export interface LedgerTransaction {
   entry_id: string;
   enterprise_id: string;
   event_date: string;
-  direction: string;
-  amount: number;
+  recorded_at: string;
+  direction: "inflow" | "outflow" | string;
+  amount: number | string;
+  category?: string | null;
+  tender?: string | null;
+  is_household: boolean;
+  source: string;
+  confidence?: number | string | null;
+  voice_id?: string | null;
+  // only present for spoken entries - lets the row show what was said
+  transcript?: string | null;
+  detected_lang?: string | null;
+  channel?: string | null;
+}
+
+export interface TransactionPage {
+  enterprise_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  transactions: LedgerTransaction[];
 }
 
 // Task Outcome types
@@ -459,18 +454,24 @@ export async function getNetInflowHeatmap(enterpriseId: string, weeks?: 7 | 14):
   return await apiClient.get<NetInflowHeatmapItem[]>(`/enterprise/${enterpriseId}/net-inflow-heatmap${query}`);
 }
 
+// Ledger Transactions
+export async function getTransactions(
+  enterpriseId: string,
+  opts: { limit?: number; offset?: number; tender?: string } = {}
+): Promise<TransactionPage> {
+  const qs = new URLSearchParams();
+  if (opts.limit !== undefined) qs.set("limit", String(opts.limit));
+  if (opts.offset !== undefined) qs.set("offset", String(opts.offset));
+  // "all" is a UI concept, not an API one - omit the param entirely so the
+  // backend returns every tender rather than filtering on the literal "all".
+  if (opts.tender && opts.tender !== "all") qs.set("tender", opts.tender);
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+  return await apiClient.get<TransactionPage>(`/enterprise/${enterpriseId}/transactions${query}`);
+}
+
 // Risk Prediction
 export async function getRiskPrediction(enterpriseId: string): Promise<RiskPredictionResponse> {
   return await apiClient.get<RiskPredictionResponse>(`/risk/${enterpriseId}/predict`);
-}
-
-// Voice Review
-export async function getVoiceReviewQueue(): Promise<VoiceReviewQueueItem[]> {
-  return await apiClient.get<VoiceReviewQueueItem[]>("/voice/review-queue");
-}
-
-export async function postVoiceReview(extractionId: string, payload: PostVoiceReviewPayload): Promise<PostVoiceReviewResponse> {
-  return await apiClient.post<PostVoiceReviewResponse>(`/voice/review/${extractionId}`, payload);
 }
 
 // Task Outcome

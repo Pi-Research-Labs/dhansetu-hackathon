@@ -1,17 +1,23 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.deps import get_token_claims
 from app.schemas.enterprise import (
+    DailyTotals,
     DigitalVisibilityDay,
     EnterpriseDetail,
     ForecastConfidencePoint,
     NetInflowHeatmapWeek,
     PaymentMix,
     ReceivablesAgeing,
+    TransactionPage,
     WeeklyCashflow,
 )
 from app.services.enterprise import (
+    enterprise_exists,
     get_cashflow_forecast,
+    get_daily_totals,
     get_digital_heatmap,
     get_enterprise_card,
     get_latest_alert,
@@ -19,10 +25,17 @@ from app.services.enterprise import (
     get_net_inflow_heatmap,
     get_payment_mix,
     get_receivables_ageing,
+    get_transactions,
     get_weekly_cashflow,
 )
 
 router = APIRouter(tags=["enterprise"])
+
+
+# Mirrors ledger_entries_live.tender's CHECK constraint. Validated here so a
+# typo comes back as a 422 rather than an empty page that looks like "this
+# merchant has no UPI transactions".
+_TENDERS = {"cash", "upi", "wallet", "bank", "credit"}
 
 
 def _check_access(claims: dict, enterprise_id: str) -> None:
@@ -119,3 +132,42 @@ async def enterprise_net_inflow_heatmap(
     if weeks not in (7, 14):
         raise HTTPException(status_code=422, detail="weeks must be 7 or 14")
     return await get_net_inflow_heatmap(enterprise_id, weeks)
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/transactions",
+    response_model=TransactionPage,
+)
+async def enterprise_transactions(
+    enterprise_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    date_from: date | None = Query(None, description="inclusive lower bound on event_date"),
+    date_to: date | None = Query(None, description="inclusive upper bound on event_date"),
+    tender: str | None = Query(None, description="cash | upi | wallet | bank | credit"),
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    _check_access(claims, enterprise_id)
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(status_code=422, detail="date_from must be on or before date_to")
+    if tender is not None and tender not in _TENDERS:
+        raise HTTPException(status_code=422, detail=f"tender must be one of {', '.join(sorted(_TENDERS))}")
+    return await get_transactions(enterprise_id, limit, offset, date_from, date_to, tender)
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/daily-totals",
+    response_model=DailyTotals,
+)
+async def enterprise_daily_totals(
+    enterprise_id: str,
+    on: date | None = Query(None, description="day to total, defaults to today"),
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    _check_access(claims, enterprise_id)
+    # 404 on an unknown enterprise, but a real enterprise with a quiet day
+    # gets zeros -- "you took nothing today" is a legitimate answer for a
+    # home screen, and the panel ends before today in any case.
+    if not await enterprise_exists(enterprise_id):
+        raise HTTPException(status_code=404, detail="Enterprise not found")
+    return await get_daily_totals(enterprise_id, on or date.today())

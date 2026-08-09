@@ -17,9 +17,22 @@ Amount/direction extraction below is a plain regex heuristic, not a model
 call — Sarvam's structured-extraction path is its chat-completions API,
 which this integration deliberately does not call yet (its exact endpoint
 shape wasn't verified against raw docs, and guessing API shapes has bitten
-this project before — see the Mappls thread). Confidence is hardcoded to
-0.5, always below voice_extractions.needs_review's 0.70 threshold, so a
-regex guess can never bypass human review.
+this project before — see the Mappls thread).
+
+Posting is immediate, not gated on review. Anything the regex fully parses
+(BOTH an amount and a direction) is written straight to ledger_entries_live
+in the same transaction, so the merchant sees the entry the moment they
+speak it rather than waiting on an officer. Review did not go away, it
+stopped being a gate: confidence stays at 0.5, below
+voice_extractions.needs_review's 0.70 threshold, so every regex-parsed entry
+still surfaces in the officer queue — and confirming it there writes a
+CORRECTION row (corrects_entry) rather than a second entry, so verifying an
+already-posted utterance can never double-count it.
+
+A partial parse is not posted. Amount without direction would mean guessing
+whether money came in or went out, and getting that backwards turns a
+payment into income — so those stay unposted and the queue is the only way
+they reach the ledger, exactly as before.
 """
 
 import json
@@ -35,14 +48,51 @@ from app.core.db import get_pool
 SARVAM_BASE_URL = "https://api.sarvam.ai"
 SARVAM_MODEL = "saaras:v3"
 
+# Same reason as the direction lists below: codemix transcripts spell the
+# currency however the speaker said it, so "750 rupaye" has to count as
+# money. A bare number with no currency marker still does not -- "aaj 15
+# litre doodh becha" is a quantity, and reading it as Rs 15 would post a
+# fabricated amount.
+_CURRENCY = r"(?:₹|rs\.?|rupees?|rupay[ae]?|rupiya|rupaiya)"
 _AMOUNT_RE = re.compile(
-    r"(?:₹|rs\.?|rupees?)\s*([\d,]+(?:\.\d{1,2})?)"
-    r"|([\d,]+(?:\.\d{1,2})?)\s*(?:₹|rs\.?|rupees?)",
+    rf"{_CURRENCY}\s*([\d,]+(?:\.\d{{1,2}})?)"
+    rf"|([\d,]+(?:\.\d{{1,2}})?)\s*{_CURRENCY}",
     re.IGNORECASE,
 )
 
-_INFLOW_WORDS = ("received", "sold", "मिला", "मिले", "बिका", "बिक्री", "आया")
-_OUTFLOW_WORDS = ("paid", "bought", "spent", "दिया", "ख़रीदा", "खरीदा", "भरा", "खर्च")
+# Direction now decides whether an utterance posts at all, so the romanised
+# forms matter as much as the Devanagari ones: Sarvam's 'codemix' mode
+# routinely returns Latin script for Hindi/Gujarati speech ("aaj 500 ka
+# doodh becha"), and the Devanagari-only list missed every one of those --
+# they parsed an amount, no direction, and fell through to the queue.
+#
+# English + romanised Hindi/Gujarati only. Native-script Gujarati is
+# deliberately absent rather than guessed at; that, and the substring
+# matching below (no word boundaries, so "aaya" hits inside longer words),
+# are why this stays a stopgap until the LLM extractor replaces regex_v1.
+_INFLOW_WORDS = (
+    "received", "sold", "sale",
+    "मिला", "मिले", "बिका", "बिक्री", "आया",
+    "becha", "becha", "bechi", "bikri", "mila", "mile", "aaya", "jama",
+    "vechyu", "vecha", "malya",
+)
+_OUTFLOW_WORDS = (
+    "paid", "bought", "spent",
+    "दिया", "ख़रीदा", "खरीदा", "भरा", "खर्च",
+    "kharida", "kharidi", "kharcha", "diya", "diye", "bhara", "chukaya",
+    "kharidyu", "apya", "chukavya",
+)
+
+# voice_entries.channel and ledger_entries_live.source use different
+# vocabularies for the same thing: an app capture is channel 'app' but
+# source 'voice'. The other two happen to match.
+_CHANNEL_SOURCE = {"app": "voice", "ivr": "ivr", "assisted": "assisted"}
+
+# ledger_entries_live.category is NOT NULL, and the regex extractor infers no
+# category at all. Labelling it honestly beats inventing one from the
+# transcript: the officer sets a real category when they review, and the
+# correction carries it.
+_UNCLASSIFIED = "unclassified"
 
 
 class SarvamError(Exception):
@@ -148,7 +198,15 @@ async def create_voice_entry(
         )
 
         if error is not None:
-            return {**dict(voice_row), "amount": None, "direction": None, "confidence": None, "needs_review": True}
+            return {
+                **dict(voice_row),
+                "amount": None,
+                "direction": None,
+                "confidence": None,
+                "needs_review": True,
+                "entry_id": None,
+                "posted_to_ledger": False,
+            }
 
         amount, direction = extract_amount_direction(result["transcript"])
         confidence = Decimal("0.5") if amount is not None else None
@@ -167,7 +225,36 @@ async def create_voice_entry(
             json.dumps({"transcript": result["transcript"], "language_code": result["language_code"]}),
         )
 
-    return {**dict(voice_row), **dict(extraction_row)}
+        # Post straight to the ledger on a full parse, inside the same
+        # transaction as the extraction -- a caller can never see an
+        # extraction whose entry failed to write, or the reverse.
+        entry_id = None
+        if amount is not None and direction is not None:
+            entry_id = await conn.fetchval(
+                """
+                INSERT INTO dhansetu.ledger_entries_live
+                    (enterprise_id, event_date, recorded_at, direction, amount,
+                     category, tender, is_household, source, voice_id, confidence)
+                VALUES ($1, $2::timestamptz::date, now(), $3, $4, $5,
+                        NULL, FALSE, $6, $7, $8)
+                RETURNING entry_id
+                """,
+                enterprise_id,
+                spoken_at,
+                direction,
+                amount,
+                _UNCLASSIFIED,
+                _CHANNEL_SOURCE[channel],
+                voice_row["voice_id"],
+                confidence,
+            )
+
+    return {
+        **dict(voice_row),
+        **dict(extraction_row),
+        "entry_id": entry_id,
+        "posted_to_ledger": entry_id is not None,
+    }
 
 
 async def get_review_queue(officer_id: str) -> list[dict]:
@@ -211,12 +298,25 @@ async def submit_review(
                 extraction["voice_id"],
             )
 
+            # The utterance may already be in the ledger: a full regex parse
+            # posts immediately now, and review is verification after the
+            # fact. Link to that row via corrects_entry instead of inserting
+            # a second one, or confirming an entry would double-count it.
+            # v_ledger_live_effective already excludes superseded and voided
+            # rows, so this finds the currently-effective entry and chained
+            # corrections keep working.
+            corrects_entry = await conn.fetchval(
+                "SELECT entry_id FROM dhansetu.v_ledger_live_effective WHERE voice_id = $1",
+                extraction["voice_id"],
+            )
+
             ledger_row = await conn.fetchrow(
                 """
                 INSERT INTO dhansetu.ledger_entries_live
                     (enterprise_id, event_date, recorded_at, direction, amount,
-                     category, tender, is_household, source, voice_id, confidence)
-                VALUES ($1, $2::timestamptz::date, now(), $3, $4, $5, $6, $7, 'voice', $8, 1.0)
+                     category, tender, is_household, source, voice_id, confidence,
+                     corrects_entry)
+                VALUES ($1, $2::timestamptz::date, now(), $3, $4, $5, $6, $7, 'voice', $8, 1.0, $9)
                 RETURNING entry_id, enterprise_id, event_date, direction, amount
                 """,
                 voice_entry["enterprise_id"],
@@ -227,5 +327,6 @@ async def submit_review(
                 tender,
                 is_household,
                 extraction["voice_id"],
+                corrects_entry,
             )
     return dict(ledger_row)

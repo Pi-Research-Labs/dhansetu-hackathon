@@ -72,12 +72,17 @@ export default function RiskAndAdvicePanel({
         {/* Risk Model Prediction Stats */}
         {prediction && (
           <div className="pt-2 border-t border-[#E2E6D8] text-[10.5px] font-mono text-[#5F6656] grid grid-cols-2 gap-2">
+            {/* Labels are the officer-facing wording, not the column names:
+                "Stress Prob"/"Fused Score" are model vocabulary and a field
+                officer has no reason to know them. Tooltip copy lives in the
+                dictionary like the rest of the dashboard, so it translates
+                with the language switcher instead of staying English. */}
             <div className="flex items-center gap-1">
               <span className="flex items-center gap-0.5 group relative cursor-help">
-                <span>Stress Prob:</span>
+                <span>{t.dash.scoreStressLabel}:</span>
                 <Info className="w-3 h-3 text-[#5F6656] shrink-0" />
-                <span className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-48 p-2 bg-[#1A2016] text-white text-[10px] font-sans rounded-lg shadow-lg z-50 normal-case leading-normal font-normal">
-                  Likelihood of facing repayment stress or cashflow shortfalls in the near term.
+                <span className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 p-2 bg-[#1A2016] text-white text-[10px] font-sans rounded-lg shadow-lg z-50 normal-case leading-normal font-normal">
+                  {t.dash.scoreStressTooltip}
                   <span className="absolute top-full left-3 border-[5px] border-transparent border-t-[#1A2016]"></span>
                 </span>
               </span>
@@ -85,10 +90,10 @@ export default function RiskAndAdvicePanel({
             </div>
             <div className="flex items-center gap-1 justify-end">
               <span className="flex items-center gap-0.5 group relative cursor-help">
-                <span>Fused Score:</span>
+                <span>{t.dash.scoreOverallLabel}:</span>
                 <Info className="w-3 h-3 text-[#5F6656] shrink-0" />
-                <span className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-[#1A2016] text-white text-[10px] font-sans rounded-lg shadow-lg z-50 normal-case leading-normal font-normal text-left">
-                  Consolidated credit risk rating combining operational data, transaction trends, and bank records.
+                <span className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-56 p-2 bg-[#1A2016] text-white text-[10px] font-sans rounded-lg shadow-lg z-50 normal-case leading-normal font-normal text-left">
+                  {t.dash.scoreOverallTooltip}
                   <span className="absolute top-full right-3 border-[5px] border-transparent border-t-[#1A2016]"></span>
                 </span>
               </span>

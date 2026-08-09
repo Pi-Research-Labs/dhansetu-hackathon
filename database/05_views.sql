@@ -383,10 +383,77 @@ WHERE l.event_date > (SELECT MAX(event_date) FROM daily_ledger) - 90
 ORDER BY l.enterprise_id, l.event_date;
 
 -- ===========================================================================
+-- 10b. EFFECTIVE DAILY LEDGER — synthetic panel + real voice-captured entries
+-- The synthetic panel (daily_ledger) and the real ledger
+-- (ledger_entries_live, rolled up by v_daily_from_voice in 04_live_data.sql)
+-- are ADDITIVE: a spoken transaction is a transaction the panel never knew
+-- about, not a restatement of one it did. So a merchant recording a sale in
+-- the app sees that day's total go up, which is the whole point of capturing
+-- it. (The alternative — live overrides synthetic for that day — would make
+-- speaking one small sale erase a whole simulated day.)
+--
+-- FULL OUTER JOIN, not LEFT: entries dated past the panel's last day
+-- (2026-07-31) have no synthetic row to hang off, and "today" is always past
+-- it. Those days appear as live-only rows rather than vanishing.
+--
+-- Only the columns the two sources share are summed. Anything the real
+-- ledger cannot know — digital_share, emi_amount, balance, price indices —
+-- is deliberately absent, so callers needing those keep reading daily_ledger
+-- directly and do not silently get a half-populated row.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_ledger_daily_effective AS
+SELECT
+    COALESCE(d.enterprise_id, v.enterprise_id)                          AS enterprise_id,
+    COALESCE(d.event_date, v.event_date)                                AS event_date,
+    COALESCE(d.cash_inflow, 0)        + COALESCE(v.cash_inflow, 0)      AS cash_inflow,
+    COALESCE(d.outflow, 0)            + COALESCE(v.outflow, 0)          AS outflow,
+    COALESCE(d.input_cost, 0)         + COALESCE(v.input_cost, 0)       AS input_cost,
+    COALESCE(d.household_drawings, 0) + COALESCE(v.household_drawings, 0) AS household_drawings,
+    COALESCE(d.net, 0)                + COALESCE(v.net, 0)              AS net,
+    COALESCE(d.txn_count, 0)          + COALESCE(v.txn_count, 0)        AS txn_count,
+    -- the live slice on its own, so the UI can say "of which you recorded X"
+    COALESCE(v.cash_inflow, 0)                                          AS live_inflow,
+    COALESCE(v.outflow, 0)                                              AS live_outflow,
+    COALESCE(v.txn_count, 0)                                            AS live_txn_count,
+    (v.enterprise_id IS NOT NULL)                                       AS has_live_entries,
+    -- How many went IN vs OUT, as opposed to how much. Counted off the live
+    -- ledger only, and that is a hard limit rather than an oversight:
+    -- daily_ledger carries one txn_count per day with no per-transaction
+    -- direction behind it (it stores daily inflow/outflow *amounts*), so
+    -- there is nothing to split on a panel day. On any date after the panel
+    -- ends (2026-07-31) every transaction is live, so these equal the true
+    -- totals -- which covers "today", the case the merchant home screen asks
+    -- about. On earlier dates they count the live additions only, and
+    -- txn_count stays the honest combined figure.
+    COALESCE(c.inflow_count, 0)                                         AS inflow_count,
+    COALESCE(c.outflow_count, 0)                                        AS outflow_count
+FROM daily_ledger d
+FULL OUTER JOIN v_daily_from_voice v
+       ON v.enterprise_id = d.enterprise_id
+      AND v.event_date    = d.event_date
+-- Separate join rather than extra columns on v_daily_from_voice: that view
+-- is the documented daily_ledger-shaped seam and gains nothing from count
+-- columns daily_ledger has no counterpart for.
+LEFT JOIN (
+    SELECT enterprise_id, event_date,
+           COUNT(*) FILTER (WHERE direction = 'inflow')  AS inflow_count,
+           COUNT(*) FILTER (WHERE direction = 'outflow') AS outflow_count
+    FROM v_ledger_live_effective
+    GROUP BY enterprise_id, event_date
+) c ON c.enterprise_id = COALESCE(d.enterprise_id, v.enterprise_id)
+   AND c.event_date    = COALESCE(d.event_date, v.event_date);
+
+-- ===========================================================================
 -- 11. HISTORICAL WEEKLY CASHFLOW — inflow/outflow/net by ISO week
 -- Unbounded here; the service defaults to trailing 26 weeks (6 months, to
 -- line up with the forecast graph's own horizon for a continuous
 -- history+forecast timeline) — full panel is ~156 weeks, unreadable as bars.
+--
+-- Reads the effective ledger (10b), so voice-captured entries show up in the
+-- weekly graph, in v_enterprise_net_inflow_heatmap (§15, derived from this)
+-- and in the worklist sparkline (§2, also derived from this) — three
+-- surfaces off one repoint.
 -- ===========================================================================
 
 CREATE OR REPLACE VIEW v_enterprise_weekly_cashflow AS
@@ -398,7 +465,7 @@ SELECT
     SUM(l.outflow)                                     AS outflow,
     SUM(l.net)                                         AS net,
     COUNT(*) FILTER (WHERE l.cash_inflow = 0 AND l.outflow = 0) AS zero_txn_days
-FROM daily_ledger l
+FROM v_ledger_daily_effective l
 GROUP BY l.enterprise_id, date_trunc('week', l.event_date)
 ORDER BY l.enterprise_id, week_start;
 
@@ -630,3 +697,61 @@ LEFT JOIN commodities c ON (
 );
 
 
+
+-- ===========================================================================
+-- 16. ENTERPRISE TRANSACTIONS — the itemised real ledger
+-- One row per live entry (voice, IVR, assisted, manual, UPI feed), carrying
+-- the utterance that produced it so the app can show "you said: ..." beside
+-- the amount. Reads v_ledger_live_effective, so superseded corrections and
+-- voided rows are already gone — an edited entry appears once, at its
+-- corrected value.
+--
+-- Deliberately NOT merged with daily_ledger: the synthetic panel has no
+-- itemised transactions to show, only daily totals. This view is the real
+-- entries only; v_ledger_daily_effective (10b) is where the two combine.
+-- Ordering and paging are the service's job.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_transactions AS
+SELECT
+    l.entry_id,
+    l.enterprise_id,
+    l.event_date,
+    l.recorded_at,
+    l.direction,
+    l.amount,
+    l.category,
+    l.tender,
+    l.is_household,
+    l.source,
+    l.confidence,
+    l.voice_id,
+    v.transcript,
+    v.detected_lang,
+    v.channel
+FROM v_ledger_live_effective l
+LEFT JOIN voice_entries v ON v.voice_id = l.voice_id;
+
+-- ===========================================================================
+-- 17. DAILY TOTALS — one day's inflow/expense for the merchant home screen
+-- Wraps v_ledger_daily_effective (10b) so the mobile landing page is a
+-- single indexed lookup rather than a client-side sum over a transaction
+-- list. Days with no activity simply have no row; the service substitutes
+-- zeros so a quiet day renders as Rs 0 rather than an error.
+-- ===========================================================================
+
+CREATE OR REPLACE VIEW v_enterprise_daily_totals AS
+SELECT
+    enterprise_id,
+    event_date,
+    cash_inflow            AS total_inflow,
+    outflow                AS total_expenses,
+    net,
+    txn_count,
+    live_inflow,
+    live_outflow,
+    live_txn_count,
+    has_live_entries,
+    inflow_count,
+    outflow_count
+FROM v_ledger_daily_effective;
