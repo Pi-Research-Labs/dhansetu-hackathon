@@ -21,7 +21,6 @@ import { worklistItemToEnterprise, enterpriseDetailsToEnterprise } from "@/utils
 import { Enterprise } from "@/types/enterprise";
 import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
 import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
-import VoiceReviewTab from "@/components/dashboard/VoiceReviewTab";
 import { Lock } from "lucide-react";
 
 export default function OfficerDashboard() {
@@ -39,8 +38,7 @@ export default function OfficerDashboard() {
   const [segmentFilter, setSegmentFilter] = useState("ALL");
   const [tierFilter, setTierFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"portfolio" | "market" | "voice">("portfolio");
-  const [selectedTenderFilter, setSelectedTenderFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"portfolio" | "market">("portfolio");
 
   // Detailed API States for selected enterprise
   const [enterpriseDetails, setEnterpriseDetails] = useState<EnterpriseDetailsResponse | null>(null);
@@ -274,17 +272,6 @@ export default function OfficerDashboard() {
           >
             {t.dash.marketIntelTab || "Market Intel"}
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("voice")}
-            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
-              activeTab === "voice"
-                ? "bg-[#2E7D32] text-white shadow-xs"
-                : "text-[#5F6656] hover:text-[#1A2016]"
-            }`}
-          >
-            {t.dash.voiceReviewTab || "Paid Transactions Queue"}
-          </button>
         </div>
       </div>
 
@@ -317,18 +304,9 @@ export default function OfficerDashboard() {
             segments={segments}
             tierCounts={tierCounts}
             t={t}
-            onSelectTenderFilter={(tender: string) => {
-              setSelectedTenderFilter(tender);
-              setActiveTab("voice");
-            }}
           />
-        ) : activeTab === "market" ? (
-          <MarketIntelligenceTab />
         ) : (
-          <VoiceReviewTab
-            initialTenderFilter={selectedTenderFilter}
-            onTenderFilterChange={setSelectedTenderFilter}
-          />
+          <MarketIntelligenceTab />
         )}
       </div>
     </div>

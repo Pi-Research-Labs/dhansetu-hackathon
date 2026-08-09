@@ -64,6 +64,10 @@ export interface TranslationDictionary {
     allTiers: string;
     bankablePipeline: string;
     atRiskExposure: string;
+    scoreStressLabel: string;
+    scoreStressTooltip: string;
+    scoreOverallLabel: string;
+    scoreOverallTooltip: string;
     backtestStat: (a: number, b: number) => string;
     noMatch: string;
     historyTab: string;
@@ -76,7 +80,6 @@ export interface TranslationDictionary {
     suggestedActions: string;
     marketIntelTab: string;
     portfolioTab: string;
-    voiceReviewTab: string;
     creditHeadroom: string;
     headroomNote: (emi: number) => string;
     metrics: {
@@ -214,6 +217,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "All Risk Tiers",
       bankablePipeline: "Bankable Loan Pipeline",
       atRiskExposure: "At-Risk Exposure",
+      scoreStressLabel: "Chance of cash trouble",
+      scoreStressTooltip:
+        "How likely this business is to run short of cash or miss a repayment in the next 90 days. Higher means more likely.",
+      scoreOverallLabel: "Overall risk rating",
+      scoreOverallTooltip:
+        "The combined rating behind this enterprise's tier: the model's prediction blended with the rule checks. 38% and above is Watch, 58% and above is Act now.",
       backtestStat: (a: number, b: number) => `Backtest: ${a}% lower error on 3-month · ${b}% on 6-month vs naive baseline`,
       noMatch: "No assigned enterprises match the selected filters.",
       historyTab: "History (Weekly)",
@@ -226,7 +235,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "Recommended Guidance Actions",
       marketIntelTab: "Market Intelligence",
       portfolioTab: "My Portfolio",
-      voiceReviewTab: "Paid Transactions Queue",
       creditHeadroom: "Eligible Credit Headroom",
       headroomNote: (emi: number) => `Affordable at ≤₹${emi}/mo EMI · 24-month tenure pre-qualified`,
       metrics: {
@@ -411,6 +419,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "सभी जोखिम स्तर",
       bankablePipeline: "ऋण-योग्य पाइपलाइन",
       atRiskExposure: "जोखिम में कुल ऋण",
+      scoreStressLabel: "नकदी संकट की संभावना",
+      scoreStressTooltip:
+        "अगले 90 दिनों में इस व्यवसाय के पास नकदी कम पड़ने या किस्त चूकने की कितनी संभावना है। जितना ज़्यादा, उतना जोखिम।",
+      scoreOverallLabel: "कुल जोखिम रेटिंग",
+      scoreOverallTooltip:
+        "इस उद्यम के स्तर के पीछे की संयुक्त रेटिंग: मॉडल का अनुमान और नियम-जाँच मिलाकर। 38% से ऊपर 'निगरानी', 58% से ऊपर 'तुरंत कार्रवाई'।",
       backtestStat: (a: number, b: number) => `बैकटेस्ट: 3 माह पर ${a}% कम त्रुटि · 6 माह पर ${b}% सटीकता सुधार`,
       noMatch: "चयनित फ़िल्टर से कोई आवंटित उद्यम मेल नहीं खाता।",
       historyTab: "इतिहास (साप्ताहिक)",
@@ -423,7 +437,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "अनुशंसित मार्गदर्शन कार्यवाहियाँ",
       marketIntelTab: "बाज़ार जानकारी",
       portfolioTab: "मेरा पोर्टफोलियो",
-      voiceReviewTab: "भुगतान लेनदेन कतार",
       creditHeadroom: "अतिरिक्त ऋण क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/माह EMI पर वहनीय · 24-माह अवधि पूर्व-पात्र`,
       metrics: {
@@ -608,6 +621,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "అన్ని రిస్క్ స్థాయిలు",
       bankablePipeline: "రుణ-అర్హ పైప్‌లైన్",
       atRiskExposure: "రిస్క్‌లో ఉన్న రుణాలు",
+      scoreStressLabel: "నగదు ఇబ్బంది అవకాశం",
+      scoreStressTooltip:
+        "రాబోయే 90 రోజుల్లో ఈ వ్యాపారానికి నగదు కొరత రావడానికి లేదా వాయిదా చెల్లించలేకపోవడానికి ఎంత అవకాశం ఉంది. ఎక్కువైతే ఎక్కువ ప్రమాదం.",
+      scoreOverallLabel: "మొత్తం రిస్క్ రేటింగ్",
+      scoreOverallTooltip:
+        "ఈ సంస్థ స్థాయి వెనుక ఉన్న సంయుక్త రేటింగ్: మోడల్ అంచనా మరియు రూల్ తనిఖీలు కలిపి. 38% పైన 'గమనించండి', 58% పైన 'వెంటనే చర్య'.",
       backtestStat: (a: number, b: number) => `బ్యాక్‌టెస్ట్: 3 నెలలపై ${a}% తక్కువ లోపం · 6 నెలలపై ${b}% ఖచ్చితత్వం`,
       noMatch: "ఎంచుకున్న ఫిల్టర్లకు సరిపోలే కేటాయించిన సంస్థ లేదు.",
       historyTab: "చరిత్ర (వారంవారీ)",
@@ -620,7 +639,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "సూచించిన చర్యలు",
       marketIntelTab: "మార్కెట్ సమాచారం",
       portfolioTab: "నా పోర్ట్‌ఫోలియో",
-      voiceReviewTab: "చెల్లించిన లావాదేవీల క్యూ",
       creditHeadroom: "అదనపు రుణ సామర్థ్యం",
       headroomNote: (emi: number) => `≤₹${emi}/నెల EMI వద్ద భరించగలిగేది · 24 నెలల కాలపరిమితి`,
       metrics: {
@@ -805,6 +823,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "सर्व जोखीम स्तर",
       bankablePipeline: "कर्ज-पात्र पाइपलाइन",
       atRiskExposure: "जोखमीतील कर्ज",
+      scoreStressLabel: "रोख अडचणीची शक्यता",
+      scoreStressTooltip:
+        "पुढील 90 दिवसांत या व्यवसायाकडे रोख कमी पडण्याची किंवा हप्ता चुकण्याची किती शक्यता आहे. जास्त म्हणजे जास्त धोका.",
+      scoreOverallLabel: "एकूण जोखीम रेटिंग",
+      scoreOverallTooltip:
+        "या उद्योगाच्या श्रेणीमागील एकत्रित रेटिंग: मॉडेलचा अंदाज आणि नियम-तपासणी एकत्र करून. 38% वर 'लक्ष ठेवा', 58% वर 'त्वरित कारवाई'.",
       backtestStat: (a: number, b: number) => `बॅकटेस्ट: ३ महिन्यांवर ${a}% कमी त्रुटी · ६ महिन्यांवर ${b}% अचूकता`,
       noMatch: "निवडलेल्या फिल्टरशी जुळणारा कोणताही उद्योग नाही.",
       historyTab: "इतिहास (साप्ताहिक)",
@@ -817,7 +841,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "सुचवलेल्या कृती",
       marketIntelTab: "बाजार माहिती",
       portfolioTab: "माझा पोर्टफोलिओ",
-      voiceReviewTab: "भरलेल्या व्यवहारांची रांग",
       creditHeadroom: "अतिरिक्त कर्ज क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/महिना EMI वर परवडणारे · २४ महिने मुदत`,
       metrics: {

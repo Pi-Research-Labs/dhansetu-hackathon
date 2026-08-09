@@ -9,10 +9,9 @@ interface PaymentMixCardProps {
   data?: PaymentMixResponse | null;
   isLoading?: boolean;
   t?: TranslationDictionary;
-  onSelectTender?: (tender: string) => void;
 }
 
-export default function PaymentMixCard({ data, isLoading = false, t, onSelectTender }: PaymentMixCardProps) {
+export default function PaymentMixCard({ data, isLoading = false, t }: PaymentMixCardProps) {
   const tMix = t?.dash;
 
   if (isLoading) {
@@ -71,71 +70,56 @@ export default function PaymentMixCard({ data, isLoading = false, t, onSelectTen
           {/* Segmented Stacked Progress Bar */}
           <div className="h-3.5 w-full rounded-full bg-[#E2E6D8] overflow-hidden flex shadow-inner">
             {upiVal > 0 && (
-              <button
-                type="button"
-                onClick={() => onSelectTender?.("upi")}
+              <div
                 style={{ width: `${upiVal}%` }}
-                className="bg-[#2E7D32] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
-                title={`UPI: ${upiPct}% - Click to filter queue`}
+                className="bg-[#2E7D32] h-full"
+                title={`UPI: ${upiPct}%`}
               />
             )}
             {walletVal > 0 && (
-              <button
-                type="button"
-                onClick={() => onSelectTender?.("wallet")}
+              <div
                 style={{ width: `${walletVal}%` }}
-                className="bg-[#1565C0] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
-                title={`Wallet: ${walletPct}% - Click to filter queue`}
+                className="bg-[#1565C0] h-full"
+                title={`Wallet: ${walletPct}%`}
               />
             )}
             {cashVal > 0 && (
-              <button
-                type="button"
-                onClick={() => onSelectTender?.("cash")}
+              <div
                 style={{ width: `${cashVal}%` }}
-                className="bg-[#E65100] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
-                title={`Cash: ${cashPct}% - Click to filter queue`}
+                className="bg-[#E65100] h-full"
+                title={`Cash: ${cashPct}%`}
               />
             )}
           </div>
 
-          {/* Legend detailing the distribution */}
+          {/* Legend detailing the distribution. Read-only: these used to be
+              buttons that jumped to the paid-transactions queue filtered by
+              tender, but that tab is gone, so they no longer have anywhere
+              to navigate to. */}
           <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-            <button
-              type="button"
-              onClick={() => onSelectTender?.("upi")}
-              className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 hover:bg-[#E8F5E9] hover:border-[#2E7D32]/30 cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center focus:outline-none"
-            >
+            <div className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 flex flex-col items-center justify-center">
               <div className="text-[#5F6656] flex items-center justify-center gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32]" />
                 {tMix?.upiLabel || "UPI"}
               </div>
               <div className="font-mono font-bold text-[#2E7D32] mt-0.5">{upiPct}%</div>
-            </button>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => onSelectTender?.("wallet")}
-              className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 hover:bg-[#E3F2FD] hover:border-[#1565C0]/30 cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center focus:outline-none"
-            >
+            <div className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 flex flex-col items-center justify-center">
               <div className="text-[#5F6656] flex items-center justify-center gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1565C0]" />
                 {tMix?.walletLabel || "Wallet"}
               </div>
               <div className="font-mono font-bold text-[#1565C0] mt-0.5">{walletPct}%</div>
-            </button>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => onSelectTender?.("cash")}
-              className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 hover:bg-[#FFF3E0] hover:border-[#E65100]/30 cursor-pointer transition-all active:scale-95 flex flex-col items-center justify-center focus:outline-none"
-            >
+            <div className="bg-white p-1 rounded-lg border border-[#E2E6D8]/60 flex flex-col items-center justify-center">
               <div className="text-[#5F6656] flex items-center justify-center gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#E65100]" />
                 {tMix?.cashLabel || "Cash"}
               </div>
               <div className="font-mono font-bold text-[#E65100] mt-0.5">{cashPct}%</div>
-            </button>
+            </div>
           </div>
         </div>
 

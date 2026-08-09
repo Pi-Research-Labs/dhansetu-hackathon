@@ -291,39 +291,6 @@ export interface RiskPredictionResponse {
   source: string;
 }
 
-// Voice Review Queue & Confirm types
-export interface VoiceReviewQueueItem {
-  extraction_id?: string;
-  voice_id?: string;
-  enterprise_id: string;
-  proprietor_name?: string;
-  channel?: string;
-  detected_lang?: string;
-  transcript?: string;
-  spoken_at?: string;
-  amount?: number;
-  direction?: string;
-  confidence?: number;
-  needs_review?: boolean;
-  [key: string]: unknown;
-}
-
-export interface PostVoiceReviewPayload {
-  reviewed_amount: number;
-  direction: "inflow" | "outflow" | string;
-  category: string;
-  is_household: boolean;
-  tender: string;
-}
-
-export interface PostVoiceReviewResponse {
-  entry_id: string;
-  enterprise_id: string;
-  event_date: string;
-  direction: string;
-  amount: number;
-}
-
 // Task Outcome types
 export interface PostOutcomePayload {
   task_id: string;
@@ -462,15 +429,6 @@ export async function getNetInflowHeatmap(enterpriseId: string, weeks?: 7 | 14):
 // Risk Prediction
 export async function getRiskPrediction(enterpriseId: string): Promise<RiskPredictionResponse> {
   return await apiClient.get<RiskPredictionResponse>(`/risk/${enterpriseId}/predict`);
-}
-
-// Voice Review
-export async function getVoiceReviewQueue(): Promise<VoiceReviewQueueItem[]> {
-  return await apiClient.get<VoiceReviewQueueItem[]>("/voice/review-queue");
-}
-
-export async function postVoiceReview(extractionId: string, payload: PostVoiceReviewPayload): Promise<PostVoiceReviewResponse> {
-  return await apiClient.post<PostVoiceReviewResponse>(`/voice/review/${extractionId}`, payload);
 }
 
 // Task Outcome
