@@ -765,10 +765,27 @@ export function AddEntryScreen() {
                 const parsedAmount = parseFloat(en.amount) || 0;
                 const isOutflow = en.direction === 'outflow';
                 const title = formatCategoryName(en.category) || (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
+                const confidencePct = en.confidence ? Math.round(parseFloat(en.confidence) * 100) : null;
+                const sourceText = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : 'Manual';
                 return (
                   <View key={en.entry_id} style={styles.entryRowItem}>
                     <View style={styles.entryMainInfo}>
-                      <Text style={styles.entryTypeTitle}>{title}</Text>
+                      <View style={styles.entryTitleRow}>
+                        <Text style={styles.entryTypeTitle}>{title}</Text>
+                        {en.is_household && (
+                          <View style={styles.householdBadge}>
+                            <Text style={styles.householdBadgeText}>Household</Text>
+                          </View>
+                        )}
+                      </View>
+                      
+                      <View style={styles.entryMetaRow}>
+                        <Text style={styles.entryMetaText}>
+                          {en.tender ? `${en.tender.toUpperCase()}` : ''}
+                          {en.source ? ` • ${sourceText}` : ''}
+                        </Text>
+                      </View>
+
                       {en.transcript ? (
                         <View style={styles.transcriptContainer}>
                           <Mic size={10} color="#475569" style={{ marginRight: 4 }} />
@@ -1777,5 +1794,33 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontSize: 13,
     fontWeight: '600',
+  },
+  entryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  householdBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  householdBadgeText: {
+    color: '#475569',
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  entryMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
+  entryMetaText: {
+    color: '#64748B',
+    fontSize: 10,
+    fontWeight: '500',
   },
 });
