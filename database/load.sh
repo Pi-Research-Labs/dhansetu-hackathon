@@ -46,6 +46,8 @@ run 07_auth.sql
 run 08_officer_auth.sql
 run 09_app_grants.sql
 run 10_dedupe_names.sql
+run 11_fo1_demo_portfolio.sql
+run 12_fo1_pottery_and_stable.sql
 
 echo "==> row counts"
 psql -d "$DB" -q -c "
