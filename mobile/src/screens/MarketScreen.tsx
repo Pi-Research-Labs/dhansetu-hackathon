@@ -1,92 +1,88 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Modal,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Store, TrendingUp, Calendar, ShieldAlert } from 'lucide-react-native';
+import {
+  Store,
+  TrendingUp,
+  Calendar,
+  ShieldAlert,
+  MapPin,
+  ChevronDown,
+  Check,
+} from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { MarketPriceChart } from '@/components/charts/MarketPriceChart';
-
-interface SegmentIntel {
-  commodity: string;
-  productivity: string;
-  seasonal: string;
-  risks: { tag: string; severity: 'high' | 'medium' | 'low'; desc: string }[];
-  prices: { name: string; location: string; price: string; change: string; isUp: boolean }[];
-}
-
-const MARKET_INTEL: Record<string, SegmentIntel> = {
-  'Kirana Store': {
-    commodity: 'FMCG & Food Staples Basket',
-    productivity: 'Staple supplies steady; distributor credit tightening reducing margins by ~2% YoY on packaged goods.',
-    seasonal: 'Demand peaks during Dussehra–Diwali & Sankranti; 5–10% dip during monsoon months due to reduced rural daily wages.',
-    risks: [
-      { tag: 'Price fluctuation', severity: 'medium', desc: 'Edible oil & pulse price swings compress fixed-MRP margins.' },
-      { tag: 'Local disruption', severity: 'low', desc: 'New highway retail cluster may divert weekly haat footfall.' },
-    ],
-    prices: [
-      { name: 'Wheat Flour (Atta 10kg)', location: 'Karimnagar Wholesale', price: '₹ 340 / bag', change: '+1.2%', isUp: true },
-      { name: 'Refined Edible Oil (1L)', location: 'Telangana Mandi Index', price: '₹ 128 / L', change: '-0.8%', isUp: false },
-      { name: 'Toor Dal (Grade A)', location: 'Nizamabad APMC', price: '₹ 142 / kg', change: '+2.5%', isUp: true },
-    ],
-  },
-  'Dairy Producer': {
-    commodity: 'Milk Procurement Price (per Litre)',
-    productivity: 'Yield per animal up ~1.5% YoY with improved fodder; flush season yields significantly higher.',
-    seasonal: 'Flush season (Nov–Feb) volume up ~20%; feed cost per litre escalates during lean summer months.',
-    risks: [
-      { tag: 'Weather shock', severity: 'high', desc: 'Apr–Jun heatwaves reduce milk yield by 8–12% in low-rainfall years.' },
-      { tag: 'Price fluctuation', severity: 'medium', desc: 'Maize & soya feed cost surges compress per-litre margins.' },
-    ],
-    prices: [
-      { name: 'Cow Milk (3.5% Fat)', location: 'Karimnagar Dairy Co-op', price: '₹ 38.50 / L', change: '+1.5%', isUp: true },
-      { name: 'Buffalo Milk (6.0% Fat)', location: 'Warangal Collection Center', price: '₹ 54.00 / L', change: '+2.0%', isUp: true },
-      { name: 'Cattle Feed (50kg)', location: 'Regional APMC Feed Depot', price: '₹ 1,350 / bag', change: '+0.5%', isUp: true },
-    ],
-  },
-  'FPO': {
-    commodity: 'Paddy & Groundnut Mandi Index',
-    productivity: 'Regional paddy yields +0.8% YoY long-term baseline; groundnut highly dependent on monsoon timing.',
-    seasonal: 'Cashflows concentrated in Rabi (Mar–Apr) and Kharif (Oct–Nov) procurement windows.',
-    risks: [
-      { tag: 'Weather shock', severity: 'high', desc: 'Deficient monsoons directly cut Kharif volumes; irrigation provides only partial buffer.' },
-      { tag: 'Price fluctuation', severity: 'medium', desc: 'MSP vs open-market spreads cause 5–15% swing in net realizations.' },
-      { tag: 'Local disruption', severity: 'low', desc: 'Mandi transport strikes delay buyer settlements by 1–3 weeks.' },
-    ],
-    prices: [
-      { name: 'Paddy (Grade A MSP)', location: 'Karimnagar Procurement Center', price: '₹ 2,320 / Qtl', change: '+4.0%', isUp: true },
-      { name: 'Groundnut (Bold)', location: 'Kurnool APMC Mandi', price: '₹ 6,450 / Qtl', change: '-1.2%', isUp: false },
-      { name: 'Maize (Yellow)', location: 'Nizamabad Mandi', price: '₹ 2,090 / Qtl', change: '+1.8%', isUp: true },
-    ],
-  },
-  'Poultry Unit': {
-    commodity: 'Egg / Broiler Realization vs Feed Index',
-    productivity: 'Feed conversion ratio improving steadily; disease management remains primary productivity driver.',
-    seasonal: 'Strong winter demand; summer heat lowers egg laying rates and elevates mortality risk.',
-    risks: [
-      { tag: 'Weather shock', severity: 'high', desc: 'Extreme heat spike causes mortality and 5–10% drop in egg laying.' },
-      { tag: 'Price fluctuation', severity: 'high', desc: 'Maize/soya feed constitutes ~65% of costs and is highly volatile.' },
-      { tag: 'Local disruption', severity: 'medium', desc: 'Bird-flu scares temporarily suppress local consumer demand.' },
-    ],
-    prices: [
-      { name: 'Layer Eggs (NECC Index)', location: 'Hyderabad/Karimnagar Zone', price: '₹ 4.85 / pc', change: '+3.2%', isUp: true },
-      { name: 'Broiler (Live Weight)', location: 'Farm Gate Realization', price: '₹ 112 / kg', change: '-2.1%', isUp: false },
-    ],
-  },
-};
+import {
+  getMarketCategories,
+  getMarketIntelligence,
+  MarketCategory,
+  MarketIntelligenceDetail,
+} from '@/utils/api-config';
 
 export function MarketScreen() {
   const insets = useSafeAreaInsets();
-  const { lang, segment } = useMerchantStore();
+  const { lang, enterpriseId } = useMerchantStore();
   const t = L[lang];
 
-  const segments = Object.keys(MARKET_INTEL);
-  
-  // Try to find a matching segment key or default to 'FPO'
-  const matchedSegment = segments.find(
-    (s) => s.toLowerCase().includes(segment.toLowerCase()) || segment.toLowerCase().includes(s.toLowerCase())
-  ) || 'FPO';
+  const [categories, setCategories] = useState<MarketCategory[]>([]);
+  const [selectedSubType, setSelectedSubType] = useState<string>('');
+  const [intel, setIntel] = useState<MarketIntelligenceDetail | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
-  const intel = MARKET_INTEL[matchedSegment] || MARKET_INTEL['FPO'];
+  // 1. Fetch categories on mount (scoped to merchant if enterpriseId is available)
+  useEffect(() => {
+    getMarketCategories(enterpriseId || undefined)
+      .then((cats) => {
+        setCategories(cats);
+        // Pre-select the merchant's primary sub-type
+        const primary = cats.find((c) => c.is_merchant_primary);
+        if (primary) {
+          setSelectedSubType(primary.sub_type);
+        } else if (cats.length > 0) {
+          setSelectedSubType(cats[0].sub_type);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching market categories:', err);
+      });
+  }, [enterpriseId]);
+
+  // 2. Fetch market intelligence whenever selected sub-type or enterpriseId changes
+  useEffect(() => {
+    setLoading(true);
+    getMarketIntelligence({
+      subType: selectedSubType || undefined,
+      enterpriseId: enterpriseId || undefined,
+    })
+      .then((data) => {
+        setIntel(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching market intelligence:', err);
+        setLoading(false);
+      });
+  }, [selectedSubType, enterpriseId]);
+
+  if (loading && !intel) {
+    return (
+      <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color="#2E7D32" />
+        <Text style={styles.loadingText}>Loading Market Intelligence...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -100,39 +96,48 @@ export function MarketScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Category Picker Selector */}
+        <TouchableOpacity
+          style={styles.dropdownBtn}
+          onPress={() => setIsDropdownOpen(true)}
+        >
+          <Text style={styles.dropdownBtnText}>
+            {selectedSubType || intel?.sub_type || 'Select Category'}
+          </Text>
+          <ChevronDown size={16} color="#6F6B5E" />
+        </TouchableOpacity>
 
-        {/* Commodity Basket Banner */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>{t.trackedCommodity}</Text>
-          <Text style={styles.commodityTitle}>{intel.commodity}</Text>
-          <View style={styles.liveTagRow}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveTagText}>{t.liveFeed}</Text>
+        {/* Location / District Indicator */}
+        {intel?.district && (
+          <View style={styles.districtBadge}>
+            <MapPin size={12} color="#6F6B5E" style={{ marginRight: 4 }} />
+            <Text style={styles.districtText}>
+              District: <Text style={styles.districtBold}>{intel.district}</Text>
+            </Text>
+          </View>
+        )}
+
+        {/* Main KPI Card */}
+        <View style={styles.kpiContainer}>
+          <View style={[styles.kpiCard, { marginRight: 6 }]}>
+            <Text style={styles.cardLabel}>{t.trackedCommodity}</Text>
+            <Text style={styles.kpiTitle}>{intel?.tracked_commodity}</Text>
+            <View style={styles.liveTagRow}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveTagText}>{t.liveFeed}</Text>
+            </View>
+          </View>
+          <View style={[styles.kpiCard, { marginLeft: 6 }]}>
+            <Text style={styles.cardLabel}>12-MO PRICE TREND</Text>
+            <Text style={[styles.kpiValue, intel && intel.price_trend_12m_pct < 0 ? styles.textDown : styles.textUp]}>
+              {intel && intel.price_trend_12m_pct > 0 ? `+${intel.price_trend_12m_pct}%` : `${intel?.price_trend_12m_pct}%`}
+            </Text>
+            <Text style={styles.trendSubLabel}>vs baseline index</Text>
           </View>
         </View>
 
-        {/* ECharts Price Index & Rainfall Chart */}
-        <MarketPriceChart />
-
-        {/* Commodity Prices */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t.realtimeRates}</Text>
-        </View>
-
-        {intel.prices.map((p, idx) => (
-          <View key={idx} style={styles.priceCard}>
-            <View style={styles.priceMain}>
-              <Text style={styles.priceName}>{p.name}</Text>
-              <Text style={styles.priceLoc}>{p.location}</Text>
-            </View>
-            <View style={styles.priceRight}>
-              <Text style={styles.priceVal}>{p.price}</Text>
-              <View style={[styles.changeChip, p.isUp ? styles.chipUp : styles.chipDown]}>
-                <Text style={[styles.changeText, p.isUp ? styles.textUp : styles.textDown]}>{p.change}</Text>
-              </View>
-            </View>
-          </View>
-        ))}
+        {/* ECharts Dynamic Dual Axis Chart */}
+        <MarketPriceChart chartData={intel?.chart_data} />
 
         {/* Productivity Outlook */}
         <View style={styles.card}>
@@ -140,7 +145,7 @@ export function MarketScreen() {
             <TrendingUp size={16} color="#2E7D32" />
             <Text style={styles.cardHeaderTitle}>{t.productivityTitle}</Text>
           </View>
-          <Text style={styles.cardDescText}>{intel.productivity}</Text>
+          <Text style={styles.cardDescText}>{intel?.productivity_outlook}</Text>
         </View>
 
         {/* Seasonal Pattern */}
@@ -149,7 +154,7 @@ export function MarketScreen() {
             <Calendar size={16} color="#1565C0" />
             <Text style={styles.cardHeaderTitle}>{t.seasonalTitle}</Text>
           </View>
-          <Text style={styles.cardDescText}>{intel.seasonal}</Text>
+          <Text style={styles.cardDescText}>{intel?.seasonal_pattern}</Text>
         </View>
 
         {/* Climate & Market Risks */}
@@ -159,19 +164,66 @@ export function MarketScreen() {
             <Text style={styles.cardHeaderTitle}>{t.climateRisksTitle}</Text>
           </View>
 
-          {intel.risks.map((r, idx) => (
+          {intel?.risks.map((r, idx) => (
             <View key={idx} style={styles.riskItem}>
               <View style={styles.riskHeader}>
-                <Text style={styles.riskTag}>{r.tag}</Text>
-                <View style={[styles.sevBadge, r.severity === 'high' ? styles.sevHigh : r.severity === 'medium' ? styles.sevMed : styles.sevLow]}>
+                <Text style={styles.riskTag}>{r.risk_type}</Text>
+                <View style={[
+                  styles.sevBadge,
+                  r.severity === 'high' ? styles.sevHigh : r.severity === 'medium' ? styles.sevMed : styles.sevLow
+                ]}>
                   <Text style={styles.sevText}>{t.severityLabel(r.severity)}</Text>
                 </View>
               </View>
-              <Text style={styles.riskDesc}>{r.desc}</Text>
+              <Text style={styles.riskDesc}>{r.detail}</Text>
             </View>
           ))}
         </View>
       </ScrollView>
+
+      {/* Category Dropdown Modal */}
+      <Modal
+        visible={isDropdownOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsDropdownOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsDropdownOpen(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Category</Text>
+            <FlatList
+              data={categories}
+              keyExtractor={(item) => item.sub_type_id}
+              renderItem={({ item }) => {
+                const isSelected = item.sub_type === selectedSubType;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalItem, isSelected && styles.modalItemActive]}
+                    onPress={() => {
+                      setSelectedSubType(item.sub_type);
+                      setIsDropdownOpen(false);
+                    }}
+                  >
+                    <View style={styles.modalItemLeft}>
+                      <Text style={[styles.modalItemText, isSelected && styles.modalItemTextActive]}>
+                        {item.sub_type}
+                      </Text>
+                      {item.is_merchant_primary && (
+                        <Text style={styles.primaryBadge}>★ Your Business</Text>
+                      )}
+                    </View>
+                    {isSelected && <Check size={16} color="#2E7D32" />}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -181,17 +233,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAF5',
   },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#6F6B5E',
+    fontSize: 13,
+    fontWeight: '500',
+  },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E7E5DA',
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -212,29 +269,67 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  segmentContainer: {
-    marginBottom: 14,
-  },
-  segTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
+  dropdownBtn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E7E5DA',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
-  segTabActive: {
-    backgroundColor: '#2E7D32',
-    borderColor: '#2E7D32',
-  },
-  segText: {
-    color: '#6F6B5E',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  segTextActive: {
-    color: '#FFFFFF',
+  dropdownBtnText: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#1D261F',
+  },
+  districtBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    marginLeft: 2,
+  },
+  districtText: {
+    fontSize: 12,
+    color: '#6F6B5E',
+  },
+  districtBold: {
+    fontWeight: '700',
+    color: '#1D261F',
+  },
+  kpiContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  kpiCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+    justifyContent: 'space-between',
+  },
+  kpiTitle: {
+    color: '#1D261F',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  kpiValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  trendSubLabel: {
+    fontSize: 9,
+    color: '#6F6B5E',
+    marginTop: 2,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -251,21 +346,15 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     color: '#6F6B5E',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  commodityTitle: {
-    color: '#1D261F',
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 4,
   },
   liveTagRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
+    gap: 4,
+    marginTop: 4,
   },
   liveDot: {
     width: 6,
@@ -275,71 +364,9 @@ const styles = StyleSheet.create({
   },
   liveTagText: {
     color: '#2E7D32',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  sectionHeader: {
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    color: '#1D261F',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  priceCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E7E5DA',
-    marginBottom: 10,
-  },
-  priceMain: {
-    flex: 1,
-  },
-  priceName: {
-    color: '#1D261F',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  priceLoc: {
-    color: '#6F6B5E',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  priceRight: {
-    alignItems: 'flex-end',
-  },
-  priceVal: {
-    color: '#1D261F',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  changeChip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 4,
-  },
-  chipUp: {
-    backgroundColor: '#E7F2E7',
-  },
-  chipDown: {
-    backgroundColor: '#F8E6E2',
-  },
-  changeText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  textUp: {
-    color: '#2E7D32',
-  },
-  textDown: {
-    color: '#C0392B',
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -373,6 +400,8 @@ const styles = StyleSheet.create({
     color: '#1D261F',
     fontSize: 12,
     fontWeight: '600',
+    flex: 1,
+    paddingRight: 8,
   },
   sevBadge: {
     paddingHorizontal: 6,
@@ -397,5 +426,71 @@ const styles = StyleSheet.create({
     color: '#6F6B5E',
     fontSize: 11,
     lineHeight: 16,
+  },
+  textUp: {
+    color: '#2E7D32',
+  },
+  textDown: {
+    color: '#C0392B',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    maxHeight: '75%',
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1D261F',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0EFEA',
+  },
+  modalItemActive: {
+    backgroundColor: '#F4FBF4',
+    borderRadius: 8,
+  },
+  modalItemLeft: {
+    flexDirection: 'column',
+    flex: 1,
+  },
+  modalItemText: {
+    fontSize: 13,
+    color: '#1D261F',
+    fontWeight: '500',
+  },
+  modalItemTextActive: {
+    color: '#2E7D32',
+    fontWeight: '700',
+  },
+  primaryBadge: {
+    fontSize: 9,
+    color: '#2E7D32',
+    fontWeight: '700',
+    marginTop: 2,
   },
 });
