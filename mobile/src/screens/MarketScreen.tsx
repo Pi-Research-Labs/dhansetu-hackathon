@@ -5,9 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Modal,
-  FlatList,
-  TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -16,16 +13,12 @@ import {
   Calendar,
   ShieldAlert,
   MapPin,
-  ChevronDown,
-  Check,
 } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { MarketPriceChart } from '@/components/charts/MarketPriceChart';
 import {
-  getMarketCategories,
   getMarketIntelligence,
-  MarketCategory,
   MarketIntelligenceDetail,
 } from '@/utils/api-config';
 
@@ -34,35 +27,13 @@ export function MarketScreen() {
   const { lang, enterpriseId } = useMerchantStore();
   const t = L[lang];
 
-  const [categories, setCategories] = useState<MarketCategory[]>([]);
-  const [selectedSubType, setSelectedSubType] = useState<string>('');
   const [intel, setIntel] = useState<MarketIntelligenceDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
-  // 1. Fetch categories on mount (scoped to merchant if enterpriseId is available)
-  useEffect(() => {
-    getMarketCategories(enterpriseId || undefined)
-      .then((cats) => {
-        setCategories(cats);
-        // Pre-select the merchant's primary sub-type
-        const primary = cats.find((c) => c.is_merchant_primary);
-        if (primary) {
-          setSelectedSubType(primary.sub_type);
-        } else if (cats.length > 0) {
-          setSelectedSubType(cats[0].sub_type);
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching market categories:', err);
-      });
-  }, [enterpriseId]);
-
-  // 2. Fetch market intelligence whenever selected sub-type or enterpriseId changes
+  // Fetch market intelligence on mount (scoped automatically to the merchant's enterprise)
   useEffect(() => {
     setLoading(true);
     getMarketIntelligence({
-      subType: selectedSubType || undefined,
       enterpriseId: enterpriseId || undefined,
     })
       .then((data) => {
@@ -73,7 +44,7 @@ export function MarketScreen() {
         console.error('Error fetching market intelligence:', err);
         setLoading(false);
       });
-  }, [selectedSubType, enterpriseId]);
+  }, [enterpriseId]);
 
   if (loading && !intel) {
     return (
@@ -96,16 +67,12 @@ export function MarketScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Category Picker Selector */}
-        <TouchableOpacity
-          style={styles.dropdownBtn}
-          onPress={() => setIsDropdownOpen(true)}
-        >
-          <Text style={styles.dropdownBtnText}>
-            {selectedSubType || intel?.sub_type || 'Select Category'}
+        {/* Industry / Sub Type Title */}
+        <View style={styles.industryHeader}>
+          <Text style={styles.industryText}>
+            Industry: <Text style={styles.industryBold}>{intel?.sub_type}</Text>
           </Text>
-          <ChevronDown size={16} color="#6F6B5E" />
-        </TouchableOpacity>
+        </View>
 
         {/* Location / District Indicator */}
         {intel?.district && (
@@ -180,50 +147,6 @@ export function MarketScreen() {
           ))}
         </View>
       </ScrollView>
-
-      {/* Category Dropdown Modal */}
-      <Modal
-        visible={isDropdownOpen}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsDropdownOpen(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsDropdownOpen(false)}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Category</Text>
-            <FlatList
-              data={categories}
-              keyExtractor={(item) => item.sub_type_id}
-              renderItem={({ item }) => {
-                const isSelected = item.sub_type === selectedSubType;
-                return (
-                  <TouchableOpacity
-                    style={[styles.modalItem, isSelected && styles.modalItemActive]}
-                    onPress={() => {
-                      setSelectedSubType(item.sub_type);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    <View style={styles.modalItemLeft}>
-                      <Text style={[styles.modalItemText, isSelected && styles.modalItemTextActive]}>
-                        {item.sub_type}
-                      </Text>
-                      {item.is_merchant_primary && (
-                        <Text style={styles.primaryBadge}>★ Your Business</Text>
-                      )}
-                    </View>
-                    {isSelected && <Check size={16} color="#2E7D32" />}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 }
@@ -269,10 +192,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  dropdownBtn: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  industryHeader: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E7E5DA',
@@ -281,10 +201,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 8,
   },
-  dropdownBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1D261F',
+  industryText: {
+    fontSize: 13,
+    color: '#6F6B5E',
+  },
+  industryBold: {
+    fontWeight: '700',
+    color: '#2E7D32',
   },
   districtBadge: {
     flexDirection: 'row',
@@ -432,65 +355,5 @@ const styles = StyleSheet.create({
   },
   textDown: {
     color: '#C0392B',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    maxHeight: '75%',
-    borderWidth: 1,
-    borderColor: '#E7E5DA',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1D261F',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0EFEA',
-  },
-  modalItemActive: {
-    backgroundColor: '#F4FBF4',
-    borderRadius: 8,
-  },
-  modalItemLeft: {
-    flexDirection: 'column',
-    flex: 1,
-  },
-  modalItemText: {
-    fontSize: 13,
-    color: '#1D261F',
-    fontWeight: '500',
-  },
-  modalItemTextActive: {
-    color: '#2E7D32',
-    fontWeight: '700',
-  },
-  primaryBadge: {
-    fontSize: 9,
-    color: '#2E7D32',
-    fontWeight: '700',
-    marginTop: 2,
   },
 });
