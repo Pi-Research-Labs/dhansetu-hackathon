@@ -200,7 +200,7 @@ export default function VoiceReviewTab({
       ) : (
         /* Audit Table View */
         <div className="bg-white border border-[#E2E6D8] rounded-2xl overflow-hidden shadow-2xs flex flex-col flex-1 min-h-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-neutral-400/50 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgba(163,163,163,0.5)_transparent]">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="bg-[#FAFBF6] border-b border-[#E2E6D8] text-[9.5px] font-bold text-[#5F6656] uppercase tracking-wider">
@@ -290,13 +290,12 @@ export default function VoiceReviewTab({
                           {/* Small visual bar */}
                           <div className="w-16 bg-[#E2E6D8] h-1.5 rounded-full overflow-hidden mt-1">
                             <div
-                              className={`h-full rounded-full ${
-                                confidencePct >= 80
+                              className={`h-full rounded-full ${confidencePct >= 80
                                   ? "bg-[#2E7D32]"
                                   : confidencePct >= 50
-                                  ? "bg-[#E65100]"
-                                  : "bg-[#C62828]"
-                              }`}
+                                    ? "bg-[#E65100]"
+                                    : "bg-[#C62828]"
+                                }`}
                               style={{ width: `${confidencePct}%` }}
                             />
                           </div>

@@ -109,7 +109,7 @@ export default function WorklistList({
   }
 
   return (
-    <div className="bg-white border border-[#E2E6D8] rounded-xl overflow-hidden max-h-[650px] overflow-y-auto divide-y divide-[#E2E6D8]/60 shadow-2xs">
+    <div className="bg-white border border-[#E2E6D8] rounded-xl overflow-hidden divide-y divide-[#E2E6D8]/60 shadow-2xs">
       {items.map((item) => {
         const isSelected = item.enterprise_id === selectedId;
 
