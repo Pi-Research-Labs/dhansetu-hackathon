@@ -157,7 +157,7 @@ export function HomeScreen() {
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#1565C0' }]} />
               <CreditCard size={12} color="#6F6B5E" />
-              <Text style={styles.legendText}>{t.appsLabel} ({Math.round(appShare * 100)}%)</Text>
+              <Text style={styles.legendText}>{t.walletLabel} ({Math.round(appShare * 100)}%)</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#C9CDBF' }]} />

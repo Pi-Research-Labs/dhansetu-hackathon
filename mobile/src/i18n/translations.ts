@@ -22,7 +22,7 @@ export interface Translations {
   channelsTitle: string;
   channelsSub: string;
   upiLabel: string;
-  appsLabel: string;
+  walletLabel: string;
   cashLabel: string;
   recordedEntriesTitle: string;
   todaysEntryTitle: string;
@@ -125,7 +125,7 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'Collection Channels',
     channelsSub: 'How your customers pay you',
     upiLabel: 'UPI',
-    appsLabel: 'Apps',
+    walletLabel: 'Wallet',
     cashLabel: 'Cash',
     recordedEntriesTitle: 'Recorded Entries',
     todaysEntryTitle: "Today's Entry",
@@ -228,7 +228,7 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'भुगतान संग्रह चैनल',
     channelsSub: 'ग्राहक आपको कैसे भुगतान करते हैं',
     upiLabel: 'UPI',
-    appsLabel: 'ऐप्स',
+    walletLabel: 'वॉलेट',
     cashLabel: 'नकद',
     recordedEntriesTitle: 'दर्ज प्रविष्टियाँ',
     todaysEntryTitle: 'आज की प्रविष्टि',
@@ -331,7 +331,7 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'पेमेंट वसुली चॅनेल',
     channelsSub: 'ग्राहक तुम्हाला कसे पैसे देतात',
     upiLabel: 'UPI',
-    appsLabel: 'अ‍ॅप्स',
+    walletLabel: 'वॉलेट',
     cashLabel: 'रोख',
     recordedEntriesTitle: 'नोंदवलेल्या नोंदी',
     todaysEntryTitle: 'आजची नोंद',
@@ -434,7 +434,7 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'చెల్లింపుల సేకరణ మార్గాలు',
     channelsSub: 'వినియోగదారులు మీకు ఎలా చెల్లిస్తారు',
     upiLabel: 'UPI',
-    appsLabel: 'యాప్‌లు',
+    walletLabel: 'వాలెట్',
     cashLabel: 'నగదు',
     recordedEntriesTitle: 'నమోదైన ఎంట్రీలు',
     todaysEntryTitle: 'ఈరోజు నమోదు',
