@@ -479,13 +479,25 @@ someone else gets `403` first, which avoids leaking whether an id exists).
   "total_inflow": "15800.00",     // panel 15300 + live 500
   "total_expenses": "2030.00",    // panel  1830 + live 200
   "net": "13770.00",
-  "txn_count": 6,
+  "txn_count": 6,               // all transactions that day
   "live_inflow": "500.00",
   "live_outflow": "200.00",
   "live_txn_count": 2,
-  "has_live_entries": true
+  "has_live_entries": true,
+  "inflow_count": 2,            // how many were money IN
+  "outflow_count": 1            // how many were money OUT
 }
 ```
+
+`inflow_count`/`outflow_count` are counted off the **live** ledger only, and
+that's a hard limit rather than an omission: `daily_ledger` carries one
+`txn_count` per day with no per-transaction direction behind it (it stores
+daily inflow/outflow *amounts*), so there is nothing to split on a panel day.
+
+On any date after the panel ends — **including today** — every transaction is
+live, so `inflow_count + outflow_count == txn_count` and both are the true
+figures. On earlier dates they count only what was captured live, while
+`txn_count` stays the honest combined number.
 
 ## `GET /enterprise/{enterprise_id}/map-tile` — officer (any) or merchant (own only)
 

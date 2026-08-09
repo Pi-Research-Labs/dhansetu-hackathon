@@ -203,6 +203,8 @@ async def get_daily_totals(enterprise_id: str, on: date) -> dict:
             "live_outflow": Decimal("0"),
             "live_txn_count": 0,
             "has_live_entries": False,
+            "inflow_count": 0,
+            "outflow_count": 0,
         }
 
 

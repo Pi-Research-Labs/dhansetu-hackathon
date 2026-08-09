@@ -226,3 +226,9 @@ class DailyTotals(BaseModel):
     live_outflow: Decimal
     live_txn_count: int
     has_live_entries: bool
+    # How many in vs out. Live entries only -- the synthetic panel has one
+    # txn_count per day with no direction behind it. For any date after the
+    # panel ends (2026-07-31), including today, everything is live and these
+    # are the true counts.
+    inflow_count: int
+    outflow_count: int

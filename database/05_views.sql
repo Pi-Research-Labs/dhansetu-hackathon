@@ -416,11 +416,33 @@ SELECT
     COALESCE(v.cash_inflow, 0)                                          AS live_inflow,
     COALESCE(v.outflow, 0)                                              AS live_outflow,
     COALESCE(v.txn_count, 0)                                            AS live_txn_count,
-    (v.enterprise_id IS NOT NULL)                                       AS has_live_entries
+    (v.enterprise_id IS NOT NULL)                                       AS has_live_entries,
+    -- How many went IN vs OUT, as opposed to how much. Counted off the live
+    -- ledger only, and that is a hard limit rather than an oversight:
+    -- daily_ledger carries one txn_count per day with no per-transaction
+    -- direction behind it (it stores daily inflow/outflow *amounts*), so
+    -- there is nothing to split on a panel day. On any date after the panel
+    -- ends (2026-07-31) every transaction is live, so these equal the true
+    -- totals -- which covers "today", the case the merchant home screen asks
+    -- about. On earlier dates they count the live additions only, and
+    -- txn_count stays the honest combined figure.
+    COALESCE(c.inflow_count, 0)                                         AS inflow_count,
+    COALESCE(c.outflow_count, 0)                                        AS outflow_count
 FROM daily_ledger d
 FULL OUTER JOIN v_daily_from_voice v
        ON v.enterprise_id = d.enterprise_id
-      AND v.event_date    = d.event_date;
+      AND v.event_date    = d.event_date
+-- Separate join rather than extra columns on v_daily_from_voice: that view
+-- is the documented daily_ledger-shaped seam and gains nothing from count
+-- columns daily_ledger has no counterpart for.
+LEFT JOIN (
+    SELECT enterprise_id, event_date,
+           COUNT(*) FILTER (WHERE direction = 'inflow')  AS inflow_count,
+           COUNT(*) FILTER (WHERE direction = 'outflow') AS outflow_count
+    FROM v_ledger_live_effective
+    GROUP BY enterprise_id, event_date
+) c ON c.enterprise_id = COALESCE(d.enterprise_id, v.enterprise_id)
+   AND c.event_date    = COALESCE(d.event_date, v.event_date);
 
 -- ===========================================================================
 -- 11. HISTORICAL WEEKLY CASHFLOW — inflow/outflow/net by ISO week
@@ -729,5 +751,7 @@ SELECT
     live_inflow,
     live_outflow,
     live_txn_count,
-    has_live_entries
+    has_live_entries,
+    inflow_count,
+    outflow_count
 FROM v_ledger_daily_effective;
