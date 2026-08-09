@@ -1,5 +1,13 @@
 import { LanguageCode } from "@/redux/slices/languageSlice";
 
+/** params the rule engine attaches to each recommended action (amount in Rs,
+ *  days until the shortfall bites, months the action should cover). */
+export interface ActionParams {
+  amount?: number;
+  days?: number;
+  months?: number;
+}
+
 export interface TranslationDictionary {
   langName: string;
   govtBadge: string;
@@ -68,6 +76,12 @@ export interface TranslationDictionary {
     scoreStressTooltip: string;
     scoreOverallLabel: string;
     scoreOverallTooltip: string;
+    scoreDirectionHint: string;
+    scoreBandLow: string;
+    scoreBandModerate: string;
+    scoreBandHigh: string;
+    actionAudience: Record<string, string>;
+    actionGuidance: Record<string, (p: ActionParams) => string>;
     backtestStat: (a: number, b: number) => string;
     noMatch: string;
     historyTab: string;
@@ -232,7 +246,24 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         "How likely this business is to run short of cash or miss a repayment in the next 90 days. Higher means more likely.",
       scoreOverallLabel: "Overall risk rating",
       scoreOverallTooltip:
-        "The combined rating behind this enterprise's tier: the model's prediction blended with the rule checks. 38% and above is Watch, 58% and above is Act now.",
+        "The combined rating behind this enterprise's tier: the model's prediction blended with the rule checks. 38 and above is Watch, 58 and above is Act now.",
+      scoreDirectionHint: "Higher = more risk",
+      scoreBandLow: "Low",
+      scoreBandModerate: "Moderate",
+      scoreBandHigh: "High",
+      actionAudience: { merchant: "Merchant does this", officer: "You do this", both: "You and the merchant" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `Pre-book about ${p.months ?? 3} months of feed and inputs now, while prices are low. Locks today's rate before costs climb.`,
+        collect_udhaar: (p) =>
+          `Go after the unpaid udhaar${p.amount ? ` — roughly ₹${Math.round(p.amount).toLocaleString("en-IN")} is sitting with buyers` : ""}. Cash already earned is the cheapest cash to find.`,
+        request_bridge_loan: (p) =>
+          `Start a short bridge loan now${p.amount ? ` to cover the ₹${Math.round(p.amount).toLocaleString("en-IN")} gap` : ""}${p.days ? `, about ${p.days} days before it bites` : ""}. Approval takes longer than the gap allows.`,
+        restructure_emi: () =>
+          "Ask the lender to re-space the EMI. Repayments are landing faster than money is coming in, so a longer schedule protects the loan.",
+        stagger_batch: (p) =>
+          `Split the next batch across ${p.months ?? 3} months instead of buying it in one go, so the cost does not land in a single week.`,
+      },
       backtestStat: (a: number, b: number) => `Backtest: ${a}% lower error on 3-month · ${b}% on 6-month vs naive baseline`,
       noMatch: "No assigned enterprises match the selected filters.",
       historyTab: "History (Weekly)",
@@ -445,7 +476,24 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         "अगले 90 दिनों में इस व्यवसाय के पास नकदी कम पड़ने या किस्त चूकने की कितनी संभावना है। जितना ज़्यादा, उतना जोखिम।",
       scoreOverallLabel: "कुल जोखिम रेटिंग",
       scoreOverallTooltip:
-        "इस उद्यम के स्तर के पीछे की संयुक्त रेटिंग: मॉडल का अनुमान और नियम-जाँच मिलाकर। 38% से ऊपर 'निगरानी', 58% से ऊपर 'तुरंत कार्रवाई'।",
+        "इस उद्यम के स्तर के पीछे की संयुक्त रेटिंग: मॉडल का अनुमान और नियम-जाँच मिलाकर। 38 से ऊपर 'निगरानी', 58 से ऊपर 'तुरंत कार्रवाई'।",
+      scoreDirectionHint: "ज़्यादा = ज़्यादा जोखिम",
+      scoreBandLow: "कम",
+      scoreBandModerate: "मध्यम",
+      scoreBandHigh: "ऊँचा",
+      actionAudience: { merchant: "व्यापारी यह करेंगे", officer: "आप यह करें", both: "आप और व्यापारी" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `अभी लगभग ${p.months ?? 3} महीने का चारा और सामान पहले से बुक करें, जब दाम कम हैं। आज की दर तय हो जाएगी।`,
+        collect_udhaar: (p) =>
+          `बकाया उधार वसूलें${p.amount ? ` — करीब ₹${Math.round(p.amount).toLocaleString("en-IN")} खरीदारों के पास अटका है` : ""}। कमाया हुआ पैसा सबसे सस्ता पैसा है।`,
+        request_bridge_loan: (p) =>
+          `अभी छोटा ब्रिज लोन शुरू करें${p.amount ? ` ताकि ₹${Math.round(p.amount).toLocaleString("en-IN")} की कमी पूरी हो` : ""}${p.days ? `, संकट से लगभग ${p.days} दिन पहले` : ""}। मंज़ूरी में समय लगता है।`,
+        restructure_emi: () =>
+          "ऋणदाता से किस्त की अवधि बढ़ाने को कहें। आमदनी से तेज़ किस्तें जा रही हैं; लंबी अवधि ऋण को बचाएगी।",
+        stagger_batch: (p) =>
+          `अगला बैच एक साथ लेने के बजाय ${p.months ?? 3} महीनों में बाँटें, ताकि खर्च एक ही हफ़्ते में न पड़े।`,
+      },
       backtestStat: (a: number, b: number) => `बैकटेस्ट: 3 माह पर ${a}% कम त्रुटि · 6 माह पर ${b}% सटीकता सुधार`,
       noMatch: "चयनित फ़िल्टर से कोई आवंटित उद्यम मेल नहीं खाता।",
       historyTab: "इतिहास (साप्ताहिक)",
@@ -658,7 +706,24 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         "రాబోయే 90 రోజుల్లో ఈ వ్యాపారానికి నగదు కొరత రావడానికి లేదా వాయిదా చెల్లించలేకపోవడానికి ఎంత అవకాశం ఉంది. ఎక్కువైతే ఎక్కువ ప్రమాదం.",
       scoreOverallLabel: "మొత్తం రిస్క్ రేటింగ్",
       scoreOverallTooltip:
-        "ఈ సంస్థ స్థాయి వెనుక ఉన్న సంయుక్త రేటింగ్: మోడల్ అంచనా మరియు రూల్ తనిఖీలు కలిపి. 38% పైన 'గమనించండి', 58% పైన 'వెంటనే చర్య'.",
+        "ఈ సంస్థ స్థాయి వెనుక ఉన్న సంయుక్త రేటింగ్: మోడల్ అంచనా మరియు రూల్ తనిఖీలు కలిపి. 38 పైన 'గమనించండి', 58 పైన 'వెంటనే చర్య'.",
+      scoreDirectionHint: "ఎక్కువ = ఎక్కువ ప్రమాదం",
+      scoreBandLow: "తక్కువ",
+      scoreBandModerate: "మధ్యస్థం",
+      scoreBandHigh: "ఎక్కువ",
+      actionAudience: { merchant: "వ్యాపారి చేయాలి", officer: "మీరు చేయాలి", both: "మీరు మరియు వ్యాపారి" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `ధరలు తక్కువగా ఉన్నప్పుడే సుమారు ${p.months ?? 3} నెలల దాణా, సామాగ్రి ముందుగా బుక్ చేయండి. ఈనాటి ధర ఖాయమవుతుంది.`,
+        collect_udhaar: (p) =>
+          `బకాయి ఉధార్ వసూలు చేయండి${p.amount ? ` — సుమారు ₹${Math.round(p.amount).toLocaleString("en-IN")} కొనుగోలుదారుల వద్ద ఉంది` : ""}. సంపాదించిన డబ్బే చౌకైన డబ్బు.`,
+        request_bridge_loan: (p) =>
+          `ఇప్పుడే చిన్న బ్రిడ్జ్ లోన్ మొదలుపెట్టండి${p.amount ? ` — ₹${Math.round(p.amount).toLocaleString("en-IN")} లోటు కోసం` : ""}${p.days ? `, సుమారు ${p.days} రోజుల ముందు` : ""}. ఆమోదానికి సమయం పడుతుంది.`,
+        restructure_emi: () =>
+          "వాయిదా గడువు పొడిగించమని రుణదాతను అడగండి. ఆదాయం కంటే వేగంగా వాయిదాలు పోతున్నాయి.",
+        stagger_batch: (p) =>
+          `తదుపరి బ్యాచ్‌ను ఒకేసారి కాకుండా ${p.months ?? 3} నెలల్లో విభజించండి, ఖర్చు ఒకే వారంలో పడకుండా.`,
+      },
       backtestStat: (a: number, b: number) => `బ్యాక్‌టెస్ట్: 3 నెలలపై ${a}% తక్కువ లోపం · 6 నెలలపై ${b}% ఖచ్చితత్వం`,
       noMatch: "ఎంచుకున్న ఫిల్టర్లకు సరిపోలే కేటాయించిన సంస్థ లేదు.",
       historyTab: "చరిత్ర (వారంవారీ)",
@@ -871,7 +936,24 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
         "पुढील 90 दिवसांत या व्यवसायाकडे रोख कमी पडण्याची किंवा हप्ता चुकण्याची किती शक्यता आहे. जास्त म्हणजे जास्त धोका.",
       scoreOverallLabel: "एकूण जोखीम रेटिंग",
       scoreOverallTooltip:
-        "या उद्योगाच्या श्रेणीमागील एकत्रित रेटिंग: मॉडेलचा अंदाज आणि नियम-तपासणी एकत्र करून. 38% वर 'लक्ष ठेवा', 58% वर 'त्वरित कारवाई'.",
+        "या उद्योगाच्या श्रेणीमागील एकत्रित रेटिंग: मॉडेलचा अंदाज आणि नियम-तपासणी एकत्र करून. 38 वर 'लक्ष ठेवा', 58 वर 'त्वरित कारवाई'.",
+      scoreDirectionHint: "जास्त = जास्त धोका",
+      scoreBandLow: "कमी",
+      scoreBandModerate: "मध्यम",
+      scoreBandHigh: "जास्त",
+      actionAudience: { merchant: "व्यापारी हे करतील", officer: "तुम्ही हे करा", both: "तुम्ही आणि व्यापारी" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `दर कमी असतानाच सुमारे ${p.months ?? 3} महिन्यांचा चारा व साहित्य आधीच बुक करा. आजचा दर निश्चित होईल.`,
+        collect_udhaar: (p) =>
+          `थकीत उधारी वसूल करा${p.amount ? ` — जवळपास ₹${Math.round(p.amount).toLocaleString("en-IN")} खरेदीदारांकडे अडकले आहे` : ""}. कमावलेला पैसा सर्वात स्वस्त पैसा.`,
+        request_bridge_loan: (p) =>
+          `आताच छोटे ब्रिज कर्ज सुरू करा${p.amount ? ` — ₹${Math.round(p.amount).toLocaleString("en-IN")} ची तूट भरण्यासाठी` : ""}${p.days ? `, सुमारे ${p.days} दिवस आधी` : ""}. मंजुरीला वेळ लागतो.`,
+        restructure_emi: () =>
+          "सावकाराला हप्त्याची मुदत वाढवायला सांगा. उत्पन्नापेक्षा वेगाने हप्ते जात आहेत.",
+        stagger_batch: (p) =>
+          `पुढील बॅच एकाच वेळी न घेता ${p.months ?? 3} महिन्यांत विभागा, म्हणजे खर्च एकाच आठवड्यात पडणार नाही.`,
+      },
       backtestStat: (a: number, b: number) => `बॅकटेस्ट: ३ महिन्यांवर ${a}% कमी त्रुटी · ६ महिन्यांवर ${b}% अचूकता`,
       noMatch: "निवडलेल्या फिल्टरशी जुळणारा कोणताही उद्योग नाही.",
       historyTab: "इतिहास (साप्ताहिक)",
