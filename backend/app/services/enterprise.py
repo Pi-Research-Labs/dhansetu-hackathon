@@ -130,6 +130,7 @@ async def get_transactions(
     offset: int = 0,
     date_from: date | None = None,
     date_to: date | None = None,
+    tender: str | None = None,
 ) -> dict:
     """Itemised real ledger entries, newest first.
 
@@ -138,29 +139,35 @@ async def get_transactions(
     """
     pool = get_pool()
     async with pool.acquire() as conn:
-        # $3/$4 are NULL-tolerant on purpose: an absent bound means unbounded,
-        # rather than the caller having to build two different statements.
+        # Every filter is NULL-tolerant: an absent one means unbounded, rather
+        # than the caller building a different statement per combination.
+        # tender in particular has to filter server-side -- doing it in the
+        # client would only filter the page in hand and leave `total` and the
+        # paging describing the unfiltered set.
         where = """
             WHERE enterprise_id = $1
               AND ($2::date IS NULL OR event_date >= $2)
               AND ($3::date IS NULL OR event_date <= $3)
+              AND ($4::text IS NULL OR tender = $4)
         """
         total = await conn.fetchval(
             f"SELECT COUNT(*) FROM dhansetu.v_enterprise_transactions {where}",
             enterprise_id,
             date_from,
             date_to,
+            tender,
         )
         rows = await conn.fetch(
             f"""
             SELECT * FROM dhansetu.v_enterprise_transactions
             {where}
             ORDER BY event_date DESC, recorded_at DESC
-            LIMIT $4 OFFSET $5
+            LIMIT $5 OFFSET $6
             """,
             enterprise_id,
             date_from,
             date_to,
+            tender,
             limit,
             offset,
         )

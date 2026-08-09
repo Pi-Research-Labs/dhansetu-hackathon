@@ -48,6 +48,7 @@ interface MyPortfolioTabProps {
   segments: string[];
   tierCounts: Record<string, number>;
   t: TranslationDictionary;
+  onSelectTenderFilter?: (tender: string) => void;
 }
 
 export default function MyPortfolioTab({
@@ -76,6 +77,7 @@ export default function MyPortfolioTab({
   segments,
   tierCounts,
   t,
+  onSelectTenderFilter,
 }: MyPortfolioTabProps) {
   return (
     <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-visible lg:overflow-hidden">
@@ -157,7 +159,7 @@ export default function MyPortfolioTab({
 
                 <ReceivablesCard items={receivables} isLoading={loadingDetails} t={t} />
 
-                <PaymentMixCard data={paymentMix} isLoading={loadingDetails} t={t} />
+                <PaymentMixCard data={paymentMix} isLoading={loadingDetails} t={t} onSelectTender={onSelectTenderFilter} />
 
                 <RiskAndAdvicePanel
                   enterprise={selectedEnterprise}

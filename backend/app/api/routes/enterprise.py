@@ -32,6 +32,12 @@ from app.services.enterprise import (
 router = APIRouter(tags=["enterprise"])
 
 
+# Mirrors ledger_entries_live.tender's CHECK constraint. Validated here so a
+# typo comes back as a 422 rather than an empty page that looks like "this
+# merchant has no UPI transactions".
+_TENDERS = {"cash", "upi", "wallet", "bank", "credit"}
+
+
 def _check_access(claims: dict, enterprise_id: str) -> None:
     if claims.get("role") == "merchant" and claims["sub"] != enterprise_id:
         raise HTTPException(status_code=403, detail="Cannot view another enterprise")
@@ -138,12 +144,15 @@ async def enterprise_transactions(
     offset: int = Query(0, ge=0),
     date_from: date | None = Query(None, description="inclusive lower bound on event_date"),
     date_to: date | None = Query(None, description="inclusive upper bound on event_date"),
+    tender: str | None = Query(None, description="cash | upi | wallet | bank | credit"),
     claims: dict = Depends(get_token_claims),
 ) -> dict:
     _check_access(claims, enterprise_id)
     if date_from and date_to and date_from > date_to:
         raise HTTPException(status_code=422, detail="date_from must be on or before date_to")
-    return await get_transactions(enterprise_id, limit, offset, date_from, date_to)
+    if tender is not None and tender not in _TENDERS:
+        raise HTTPException(status_code=422, detail=f"tender must be one of {', '.join(sorted(_TENDERS))}")
+    return await get_transactions(enterprise_id, limit, offset, date_from, date_to, tender)
 
 
 @router.get(

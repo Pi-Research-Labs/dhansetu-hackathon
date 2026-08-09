@@ -291,6 +291,34 @@ export interface RiskPredictionResponse {
   source: string;
 }
 
+// Ledger Transaction types
+export interface LedgerTransaction {
+  entry_id: string;
+  enterprise_id: string;
+  event_date: string;
+  recorded_at: string;
+  direction: "inflow" | "outflow" | string;
+  amount: number | string;
+  category?: string | null;
+  tender?: string | null;
+  is_household: boolean;
+  source: string;
+  confidence?: number | string | null;
+  voice_id?: string | null;
+  // only present for spoken entries - lets the row show what was said
+  transcript?: string | null;
+  detected_lang?: string | null;
+  channel?: string | null;
+}
+
+export interface TransactionPage {
+  enterprise_id: string;
+  total: number;
+  limit: number;
+  offset: number;
+  transactions: LedgerTransaction[];
+}
+
 // Task Outcome types
 export interface PostOutcomePayload {
   task_id: string;
@@ -424,6 +452,21 @@ export async function getCashflowForecast(enterpriseId: string): Promise<Cashflo
 export async function getNetInflowHeatmap(enterpriseId: string, weeks?: 7 | 14): Promise<NetInflowHeatmapItem[]> {
   const query = weeks ? `?weeks=${weeks}` : "";
   return await apiClient.get<NetInflowHeatmapItem[]>(`/enterprise/${enterpriseId}/net-inflow-heatmap${query}`);
+}
+
+// Ledger Transactions
+export async function getTransactions(
+  enterpriseId: string,
+  opts: { limit?: number; offset?: number; tender?: string } = {}
+): Promise<TransactionPage> {
+  const qs = new URLSearchParams();
+  if (opts.limit !== undefined) qs.set("limit", String(opts.limit));
+  if (opts.offset !== undefined) qs.set("offset", String(opts.offset));
+  // "all" is a UI concept, not an API one - omit the param entirely so the
+  // backend returns every tender rather than filtering on the literal "all".
+  if (opts.tender && opts.tender !== "all") qs.set("tender", opts.tender);
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+  return await apiClient.get<TransactionPage>(`/enterprise/${enterpriseId}/transactions${query}`);
 }
 
 // Risk Prediction

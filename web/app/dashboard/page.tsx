@@ -20,6 +20,7 @@ import {
 import { worklistItemToEnterprise, enterpriseDetailsToEnterprise } from "@/utils/worklistAdapter";
 import { Enterprise } from "@/types/enterprise";
 import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
+import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
 import { Lock } from "lucide-react";
 
@@ -38,7 +39,8 @@ export default function OfficerDashboard() {
   const [segmentFilter, setSegmentFilter] = useState("ALL");
   const [tierFilter, setTierFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"portfolio" | "market">("portfolio");
+  const [activeTab, setActiveTab] = useState<"portfolio" | "market" | "transactions">("portfolio");
+  const [selectedTenderFilter, setSelectedTenderFilter] = useState<string>("all");
 
   // Detailed API States for selected enterprise
   const [enterpriseDetails, setEnterpriseDetails] = useState<EnterpriseDetailsResponse | null>(null);
@@ -272,6 +274,17 @@ export default function OfficerDashboard() {
           >
             {t.dash.marketIntelTab || "Market Intel"}
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("transactions")}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
+              activeTab === "transactions"
+                ? "bg-[#2E7D32] text-white shadow-xs"
+                : "text-[#5F6656] hover:text-[#1A2016]"
+            }`}
+          >
+            {t.dash.transactionsTab}
+          </button>
         </div>
       </div>
 
@@ -304,9 +317,21 @@ export default function OfficerDashboard() {
             segments={segments}
             tierCounts={tierCounts}
             t={t}
+            onSelectTenderFilter={(tender: string) => {
+              setSelectedTenderFilter(tender);
+              setActiveTab("transactions");
+            }}
           />
-        ) : (
+        ) : activeTab === "market" ? (
           <MarketIntelligenceTab />
+        ) : (
+          <TransactionsTab
+            enterpriseId={selectedId}
+            enterpriseName={selectedEnterprise?.name}
+            initialTenderFilter={selectedTenderFilter}
+            onTenderFilterChange={setSelectedTenderFilter}
+            t={t}
+          />
         )}
       </div>
     </div>

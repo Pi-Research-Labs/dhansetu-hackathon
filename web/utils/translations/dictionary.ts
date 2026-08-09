@@ -131,6 +131,16 @@ export interface TranslationDictionary {
     recent90D: string;
     recentCashShare: string;
     shiftText: (pct: string) => string;
+    transactionsTab: string;
+    transactionsTitle: string;
+    txnAll: string;
+    txnLoading: string;
+    txnSelectEnterprise: string;
+    txnEmptyTitle: string;
+    txnEmptyHint: string;
+    txnUncategorised: string;
+    txnHousehold: string;
+    txnShowing: (shown: number, total: number) => string;
     loadingPaymentMix: string;
     heatmapStatus: string;
     heatmapPositive: string;
@@ -286,6 +296,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "Recent 90D",
       recentCashShare: "Recent Cash Share",
       shiftText: (pct: string) => `${pct}% shift`,
+      transactionsTab: "Transactions",
+      transactionsTitle: "Recorded Transactions",
+      txnAll: "All",
+      txnLoading: "Loading transactions...",
+      txnSelectEnterprise: "Select an enterprise to see its transactions.",
+      txnEmptyTitle: "No transactions recorded yet",
+      txnEmptyHint:
+        "Entries appear here once this merchant records them by voice or in the app. Simulated history shows as daily totals only, not individual transactions.",
+      txnUncategorised: "Uncategorised",
+      txnHousehold: "Household",
+      txnShowing: (shown: number, total: number) => `Showing ${shown} of ${total}`,
       loadingPaymentMix: "Loading Payment Mix breakdown...",
       heatmapStatus: "Status",
       heatmapPositive: "Positive",
@@ -488,6 +509,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "हालिया 90 दिन",
       recentCashShare: "हालिया नकद हिस्सा",
       shiftText: (pct: string) => `${pct}% बदलाव`,
+      transactionsTab: "लेनदेन",
+      transactionsTitle: "दर्ज लेनदेन",
+      txnAll: "सभी",
+      txnLoading: "लेनदेन लोड हो रहे हैं...",
+      txnSelectEnterprise: "लेनदेन देखने के लिए एक उद्यम चुनें।",
+      txnEmptyTitle: "अभी तक कोई लेनदेन दर्ज नहीं",
+      txnEmptyHint:
+        "जब यह व्यापारी आवाज़ से या ऐप में दर्ज करेगा, तब प्रविष्टियाँ यहाँ दिखेंगी। नकली इतिहास केवल दैनिक कुल के रूप में है, अलग-अलग लेनदेन के रूप में नहीं।",
+      txnUncategorised: "अवर्गीकृत",
+      txnHousehold: "घरेलू",
+      txnShowing: (shown: number, total: number) => `${total} में से ${shown} दिखाए जा रहे हैं`,
       loadingPaymentMix: "पेमेंट मिक्स विवरण लोड हो रहा है...",
       heatmapStatus: "स्थिति",
       heatmapPositive: "सकारात्मक",
@@ -690,6 +722,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "ఇటీవలి 90 రోజులు",
       recentCashShare: "ఇటీవలి నగదు వాటా",
       shiftText: (pct: string) => `${pct}% మార్పు`,
+      transactionsTab: "లావాదేవీలు",
+      transactionsTitle: "నమోదైన లావాదేవీలు",
+      txnAll: "అన్నీ",
+      txnLoading: "లావాదేవీలు లోడ్ అవుతున్నాయి...",
+      txnSelectEnterprise: "లావాదేవీలు చూడటానికి ఒక సంస్థను ఎంచుకోండి.",
+      txnEmptyTitle: "ఇంకా లావాదేవీలు నమోదు కాలేదు",
+      txnEmptyHint:
+        "ఈ వ్యాపారి వాయిస్ ద్వారా లేదా యాప్‌లో నమోదు చేసినప్పుడు ఎంట్రీలు ఇక్కడ కనిపిస్తాయి. అనుకరణ చరిత్ర రోజువారీ మొత్తాలుగా మాత్రమే ఉంటుంది, విడి లావాదేవీలుగా కాదు.",
+      txnUncategorised: "వర్గీకరించనివి",
+      txnHousehold: "గృహ",
+      txnShowing: (shown: number, total: number) => `${total}లో ${shown} చూపుతోంది`,
       loadingPaymentMix: "చెల్లింపుల విభజన లోడ్ అవుతోంది...",
       heatmapStatus: "స్థితి",
       heatmapPositive: "సానుకూలం",
@@ -892,6 +935,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "अलीकडील ९० दिवस",
       recentCashShare: "अलीकडील रोख वाटा",
       shiftText: (pct: string) => `${pct}% बदल`,
+      transactionsTab: "व्यवहार",
+      transactionsTitle: "नोंदवलेले व्यवहार",
+      txnAll: "सर्व",
+      txnLoading: "व्यवहार लोड होत आहेत...",
+      txnSelectEnterprise: "व्यवहार पाहण्यासाठी एक उद्योग निवडा.",
+      txnEmptyTitle: "अद्याप कोणतेही व्यवहार नोंदवलेले नाहीत",
+      txnEmptyHint:
+        "हा व्यापारी आवाजाने किंवा अ‍ॅपमध्ये नोंदवेल तेव्हा नोंदी येथे दिसतील. सिम्युलेटेड इतिहास फक्त दैनिक एकूण म्हणून आहे, वेगळे व्यवहार म्हणून नाही.",
+      txnUncategorised: "अवर्गीकृत",
+      txnHousehold: "घरगुती",
+      txnShowing: (shown: number, total: number) => `${total} पैकी ${shown} दाखवत आहे`,
       loadingPaymentMix: "पेमेंट मिक्स तपशील लोड होत आहे...",
       heatmapStatus: "स्थिती",
       heatmapPositive: "सकारात्मक",
