@@ -97,7 +97,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/weekly-cashflow` | officer any, merchant own | array of JSON | historical weekly inflow/outflow/net, default trailing 26 weeks |
 | `GET /enterprise/{id}/cashflow-forecast` | officer any, merchant own | array of JSON | 6-month forecast band + confidence score per horizon |
 | `GET /enterprise/{id}/net-inflow-heatmap` | officer any, merchant own | array of JSON | net inflow per week, trailing 7 or 14 weeks via `?weeks=` |
-| `GET /enterprise/{id}/transactions` | officer any, merchant own | JSON | itemised real ledger entries, paged, newest first |
+| `GET /enterprise/{id}/transactions` | officer any, merchant own | JSON | itemised real ledger entries, newest first, paged; filter by `?tender=` |
 | `GET /enterprise/{id}/daily-totals` | officer any, merchant own | JSON | one day's inflow/expense totals — merchant home screen |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
@@ -410,9 +410,31 @@ Query params, all optional:
 | `offset` | `0` | for paging |
 | `date_from` | none | inclusive lower bound on `event_date` |
 | `date_to` | none | inclusive upper bound on `event_date` |
+| `tender` | none | one of `cash` `upi` `wallet` `bank` `credit` |
 
-`date_from` later than `date_to` is a `422`. `total` is the count **before**
-paging, so a client can drive infinite scroll without a second request.
+`date_from` later than `date_to` is a `422`, as is an unrecognised `tender` —
+a silent empty page is indistinguishable from "this merchant has no UPI
+transactions", so a typo fails loudly instead.
+
+`total` is the count **before** paging and **after** filtering, so a client
+can drive infinite scroll, or render "showing 20 of 143", without a second
+request.
+
+**Recent vs. everything.** There is one endpoint for both; rows always come
+back newest first (`event_date DESC, recorded_at DESC`).
+
+```
+GET /enterprise/ENT0031/transactions                    # 50 most recent
+GET /enterprise/ENT0031/transactions?limit=10           # 10 most recent
+GET /enterprise/ENT0031/transactions?limit=200&offset=0 # first page of all
+GET /enterprise/ENT0031/transactions?limit=200&offset=200 # next page
+```
+
+`limit` is capped at 200 per request (`422` above that), so "all at once" for
+an enterprise with more than 200 entries means walking `offset` until
+`offset + limit >= total`. There is deliberately no unbounded fetch: this
+table grows without limit as merchants record, and an uncapped response would
+be fine in a demo and a problem in a year.
 
 ```json
 // Response 200
