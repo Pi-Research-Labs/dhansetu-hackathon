@@ -51,6 +51,14 @@ export default function OfficerDashboard() {
 
   // Route protection guard & API Worklist fetcher
   useEffect(() => {
+    // Hide main page scrollbar when on dashboard
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isAuthenticated && !checkIsAuthenticated()) {
       router.replace("/login");
       return;
@@ -219,6 +227,10 @@ export default function OfficerDashboard() {
     };
   }, [selectedId, enterpriseDetails, worklistItems, filteredWorklistItems]);
 
+  const selectedWorklistItem = useMemo(() => {
+    return worklistItems.find((item) => item.enterprise_id === selectedId);
+  }, [worklistItems, selectedId]);
+
   const bankableCount = useMemo(() => {
     return worklistItems.filter((item) => item.risk_tier === "GREEN").length;
   }, [worklistItems]);
@@ -255,33 +267,30 @@ export default function OfficerDashboard() {
           <button
             type="button"
             onClick={() => setActiveTab("portfolio")}
-            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
-              activeTab === "portfolio"
-                ? "bg-[#2E7D32] text-white shadow-xs"
-                : "text-[#5F6656] hover:text-[#1A2016]"
-            }`}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${activeTab === "portfolio"
+              ? "bg-[#2E7D32] text-white shadow-xs"
+              : "text-[#5F6656] hover:text-[#1A2016]"
+              }`}
           >
             {t.dash.portfolioTab || "My Portfolio"}
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("market")}
-            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
-              activeTab === "market"
-                ? "bg-[#2E7D32] text-white shadow-xs"
-                : "text-[#5F6656] hover:text-[#1A2016]"
-            }`}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${activeTab === "market"
+              ? "bg-[#2E7D32] text-white shadow-xs"
+              : "text-[#5F6656] hover:text-[#1A2016]"
+              }`}
           >
             {t.dash.marketIntelTab || "Market Intel"}
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("voice")}
-            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
-              activeTab === "voice"
-                ? "bg-[#2E7D32] text-white shadow-xs"
-                : "text-[#5F6656] hover:text-[#1A2016]"
-            }`}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${activeTab === "voice"
+              ? "bg-[#2E7D32] text-white shadow-xs"
+              : "text-[#5F6656] hover:text-[#1A2016]"
+              }`}
           >
             {t.dash.voiceReviewTab || "Paid Transactions Queue"}
           </button>
@@ -323,7 +332,7 @@ export default function OfficerDashboard() {
             }}
           />
         ) : activeTab === "market" ? (
-          <MarketIntelligenceTab />
+          <MarketIntelligenceTab initialSubType={selectedWorklistItem?.sub_type} />
         ) : (
           <VoiceReviewTab
             initialTenderFilter={selectedTenderFilter}
