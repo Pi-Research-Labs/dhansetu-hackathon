@@ -101,8 +101,6 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/daily-totals` | officer any, merchant own | JSON | one day's inflow/expense totals — merchant home screen |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — transcribes and parses only, writes no ledger row |
-| `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
-| `POST /voice/review/{extraction_id}` | officer only | JSON | confirms an amount → writes ledger |
 | `POST /outcome` | officer only | JSON | closes a field-visit task |
 | `GET /evidence/district-events` | officer only | array of JSON | shocks hitting ≥30% of a district×sector cohort |
 | `GET /evidence/alert-precision` | officer only | array of JSON | confirmation rate by tier, book-wide |
@@ -749,28 +747,20 @@ output works as-is — no client-side transcoding needed. Keep recordings
 **under 30 seconds**; that's Sarvam's sync-API hard limit, not a
 choice made here — anything longer needs the batch API (not wired up).
 
-## `GET /voice/review-queue` — officer only
+## Voice review endpoints — removed
 
-The calling officer's own pending voice entries (their enterprises only),
-backed by `v_voice_review_queue`. Same array-of-rows shape as `/worklist`.
+`GET /voice/review-queue` and `POST /voice/review/{extraction_id}` no longer
+exist. They were the officer-confirmation step from when a spoken entry needed
+approval before it could reach the ledger. Voice capture now parses only, and
+the merchant confirms the parsed amount in the app, so the queue had nothing
+left to gate and its POST was a second way into `ledger_entries_live`.
 
-## `POST /voice/review/{extraction_id}` — officer only
+`POST /enterprise/{id}/transactions` is now the **only** write path into the
+ledger — typed or spoken, merchant or officer.
 
-Officer confirms (or corrects) the amount, closing the loop into a real
-ledger row.
-
-```json
-// Request
-{ "reviewed_amount": 1500.00, "direction": "inflow", "category": "milk_sale", "is_household": false, "tender": "cash" }
-
-// Response 200
-{ "entry_id": "bad5a37c-...", "enterprise_id": "ENT0031", "event_date": "2026-08-03", "direction": "inflow", "amount": 1500.00 }
-```
-Writes `voice_extractions.reviewed_by`/`reviewed_amount` and a new
-`ledger_entries_live` row (`source = 'voice'`, `confidence = 1.0` since a
-human just confirmed it) — this is what feeds `v_daily_from_voice` and,
-from there, the same pipeline `daily_ledger` already feeds. Unknown
-`extraction_id` → `404`.
+The `v_voice_review_queue` view still exists in the database, so utterances the
+regex failed to parse remain inspectable over SQL. There is simply no endpoint
+serving them.
 
 ## `/evidence/*` — officer only, book-wide (not scoped to the caller)
 
