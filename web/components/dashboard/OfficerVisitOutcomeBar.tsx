@@ -3,16 +3,20 @@
 import React, { useEffect, useState } from "react";
 import { LatestAlert, OfficerTask, getOfficerTasks, postTaskOutcome } from "@/utils/api-config";
 import { Enterprise } from "@/types/enterprise";
+import { TranslationDictionary } from "@/utils/translations/dictionary";
+import { formatCurrency } from "@/utils/formatters";
 import { Send, CheckCircle2, ClipboardCheck, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 interface OfficerVisitOutcomeBarProps {
   enterprise: Enterprise;
   latestAlert?: LatestAlert | null;
+  t: TranslationDictionary;
 }
 
 export default function OfficerVisitOutcomeBar({
   enterprise,
   latestAlert,
+  t,
 }: OfficerVisitOutcomeBarProps) {
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [outcome, setOutcome] = useState<"stress_confirmed" | "false_positive" | "unreachable">(
@@ -27,6 +31,10 @@ export default function OfficerVisitOutcomeBar({
   // (TK00004), so the old `TK-${alert_id}` guess never matched a row and every
   // submission came back 400 "unknown task_id".
   const [task, setTask] = useState<OfficerTask | null>(null);
+  // The full open queue, not just the head: a bare task id gave no sense of
+  // how much was waiting, so closing the last one looked like the form had
+  // broken rather than the work being finished.
+  const [openTasks, setOpenTasks] = useState<OfficerTask[]>([]);
   const [loadingTask, setLoadingTask] = useState(false);
 
   // The API returns live-alert tasks first, so [0] is the visit that matches
@@ -35,8 +43,10 @@ export default function OfficerVisitOutcomeBar({
     setLoadingTask(true);
     try {
       const tasks = await getOfficerTasks({ status: "open", enterprise_id: entId });
+      setOpenTasks(tasks);
       setTask(tasks.length > 0 ? tasks[0] : null);
     } catch {
+      setOpenTasks([]);
       setTask(null);
     } finally {
       setLoadingTask(false);
@@ -49,6 +59,7 @@ export default function OfficerVisitOutcomeBar({
       return;
     }
     setTask(null);
+    setOpenTasks([]);
     setSubmittedOutcomeId(null);
     setSubmitError(null);
     void loadTask(enterprise.id);
@@ -122,6 +133,44 @@ export default function OfficerVisitOutcomeBar({
       {/* Expandable Form Body */}
       {isChecked && (
         <div className="p-4.5 bg-white border-t border-[#E2E6D8]/60 space-y-3 animate-in fade-in duration-200">
+          {/* Why this visit is on the list. A task is always raised off an
+              alert, so the alert's reasons and figures are the task's
+              justification -- without them the officer is asked to close a
+              bare task id and has to guess what it was for. */}
+          {task && (task.alert_reason_1 || task.projected_shortfall) && (
+            <div className="bg-[#FAFBF6] border border-[#E2E6D8] rounded-lg p-2.5 space-y-1.5">
+              <div className="text-[9.5px] font-bold text-[#5F6656] uppercase tracking-wider">
+                Why this visit was raised
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[task.alert_reason_1, task.alert_reason_2, task.alert_reason_3]
+                  .filter(Boolean)
+                  .map((r) => (
+                    <span
+                      key={r as string}
+                      className="text-[10px] font-semibold text-[#C62828] bg-[#FFEBEE] border border-[#C62828]/20 px-1.5 py-0.5 rounded-full"
+                    >
+                      {t.mechanisms?.[r as string] || (r as string).replace(/_/g, " ")}
+                    </span>
+                  ))}
+                {task.alert_risk_tier && (
+                  <span className="text-[10px] font-semibold text-[#5F6656] border border-[#E2E6D8] px-1.5 py-0.5 rounded-full">
+                    {t.tiers?.[task.alert_risk_tier as "GREEN" | "AMBER" | "RED"] || task.alert_risk_tier}
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-[#5F6656] font-mono">
+                {task.alert_id ? `Alert ${task.alert_id}` : ""}
+                {task.alert_raised_at ? ` raised ${task.alert_raised_at}` : ""}
+                {task.projected_shortfall
+                  ? ` · shortfall ${formatCurrency(Number(task.projected_shortfall))}`
+                  : ""}
+                {task.shortfall_week_of ? ` expected week of ${task.shortfall_week_of}` : ""}
+                {task.alert_live === false ? " · alert has since expired" : ""}
+              </div>
+            </div>
+          )}
+
           <p className="text-[11px] text-[#5F6656]">
             Record field visit findings for <strong>{enterprise.name}</strong> ({enterprise.id}). This outcome updates backend risk models in real-time.
           </p>
@@ -190,6 +239,7 @@ export default function OfficerVisitOutcomeBar({
                 <p className="text-[9.5px] text-[#5F6656] mt-1 text-center font-mono">
                   Task {task.task_id}
                   {task.assigned_on ? ` · assigned ${task.assigned_on}` : ""}
+                  {openTasks.length > 1 ? ` · 1 of ${openTasks.length} open` : ""}
                 </p>
               )}
             </div>
