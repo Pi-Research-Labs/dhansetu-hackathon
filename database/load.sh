@@ -49,6 +49,7 @@ run 10_dedupe_names.sql
 run 11_fo1_demo_portfolio.sql
 run 12_fo1_pottery_and_stable.sql
 run 13_enterprise_summaries.sql
+run 14_demo_ledger_entries.sql
 
 echo "==> row counts"
 psql -d "$DB" -q -c "
