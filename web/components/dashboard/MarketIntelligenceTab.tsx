@@ -44,6 +44,37 @@ interface TooltipPayloadEntry {
   [key: string]: unknown;
 }
 
+const formatMonthLabel = (value: any) => {
+  if (!value || typeof value !== "string") return String(value || "");
+  const parts = value.split("-");
+  if (parts.length !== 2) return value;
+
+  let monthNum = 0;
+  let yearStr = "";
+
+  if (parts[0].length === 4) {
+    // YYYY-MM
+    yearStr = parts[0];
+    monthNum = parseInt(parts[1], 10);
+  } else {
+    // MM-YYYY
+    monthNum = parseInt(parts[0], 10);
+    yearStr = parts[1];
+  }
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  if (monthNum >= 1 && monthNum <= 12) {
+    const shortMonth = months[monthNum - 1];
+    const shortYear = yearStr.slice(-2);
+    return `${shortMonth}'${shortYear}`;
+  }
+  return value;
+};
+
 interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadEntry[];
@@ -54,7 +85,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-[#E2E6D8] p-3 rounded-xl shadow-md text-xs font-sans">
-        <p className="font-bold text-[#1A2016] mb-1.5">{label}</p>
+        <p className="font-bold text-[#1A2016] mb-1.5">{formatMonthLabel(label)}</p>
         {payload.map((entry: TooltipPayloadEntry, index: number) => {
           const isPrice = entry.dataKey === "price_index";
           const color = isPrice ? "#2E7D32" : "#1565C0";
@@ -107,6 +138,13 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
   const [intel, setIntel] = useState<MarketIntelligenceDetail | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      setIsMobile(true);
+    }
+  }, []);
 
   // Sync loading and error states during render-phase when selectedSubType changes
   if (selectedSubType !== prevSelectedSubType) {
@@ -287,7 +325,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
   };
 
   return (
-    <div className="w-full h-full flex flex-col min-h-0 overflow-y-auto space-y-5 pb-4 pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-neutral-400/50 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [scrollbar-width:thin] [scrollbar-color:rgba(163,163,163,0.5)_transparent]">
+    <div className="w-full h-auto lg:h-full flex flex-col min-h-0 overflow-visible lg:overflow-y-auto space-y-5 pb-4 pr-1 lg:[&::-webkit-scrollbar]:w-1 lg:[&::-webkit-scrollbar-thumb]:bg-neutral-400/50 lg:hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(163,163,163,0.5)_transparent]">
       {/* Dropdown Selector row */}
       <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div className="flex flex-col gap-1">
@@ -408,75 +446,78 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
           </span>
         </div>
         <div className="flex-1 w-full min-h-[300px]">
-          {intel?.chart_data && intel.chart_data.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart
-                data={intel.chart_data}
-                margin={{ top: 15, right: 10, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0F2EB" vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fill: "#5F6656", fontSize: 10, fontFamily: "monospace" }}
-                  tickLine={{ stroke: "#E2E6D8" }}
-                  axisLine={{ stroke: "#E2E6D8" }}
-                />
-                <YAxis
-                  yAxisId="price"
-                  orientation="left"
-                  domain={["dataMin - 5", "dataMax + 5"]}
-                  tick={{ fill: "#2E7D32", fontSize: 10, fontFamily: "monospace" }}
-                  tickLine={{ stroke: "#E2E6D8" }}
-                  axisLine={{ stroke: "#E2E6D8" }}
-                  label={{
-                    value: "Price Index",
-                    angle: -90,
-                    position: "insideLeft",
-                    offset: -5,
-                    style: { fill: "#2E7D32", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
-                  }}
-                />
-                <YAxis
-                  yAxisId="rainfall"
-                  orientation="right"
-                  domain={[0, "auto"]}
-                  tick={{ fill: "#1565C0", fontSize: 10, fontFamily: "monospace" }}
-                  tickLine={{ stroke: "#E2E6D8" }}
-                  axisLine={{ stroke: "#E2E6D8" }}
-                  label={{
-                    value: "Rainfall (mm)",
-                    angle: 90,
-                    position: "insideRight",
-                    offset: 5,
-                    style: { fill: "#1565C0", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="top"
-                  height={30}
-                  wrapperStyle={{ fontSize: 10, fontFamily: "sans-serif", paddingBottom: 10 }}
-                />
-                <Bar
-                  yAxisId="rainfall"
-                  dataKey="rainfall_mm"
-                  name="Rainfall (mm)"
-                  fill="#BBDEFB"
-                  radius={[2, 2, 0, 0]}
-                  barSize={18}
-                />
-                <Line
-                  yAxisId="price"
-                  type="monotone"
-                  dataKey="price_index"
-                  name="Price Index"
-                  stroke="#2E7D32"
-                  strokeWidth={2.5}
-                  dot={{ r: 3.5, stroke: "#2E7D32", strokeWidth: 1.5, fill: "#fff" }}
-                  activeDot={{ r: 5, stroke: "#2E7D32", strokeWidth: 2, fill: "#2E7D32" }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+          {intel?.chart_data && intel.chart_data.length > 0 ? (<ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
+            <ComposedChart
+              data={intel.chart_data}
+              margin={isMobile ? { top: 10, right: 5, left: 5, bottom: 5 } : { top: 15, right: 10, left: 10, bottom: 5 }}
+              style={{ outline: "none" }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#F0F2EB" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonthLabel}
+                tick={{ fill: "#5F6656", fontSize: isMobile ? 8 : 9, fontFamily: "system-ui, sans-serif" }}
+                tickLine={{ stroke: "#E2E6D8" }}
+                axisLine={{ stroke: "#E2E6D8" }}
+              />
+              <YAxis
+                yAxisId="price"
+                orientation="left"
+                domain={["dataMin - 5", "dataMax + 5"]}
+                width={isMobile ? 28 : 40}
+                tick={{ fill: "#2E7D32", fontSize: isMobile ? 8 : 9, fontFamily: "system-ui, sans-serif" }}
+                tickLine={{ stroke: "#E2E6D8" }}
+                axisLine={{ stroke: "#E2E6D8" }}
+                label={isMobile ? undefined : {
+                  value: "Price Index",
+                  angle: -90,
+                  position: "insideLeft",
+                  offset: -5,
+                  style: { fill: "#2E7D32", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
+                }}
+              />
+              <YAxis
+                yAxisId="rainfall"
+                orientation="right"
+                domain={[0, "auto"]}
+                width={isMobile ? 28 : 40}
+                tick={{ fill: "#1565C0", fontSize: isMobile ? 8 : 9, fontFamily: "system-ui, sans-serif" }}
+                tickLine={{ stroke: "#E2E6D8" }}
+                axisLine={{ stroke: "#E2E6D8" }}
+                label={isMobile ? undefined : {
+                  value: "Rainfall (mm)",
+                  angle: 90,
+                  position: "insideRight",
+                  offset: 5,
+                  style: { fill: "#1565C0", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
+                }}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#F0F2EB", strokeWidth: 1 }} />
+              <Legend
+                verticalAlign="top"
+                height={30}
+                wrapperStyle={{ fontSize: 10, fontFamily: "sans-serif", paddingBottom: 10 }}
+              />
+              <Bar
+                yAxisId="rainfall"
+                dataKey="rainfall_mm"
+                name="Rainfall (mm)"
+                fill="#BBDEFB"
+                radius={[2, 2, 0, 0]}
+                barSize={isMobile ? 10 : 18}
+              />
+              <Line
+                yAxisId="price"
+                type="monotone"
+                dataKey="price_index"
+                name="Price Index"
+                stroke="#2E7D32"
+                strokeWidth={2.5}
+                dot={{ r: 3, stroke: "#2E7D32", strokeWidth: 1.5, fill: "#fff" }}
+                activeDot={{ r: 5, stroke: "#2E7D32", strokeWidth: 2, fill: "#2E7D32" }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-xs text-[#5F6656] italic">
               No chart data available

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { LatestAlert, postTaskOutcome } from "@/utils/api-config";
+import React, { useEffect, useState } from "react";
+import { LatestAlert, OfficerTask, getOfficerTasks, postTaskOutcome } from "@/utils/api-config";
 import { Enterprise } from "@/types/enterprise";
 import { Send, CheckCircle2, ClipboardCheck, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
@@ -23,21 +23,58 @@ export default function OfficerVisitOutcomeBar({
   const [submittedOutcomeId, setSubmittedOutcomeId] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // The task has to be fetched, not constructed. task_ids are sequential
+  // (TK00004), so the old `TK-${alert_id}` guess never matched a row and every
+  // submission came back 400 "unknown task_id".
+  const [task, setTask] = useState<OfficerTask | null>(null);
+  const [loadingTask, setLoadingTask] = useState(false);
+
+  // The API returns live-alert tasks first, so [0] is the visit that matches
+  // the alert shown on the card rather than merely the oldest one.
+  const loadTask = React.useCallback(async (entId: string) => {
+    setLoadingTask(true);
+    try {
+      const tasks = await getOfficerTasks({ status: "open", enterprise_id: entId });
+      setTask(tasks.length > 0 ? tasks[0] : null);
+    } catch {
+      setTask(null);
+    } finally {
+      setLoadingTask(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!enterprise?.id || enterprise.id === "N/A") {
+      setTask(null);
+      return;
+    }
+    setTask(null);
+    setSubmittedOutcomeId(null);
+    setSubmitError(null);
+    void loadTask(enterprise.id);
+  }, [enterprise?.id, loadTask]);
+
   const handleSubmitOutcome = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!task) return;
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const taskId = latestAlert?.alert_id ? `TK-${latestAlert.alert_id}` : `TK-${enterprise.id}`;
-
     try {
       const res = await postTaskOutcome({
-        task_id: taskId,
+        task_id: task.task_id,
         outcome,
         intervention,
         note_lang: "gu",
       });
       setSubmittedOutcomeId(res.outcome_id);
+      // Re-read the queue: the task just closed, so without this the stale
+      // task stayed in state with the button enabled and a second click sent
+      // the same task_id again. The backend now rejects that, but the button
+      // should not invite it -- and if the enterprise has another open visit,
+      // this surfaces it instead of looking finished.
+      setTask(null);
+      void loadTask(enterprise.id);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to record outcome");
     } finally {
@@ -118,15 +155,29 @@ export default function OfficerVisitOutcomeBar({
             </div>
 
             <div className="sm:col-span-3">
+              {/* Disabled without a task rather than submitting and failing:
+                  an outcome must attach to a real visit task, so there is
+                  nothing to record for an enterprise with none open. */}
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-[#2E7D32] hover:bg-[#1b4d1f] text-white text-xs font-bold py-2 px-3 rounded-lg transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                disabled={isSubmitting || loadingTask || !task}
+                title={!task && !loadingTask ? "No open visit task for this enterprise" : undefined}
+                className="w-full bg-[#2E7D32] hover:bg-[#1b4d1f] text-white text-xs font-bold py-2 px-3 rounded-lg transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     <span>Saving...</span>
+                  </>
+                ) : loadingTask ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Finding task...</span>
+                  </>
+                ) : !task ? (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>No open task</span>
                   </>
                 ) : (
                   <>
@@ -135,6 +186,12 @@ export default function OfficerVisitOutcomeBar({
                   </>
                 )}
               </button>
+              {task && (
+                <p className="text-[9.5px] text-[#5F6656] mt-1 text-center font-mono">
+                  Task {task.task_id}
+                  {task.assigned_on ? ` · assigned ${task.assigned_on}` : ""}
+                </p>
+              )}
             </div>
           </form>
 
