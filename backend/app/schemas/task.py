@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from pydantic import BaseModel
 
@@ -23,3 +24,14 @@ class OfficerTask(BaseModel):
     # choosing a task needs to be able to tell the difference.
     alert_expires_at: date | None
     alert_live: bool | None
+    # The alert that caused this task. A task is never raised on its own, so
+    # these fields are what let a client say WHY the visit is on the list
+    # instead of showing a bare task id.
+    alert_raised_at: date | None
+    alert_risk_tier: str | None
+    alert_reason_1: str | None
+    alert_reason_2: str | None
+    alert_reason_3: str | None
+    projected_shortfall: Decimal | None
+    shortfall_week_of: str | None
+    deadline_date: date | None
