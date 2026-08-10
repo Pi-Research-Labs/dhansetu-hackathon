@@ -22,9 +22,9 @@ import { Enterprise } from "@/types/enterprise";
 import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
 import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
-import { Lock } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 
-export default function OfficerDashboard() {
+function OfficerDashboardContent() {
   const router = useRouter();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { t, currentLanguage } = useTranslation();
@@ -368,5 +368,18 @@ export default function OfficerDashboard() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OfficerDashboard() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-[calc(100vh-62px)] bg-[#F4F5F0] flex flex-col items-center justify-center text-[#5F6656]">
+        <Loader2 className="w-8 h-8 text-[#2E7D32] animate-spin mb-3" />
+        <p className="text-xs font-semibold">Loading Dashboard...</p>
+      </div>
+    }>
+      <OfficerDashboardContent />
+    </React.Suspense>
   );
 }
