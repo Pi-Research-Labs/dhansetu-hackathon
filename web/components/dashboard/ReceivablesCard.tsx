@@ -4,7 +4,7 @@ import React from "react";
 import { ReceivableItem } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
-import { Receipt, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Receipt, AlertCircle, CheckCircle2, Clock, Info } from "lucide-react";
 
 interface ReceivablesCardProps {
   items: ReceivableItem[];
@@ -31,6 +31,14 @@ export default function ReceivablesCard({ items, isLoading = false, t }: Receiva
           <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
             {tReceivables?.receivablesTitle ? tReceivables.receivablesTitle.split("&")[0].trim() : "Udhaar Book"}
           </h3>
+          <span className="group relative cursor-help flex items-center">
+            <Info className="w-3.5 h-3.5 text-[#5F6656] shrink-0" />
+            <span className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-64 p-2 bg-[#1A2016] text-white text-[10px] font-sans font-normal normal-case tracking-normal leading-normal rounded-lg shadow-lg z-50 text-left">
+              {tReceivables?.receivablesTooltip ||
+                "The udhaar book: money buyers still owe this business. Grouped by who owes it, showing how much is still unpaid, how much has been given up as bad debt, and how many days payment usually takes to arrive."}
+              <span className="absolute top-full left-3 border-[5px] border-transparent border-t-[#1A2016]"></span>
+            </span>
+          </span>
         </div>
         <div className="text-xs text-[#5F6656] p-3 bg-[#FAFBF6] rounded-xl border border-[#E2E6D8] text-center flex items-center justify-center gap-1.5">
           <CheckCircle2 className="w-4 h-4 text-[#2E7D32]" />
@@ -54,6 +62,14 @@ export default function ReceivablesCard({ items, isLoading = false, t }: Receiva
           <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
             {tReceivables?.receivablesTitle || "Udhaar Book & Receivables Ageing"}
           </h3>
+          <span className="group relative cursor-help flex items-center">
+            <Info className="w-3.5 h-3.5 text-[#5F6656] shrink-0" />
+            <span className="absolute bottom-full left-0 mb-2 hidden group-hover:block w-64 p-2 bg-[#1A2016] text-white text-[10px] font-sans font-normal normal-case tracking-normal leading-normal rounded-lg shadow-lg z-50 text-left">
+              {tReceivables?.receivablesTooltip ||
+                "The udhaar book: money buyers still owe this business. Grouped by who owes it, showing how much is still unpaid, how much has been given up as bad debt, and how many days payment usually takes to arrive."}
+              <span className="absolute top-full left-3 border-[5px] border-transparent border-t-[#1A2016]"></span>
+            </span>
+          </span>
         </div>
 
         {maxWriteOffPct > 10 && (

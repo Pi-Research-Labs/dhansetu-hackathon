@@ -79,6 +79,7 @@ export interface TranslationDictionary {
     scoreDirectionHint: string;
     summaryTitle: string;
     summaryLoading: string;
+    receivablesTooltip: string;
     scoreBandLow: string;
     scoreBandModerate: string;
     scoreBandHigh: string;
@@ -252,6 +253,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreDirectionHint: "Higher = more risk",
       summaryTitle: "What's going on",
       summaryLoading: "Reading the numbers...",
+      receivablesTooltip:
+        "The udhaar book: money buyers still owe this business. Grouped by who owes it, showing how much is still unpaid, how much has been given up as bad debt, and how many days payment usually takes to arrive.",
       scoreBandLow: "Low",
       scoreBandModerate: "Moderate",
       scoreBandHigh: "High",
@@ -484,6 +487,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreDirectionHint: "ज़्यादा = ज़्यादा जोखिम",
       summaryTitle: "क्या हो रहा है",
       summaryLoading: "आँकड़े पढ़े जा रहे हैं...",
+      receivablesTooltip:
+        "उधार बही: खरीदारों पर इस व्यवसाय का बकाया पैसा। किसने देना है उसके अनुसार बाँटा गया — कितना अभी बाकी है, कितना डूबत मानकर छोड़ दिया गया, और भुगतान आने में आमतौर पर कितने दिन लगते हैं।",
       scoreBandLow: "कम",
       scoreBandModerate: "मध्यम",
       scoreBandHigh: "ऊँचा",
@@ -716,6 +721,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreDirectionHint: "ఎక్కువ = ఎక్కువ ప్రమాదం",
       summaryTitle: "ఏమి జరుగుతోంది",
       summaryLoading: "సంఖ్యలు చదువుతోంది...",
+      receivablesTooltip:
+        "ఉధార్ పుస్తకం: కొనుగోలుదారులు ఈ వ్యాపారానికి ఇంకా చెల్లించాల్సిన డబ్బు. ఎవరు చెల్లించాలో దాని ప్రకారం విభజించబడింది — ఎంత బాకీ ఉంది, ఎంత రాబట్టలేమని వదిలేశారు, చెల్లింపు రావడానికి సాధారణంగా ఎన్ని రోజులు పడుతుంది.",
       scoreBandLow: "తక్కువ",
       scoreBandModerate: "మధ్యస్థం",
       scoreBandHigh: "ఎక్కువ",
@@ -948,6 +955,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreDirectionHint: "जास्त = जास्त धोका",
       summaryTitle: "काय चालले आहे",
       summaryLoading: "आकडे वाचत आहे...",
+      receivablesTooltip:
+        "उधार वही: खरेदीदारांकडे या व्यवसायाचे थकलेले पैसे. कोणाकडे येणे आहे त्यानुसार विभागलेले — किती अजून बाकी आहे, किती बुडीत म्हणून सोडून दिले, आणि पैसे येण्यास साधारण किती दिवस लागतात.",
       scoreBandLow: "कमी",
       scoreBandModerate: "मध्यम",
       scoreBandHigh: "जास्त",
