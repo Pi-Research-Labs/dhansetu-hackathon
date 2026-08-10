@@ -20,14 +20,14 @@ import {
 import { worklistItemToEnterprise, enterpriseDetailsToEnterprise } from "@/utils/worklistAdapter";
 import { Enterprise } from "@/types/enterprise";
 import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
+import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
-import VoiceReviewTab from "@/components/dashboard/VoiceReviewTab";
 import { Lock } from "lucide-react";
 
 export default function OfficerDashboard() {
   const router = useRouter();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [worklistItems, setWorklistItems] = useState<WorklistItem[]>([]);
@@ -39,7 +39,7 @@ export default function OfficerDashboard() {
   const [segmentFilter, setSegmentFilter] = useState("ALL");
   const [tierFilter, setTierFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"portfolio" | "market" | "voice">("portfolio");
+  const [activeTab, setActiveTab] = useState<"portfolio" | "market" | "transactions">("portfolio");
   const [selectedTenderFilter, setSelectedTenderFilter] = useState<string>("all");
 
   // Detailed API States for selected enterprise
@@ -286,13 +286,13 @@ export default function OfficerDashboard() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("voice")}
-            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${activeTab === "voice"
+            onClick={() => setActiveTab("transactions")}
+            className={`flex-1 md:flex-none px-3 py-1.5 md:py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${activeTab === "transactions"
               ? "bg-[#2E7D32] text-white shadow-xs"
               : "text-[#5F6656] hover:text-[#1A2016]"
               }`}
           >
-            {t.dash.voiceReviewTab || "Paid Transactions Queue"}
+            {t.dash.transactionsTab}
           </button>
         </div>
       </div>
@@ -326,17 +326,21 @@ export default function OfficerDashboard() {
             segments={segments}
             tierCounts={tierCounts}
             t={t}
+            lang={currentLanguage}
             onSelectTenderFilter={(tender: string) => {
               setSelectedTenderFilter(tender);
-              setActiveTab("voice");
+              setActiveTab("transactions");
             }}
           />
         ) : activeTab === "market" ? (
           <MarketIntelligenceTab initialSubType={selectedWorklistItem?.sub_type} />
         ) : (
-          <VoiceReviewTab
+          <TransactionsTab
+            enterpriseId={selectedId}
+            enterpriseName={selectedEnterprise?.name}
             initialTenderFilter={selectedTenderFilter}
             onTenderFilterChange={setSelectedTenderFilter}
+            t={t}
           />
         )}
       </div>

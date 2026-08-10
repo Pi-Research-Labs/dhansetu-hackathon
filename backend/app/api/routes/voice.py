@@ -2,14 +2,9 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-from app.core.deps import require_merchant, require_officer
-from app.schemas.voice import (
-    LedgerEntryResponse,
-    VoiceEntryResponse,
-    VoiceReviewItem,
-    VoiceReviewRequest,
-)
-from app.services.voice import create_voice_entry, get_review_queue, submit_review
+from app.core.deps import require_merchant
+from app.schemas.voice import VoiceEntryResponse
+from app.services.voice import create_voice_entry
 
 router = APIRouter(tags=["voice"])
 
@@ -41,28 +36,3 @@ async def submit_voice_entry(
     if result.get("error"):
         raise HTTPException(status_code=502, detail=f"Sarvam transcription failed: {result['error']}")
     return result
-
-
-@router.get("/voice/review-queue", response_model=list[VoiceReviewItem])
-async def voice_review_queue(claims: dict = Depends(require_officer)) -> list[dict]:
-    return await get_review_queue(officer_id=claims["sub"])
-
-
-@router.post("/voice/review/{extraction_id}", response_model=LedgerEntryResponse)
-async def review_voice_entry(
-    extraction_id: int,
-    payload: VoiceReviewRequest,
-    claims: dict = Depends(require_officer),
-) -> dict:
-    ledger_row = await submit_review(
-        extraction_id=extraction_id,
-        reviewed_by=claims["sub"],
-        reviewed_amount=payload.reviewed_amount,
-        direction=payload.direction,
-        category=payload.category,
-        is_household=payload.is_household,
-        tender=payload.tender,
-    )
-    if ledger_row is None:
-        raise HTTPException(status_code=404, detail="Unknown extraction_id")
-    return ledger_row

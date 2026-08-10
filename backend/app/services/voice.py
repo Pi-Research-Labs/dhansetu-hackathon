@@ -17,9 +17,19 @@ Amount/direction extraction below is a plain regex heuristic, not a model
 call — Sarvam's structured-extraction path is its chat-completions API,
 which this integration deliberately does not call yet (its exact endpoint
 shape wasn't verified against raw docs, and guessing API shapes has bitten
-this project before — see the Mappls thread). Confidence is hardcoded to
-0.5, always below voice_extractions.needs_review's 0.70 threshold, so a
-regex guess can never bypass human review.
+this project before — see the Mappls thread).
+
+This module transcribes and parses; it does NOT write to the ledger. The
+regex reads an amount and a direction out of the transcript and returns them,
+and the client shows that back to the merchant to confirm or correct before
+anything is recorded. The confirmed entry is written by
+POST /enterprise/{id}/transactions, which takes the voice_id so the ledger
+row stays linked to the utterance that produced it.
+
+That keeps a single write path into ledger_entries_live rather than two, and
+means a regex guess is never recorded until a human agrees to it — which
+matters when the guess is an amount of money and nobody may notice that
+"panchaas" came back as 500.
 """
 
 import json
@@ -35,15 +45,40 @@ from app.core.db import get_pool
 SARVAM_BASE_URL = "https://api.sarvam.ai"
 SARVAM_MODEL = "saaras:v3"
 
+# Same reason as the direction lists below: codemix transcripts spell the
+# currency however the speaker said it, so "750 rupaye" has to count as
+# money. A bare number with no currency marker still does not -- "aaj 15
+# litre doodh becha" is a quantity, and reading it as Rs 15 would post a
+# fabricated amount.
+_CURRENCY = r"(?:₹|rs\.?|rupees?|rupay[ae]?|rupiya|rupaiya)"
 _AMOUNT_RE = re.compile(
-    r"(?:₹|rs\.?|rupees?)\s*([\d,]+(?:\.\d{1,2})?)"
-    r"|([\d,]+(?:\.\d{1,2})?)\s*(?:₹|rs\.?|rupees?)",
+    rf"{_CURRENCY}\s*([\d,]+(?:\.\d{{1,2}})?)"
+    rf"|([\d,]+(?:\.\d{{1,2}})?)\s*{_CURRENCY}",
     re.IGNORECASE,
 )
 
-_INFLOW_WORDS = ("received", "sold", "मिला", "मिले", "बिका", "बिक्री", "आया")
-_OUTFLOW_WORDS = ("paid", "bought", "spent", "दिया", "ख़रीदा", "खरीदा", "भरा", "खर्च")
-
+# Direction now decides whether an utterance posts at all, so the romanised
+# forms matter as much as the Devanagari ones: Sarvam's 'codemix' mode
+# routinely returns Latin script for Hindi/Gujarati speech ("aaj 500 ka
+# doodh becha"), and the Devanagari-only list missed every one of those --
+# they parsed an amount, no direction, and fell through to the queue.
+#
+# English + romanised Hindi/Gujarati only. Native-script Gujarati is
+# deliberately absent rather than guessed at; that, and the substring
+# matching below (no word boundaries, so "aaya" hits inside longer words),
+# are why this stays a stopgap until the LLM extractor replaces regex_v1.
+_INFLOW_WORDS = (
+    "received", "sold", "sale",
+    "मिला", "मिले", "बिका", "बिक्री", "आया",
+    "becha", "becha", "bechi", "bikri", "mila", "mile", "aaya", "jama",
+    "vechyu", "vecha", "malya",
+)
+_OUTFLOW_WORDS = (
+    "paid", "bought", "spent",
+    "दिया", "ख़रीदा", "खरीदा", "भरा", "खर्च",
+    "kharida", "kharidi", "kharcha", "diya", "diye", "bhara", "chukaya",
+    "kharidyu", "apya", "chukavya",
+)
 
 class SarvamError(Exception):
     pass
@@ -148,7 +183,13 @@ async def create_voice_entry(
         )
 
         if error is not None:
-            return {**dict(voice_row), "amount": None, "direction": None, "confidence": None, "needs_review": True}
+            return {
+                **dict(voice_row),
+                "amount": None,
+                "direction": None,
+                "confidence": None,
+                "needs_review": True,
+            }
 
         amount, direction = extract_amount_direction(result["transcript"])
         confidence = Decimal("0.5") if amount is not None else None
@@ -168,64 +209,3 @@ async def create_voice_entry(
         )
 
     return {**dict(voice_row), **dict(extraction_row)}
-
-
-async def get_review_queue(officer_id: str) -> list[dict]:
-    pool = get_pool()
-    async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            "SELECT * FROM dhansetu.v_voice_review_queue WHERE officer_id = $1",
-            officer_id,
-        )
-        return [dict(row) for row in rows]
-
-
-async def submit_review(
-    extraction_id: int,
-    reviewed_by: str,
-    reviewed_amount: Decimal,
-    direction: str,
-    category: str | None,
-    is_household: bool,
-    tender: str | None,
-) -> dict | None:
-    pool = get_pool()
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            extraction = await conn.fetchrow(
-                """
-                UPDATE dhansetu.voice_extractions
-                SET reviewed_by = $2, reviewed_amount = $3
-                WHERE extraction_id = $1
-                RETURNING voice_id
-                """,
-                extraction_id,
-                reviewed_by,
-                reviewed_amount,
-            )
-            if extraction is None:
-                return None
-
-            voice_entry = await conn.fetchrow(
-                "SELECT enterprise_id, spoken_at FROM dhansetu.voice_entries WHERE voice_id = $1",
-                extraction["voice_id"],
-            )
-
-            ledger_row = await conn.fetchrow(
-                """
-                INSERT INTO dhansetu.ledger_entries_live
-                    (enterprise_id, event_date, recorded_at, direction, amount,
-                     category, tender, is_household, source, voice_id, confidence)
-                VALUES ($1, $2::timestamptz::date, now(), $3, $4, $5, $6, $7, 'voice', $8, 1.0)
-                RETURNING entry_id, enterprise_id, event_date, direction, amount
-                """,
-                voice_entry["enterprise_id"],
-                voice_entry["spoken_at"],
-                direction,
-                reviewed_amount,
-                category,
-                tender,
-                is_household,
-                extraction["voice_id"],
-            )
-    return dict(ledger_row)

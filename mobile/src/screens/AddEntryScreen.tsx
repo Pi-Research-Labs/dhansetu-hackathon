@@ -5,7 +5,7 @@ import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X, Calendar } f
 import { useMerchantStore, Entry } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
-import { postVoiceEntry } from '@/utils/api-config';
+import { postVoiceEntry, postLedgerEntry } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
 
 const VoiceAgentL: Record<string, {
@@ -154,7 +154,7 @@ const monthNames = [
 
 export function AddEntryScreen() {
   const insets = useSafeAreaInsets();
-  const { lang, entries, addEntry } = useMerchantStore();
+  const { lang, entries, addEntry, markEntrySynced, enterpriseId } = useMerchantStore();
   const t = L[lang];
   const vm = VoiceModalL[lang] || VoiceModalL.en;
 
@@ -257,6 +257,9 @@ export function AddEntryScreen() {
   const [modalTranscript, setModalTranscript] = useState('');
   const [modalAmount, setModalAmount] = useState('');
   const [modalType, setModalType] = useState<Entry['type']>('income');
+  // Held between transcription and the merchant confirming, so the ledger row
+  // can be linked back to what was actually said.
+  const [modalVoiceId, setModalVoiceId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
   // Timers and Refs
@@ -308,6 +311,42 @@ export function AddEntryScreen() {
   const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
     setAlertConfig({ title, message, type });
     setAlertVisible(true);
+  };
+
+  // The ledger stores direction + category; this picker offers six types. Both
+  // an EMI and a fodder purchase are outflows, so the category is what keeps
+  // them distinguishable once they are in ledger_entries_live.
+  const LEDGER_MAPPING: Record<Entry['type'], { direction: 'inflow' | 'outflow'; category: string }> = {
+    income:  { direction: 'inflow',  category: 'sale' },
+    expense: { direction: 'outflow', category: 'expense' },
+    savdep:  { direction: 'outflow', category: 'savings_deposit' },
+    savwd:   { direction: 'inflow',  category: 'savings_withdrawal' },
+    emi:     { direction: 'outflow', category: 'emi' },
+    newloan: { direction: 'inflow',  category: 'loan_received' },
+  };
+
+  /** Push a locally-saved entry to the server. Never throws: the entry is
+   *  already on the device, so a failure here downgrades to "not synced yet"
+   *  rather than losing what the merchant typed. */
+  const syncEntry = async (
+    localId: string,
+    entryType: Entry['type'],
+    numAmount: number,
+    voiceId?: string | null
+  ) => {
+    if (!enterpriseId) return;
+    const mapped = LEDGER_MAPPING[entryType];
+    try {
+      const created = await postLedgerEntry(enterpriseId, {
+        direction: mapped.direction,
+        amount: numAmount,
+        category: mapped.category,
+        voice_id: voiceId ?? undefined,
+      });
+      if (created?.entry_id) markEntrySynced(localId, created.entry_id);
+    } catch (e) {
+      console.log('Ledger sync failed, entry kept locally', e);
+    }
   };
 
   const typeKeys: Entry['type'][] = ['income', 'expense', 'savdep', 'savwd', 'emi', 'newloan'];
@@ -388,6 +427,7 @@ export function AddEntryScreen() {
       }
 
       // Populate modal state
+      setModalVoiceId(data.voice_id || null);
       setModalTranscript(data.transcript || '');
       setModalAmount(data.amount && data.amount > 0 ? formatInputValue(data.amount.toString()) : '');
 
@@ -431,6 +471,7 @@ export function AddEntryScreen() {
     setIsSaved(false);
     setModalAmount('');
     setModalTranscript('');
+    setModalVoiceId(null);
   };
 
   const handleModalSave = () => {
@@ -440,11 +481,12 @@ export function AddEntryScreen() {
       return;
     }
 
-    addEntry({
+    const localId = addEntry({
       type: modalType,
       amount: numAmount,
       note: modalTranscript.trim() || 'Recorded transaction',
     });
+    void syncEntry(localId, modalType, numAmount, modalVoiceId);
 
     // Clear main form inputs
     setAmount('');
@@ -488,11 +530,12 @@ export function AddEntryScreen() {
       return;
     }
 
-    addEntry({
+    const localId = addEntry({
       type,
       amount: numAmount,
       note: note.trim() || 'Recorded transaction',
     });
+    void syncEntry(localId, type, numAmount);
 
     setAmount('');
     setNote('');
@@ -667,6 +710,13 @@ export function AddEntryScreen() {
                 <View style={styles.entryMainInfo}>
                   <Text style={styles.entryTypeTitle}>{t.entryTypes[en.type] || en.type}</Text>
                   <Text style={styles.entryNoteText}>{en.note}</Text>
+                  {/* Entries saved before this build have no `synced` flag and
+                      were never sent anywhere, so only flag ones we actually
+                      tried and failed to sync -- marking old rows "pending"
+                      would promise a retry that isn't coming. */}
+                  {en.synced === false && (
+                    <Text style={styles.entryPendingText}>Saved on device · not synced yet</Text>
+                  )}
                 </View>
                 <View style={styles.entryAmountInfo}>
                   <Text style={[styles.entryAmtText, en.type === 'expense' || en.type === 'emi' ? styles.textRed : styles.textGreen]}>
@@ -1137,6 +1187,11 @@ const styles = StyleSheet.create({
     color: '#1D261F',
     fontSize: 13,
     fontWeight: '600',
+  },
+  entryPendingText: {
+    fontSize: 10,
+    color: '#B26A00',
+    marginTop: 2,
   },
   entryNoteText: {
     color: '#6F6B5E',

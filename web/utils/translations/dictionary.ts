@@ -1,5 +1,13 @@
 import { LanguageCode } from "@/redux/slices/languageSlice";
 
+/** params the rule engine attaches to each recommended action (amount in Rs,
+ *  days until the shortfall bites, months the action should cover). */
+export interface ActionParams {
+  amount?: number;
+  days?: number;
+  months?: number;
+}
+
 export interface TranslationDictionary {
   langName: string;
   govtBadge: string;
@@ -64,6 +72,18 @@ export interface TranslationDictionary {
     allTiers: string;
     bankablePipeline: string;
     atRiskExposure: string;
+    scoreStressLabel: string;
+    scoreStressTooltip: string;
+    scoreOverallLabel: string;
+    scoreOverallTooltip: string;
+    scoreDirectionHint: string;
+    summaryTitle: string;
+    summaryLoading: string;
+    scoreBandLow: string;
+    scoreBandModerate: string;
+    scoreBandHigh: string;
+    actionAudience: Record<string, string>;
+    actionGuidance: Record<string, (p: ActionParams) => string>;
     backtestStat: (a: number, b: number) => string;
     noMatch: string;
     historyTab: string;
@@ -76,7 +96,6 @@ export interface TranslationDictionary {
     suggestedActions: string;
     marketIntelTab: string;
     portfolioTab: string;
-    voiceReviewTab: string;
     creditHeadroom: string;
     headroomNote: (emi: number) => string;
     metrics: {
@@ -128,6 +147,16 @@ export interface TranslationDictionary {
     recent90D: string;
     recentCashShare: string;
     shiftText: (pct: string) => string;
+    transactionsTab: string;
+    transactionsTitle: string;
+    txnAll: string;
+    txnLoading: string;
+    txnSelectEnterprise: string;
+    txnEmptyTitle: string;
+    txnEmptyHint: string;
+    txnUncategorised: string;
+    txnHousehold: string;
+    txnShowing: (shown: number, total: number) => string;
     loadingPaymentMix: string;
     heatmapStatus: string;
     heatmapPositive: string;
@@ -214,6 +243,31 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "All Risk Tiers",
       bankablePipeline: "Bankable Loan Pipeline",
       atRiskExposure: "At-Risk Exposure",
+      scoreStressLabel: "Chance of cash trouble",
+      scoreStressTooltip:
+        "How likely this business is to run short of cash or miss a repayment in the next 90 days. Higher means more likely.",
+      scoreOverallLabel: "Overall risk rating",
+      scoreOverallTooltip:
+        "The combined rating behind this enterprise's tier: the model's prediction blended with the rule checks. 38 and above is Watch, 58 and above is Act now.",
+      scoreDirectionHint: "Higher = more risk",
+      summaryTitle: "What's going on",
+      summaryLoading: "Reading the numbers...",
+      scoreBandLow: "Low",
+      scoreBandModerate: "Moderate",
+      scoreBandHigh: "High",
+      actionAudience: { merchant: "Merchant does this", officer: "You do this", both: "You and the merchant" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `Pre-book about ${p.months ?? 3} months of feed and inputs now, while prices are low. Locks today's rate before costs climb.`,
+        collect_udhaar: (p) =>
+          `Go after the unpaid udhaar${p.amount ? ` — roughly ₹${Math.round(p.amount).toLocaleString("en-IN")} is sitting with buyers` : ""}. Cash already earned is the cheapest cash to find.`,
+        request_bridge_loan: (p) =>
+          `Start a short bridge loan now${p.amount ? ` to cover the ₹${Math.round(p.amount).toLocaleString("en-IN")} gap` : ""}${p.days ? `, about ${p.days} days before it bites` : ""}. Approval takes longer than the gap allows.`,
+        restructure_emi: () =>
+          "Ask the lender to re-space the EMI. Repayments are landing faster than money is coming in, so a longer schedule protects the loan.",
+        stagger_batch: (p) =>
+          `Split the next batch across ${p.months ?? 3} months instead of buying it in one go, so the cost does not land in a single week.`,
+      },
       backtestStat: (a: number, b: number) => `Backtest: ${a}% lower error on 3-month · ${b}% on 6-month vs naive baseline`,
       noMatch: "No assigned enterprises match the selected filters.",
       historyTab: "History (Weekly)",
@@ -226,7 +280,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "Recommended Guidance Actions",
       marketIntelTab: "Market Intelligence",
       portfolioTab: "My Portfolio",
-      voiceReviewTab: "Paid Transactions Queue",
       creditHeadroom: "Eligible Credit Headroom",
       headroomNote: (emi: number) => `Affordable at ≤₹${emi}/mo EMI · 24-month tenure pre-qualified`,
       metrics: {
@@ -278,6 +331,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "Recent 90D",
       recentCashShare: "Recent Cash Share",
       shiftText: (pct: string) => `${pct}% shift`,
+      transactionsTab: "Transactions",
+      transactionsTitle: "Recorded Transactions",
+      txnAll: "All",
+      txnLoading: "Loading transactions...",
+      txnSelectEnterprise: "Select an enterprise to see its transactions.",
+      txnEmptyTitle: "No transactions recorded yet",
+      txnEmptyHint:
+        "Entries appear here once this merchant records them by voice or in the app. Simulated history shows as daily totals only, not individual transactions.",
+      txnUncategorised: "Uncategorised",
+      txnHousehold: "Household",
+      txnShowing: (shown: number, total: number) => `Showing ${shown} of ${total}`,
       loadingPaymentMix: "Loading Payment Mix breakdown...",
       heatmapStatus: "Status",
       heatmapPositive: "Positive",
@@ -411,6 +475,31 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "सभी जोखिम स्तर",
       bankablePipeline: "ऋण-योग्य पाइपलाइन",
       atRiskExposure: "जोखिम में कुल ऋण",
+      scoreStressLabel: "नकदी संकट की संभावना",
+      scoreStressTooltip:
+        "अगले 90 दिनों में इस व्यवसाय के पास नकदी कम पड़ने या किस्त चूकने की कितनी संभावना है। जितना ज़्यादा, उतना जोखिम।",
+      scoreOverallLabel: "कुल जोखिम रेटिंग",
+      scoreOverallTooltip:
+        "इस उद्यम के स्तर के पीछे की संयुक्त रेटिंग: मॉडल का अनुमान और नियम-जाँच मिलाकर। 38 से ऊपर 'निगरानी', 58 से ऊपर 'तुरंत कार्रवाई'।",
+      scoreDirectionHint: "ज़्यादा = ज़्यादा जोखिम",
+      summaryTitle: "क्या हो रहा है",
+      summaryLoading: "आँकड़े पढ़े जा रहे हैं...",
+      scoreBandLow: "कम",
+      scoreBandModerate: "मध्यम",
+      scoreBandHigh: "ऊँचा",
+      actionAudience: { merchant: "व्यापारी यह करेंगे", officer: "आप यह करें", both: "आप और व्यापारी" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `अभी लगभग ${p.months ?? 3} महीने का चारा और सामान पहले से बुक करें, जब दाम कम हैं। आज की दर तय हो जाएगी।`,
+        collect_udhaar: (p) =>
+          `बकाया उधार वसूलें${p.amount ? ` — करीब ₹${Math.round(p.amount).toLocaleString("en-IN")} खरीदारों के पास अटका है` : ""}। कमाया हुआ पैसा सबसे सस्ता पैसा है।`,
+        request_bridge_loan: (p) =>
+          `अभी छोटा ब्रिज लोन शुरू करें${p.amount ? ` ताकि ₹${Math.round(p.amount).toLocaleString("en-IN")} की कमी पूरी हो` : ""}${p.days ? `, संकट से लगभग ${p.days} दिन पहले` : ""}। मंज़ूरी में समय लगता है।`,
+        restructure_emi: () =>
+          "ऋणदाता से किस्त की अवधि बढ़ाने को कहें। आमदनी से तेज़ किस्तें जा रही हैं; लंबी अवधि ऋण को बचाएगी।",
+        stagger_batch: (p) =>
+          `अगला बैच एक साथ लेने के बजाय ${p.months ?? 3} महीनों में बाँटें, ताकि खर्च एक ही हफ़्ते में न पड़े।`,
+      },
       backtestStat: (a: number, b: number) => `बैकटेस्ट: 3 माह पर ${a}% कम त्रुटि · 6 माह पर ${b}% सटीकता सुधार`,
       noMatch: "चयनित फ़िल्टर से कोई आवंटित उद्यम मेल नहीं खाता।",
       historyTab: "इतिहास (साप्ताहिक)",
@@ -423,7 +512,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "अनुशंसित मार्गदर्शन कार्यवाहियाँ",
       marketIntelTab: "बाज़ार जानकारी",
       portfolioTab: "मेरा पोर्टफोलियो",
-      voiceReviewTab: "भुगतान लेनदेन कतार",
       creditHeadroom: "अतिरिक्त ऋण क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/माह EMI पर वहनीय · 24-माह अवधि पूर्व-पात्र`,
       metrics: {
@@ -475,6 +563,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "हालिया 90 दिन",
       recentCashShare: "हालिया नकद हिस्सा",
       shiftText: (pct: string) => `${pct}% बदलाव`,
+      transactionsTab: "लेनदेन",
+      transactionsTitle: "दर्ज लेनदेन",
+      txnAll: "सभी",
+      txnLoading: "लेनदेन लोड हो रहे हैं...",
+      txnSelectEnterprise: "लेनदेन देखने के लिए एक उद्यम चुनें।",
+      txnEmptyTitle: "अभी तक कोई लेनदेन दर्ज नहीं",
+      txnEmptyHint:
+        "जब यह व्यापारी आवाज़ से या ऐप में दर्ज करेगा, तब प्रविष्टियाँ यहाँ दिखेंगी। नकली इतिहास केवल दैनिक कुल के रूप में है, अलग-अलग लेनदेन के रूप में नहीं।",
+      txnUncategorised: "अवर्गीकृत",
+      txnHousehold: "घरेलू",
+      txnShowing: (shown: number, total: number) => `${total} में से ${shown} दिखाए जा रहे हैं`,
       loadingPaymentMix: "पेमेंट मिक्स विवरण लोड हो रहा है...",
       heatmapStatus: "स्थिति",
       heatmapPositive: "सकारात्मक",
@@ -608,6 +707,31 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "అన్ని రిస్క్ స్థాయిలు",
       bankablePipeline: "రుణ-అర్హ పైప్‌లైన్",
       atRiskExposure: "రిస్క్‌లో ఉన్న రుణాలు",
+      scoreStressLabel: "నగదు ఇబ్బంది అవకాశం",
+      scoreStressTooltip:
+        "రాబోయే 90 రోజుల్లో ఈ వ్యాపారానికి నగదు కొరత రావడానికి లేదా వాయిదా చెల్లించలేకపోవడానికి ఎంత అవకాశం ఉంది. ఎక్కువైతే ఎక్కువ ప్రమాదం.",
+      scoreOverallLabel: "మొత్తం రిస్క్ రేటింగ్",
+      scoreOverallTooltip:
+        "ఈ సంస్థ స్థాయి వెనుక ఉన్న సంయుక్త రేటింగ్: మోడల్ అంచనా మరియు రూల్ తనిఖీలు కలిపి. 38 పైన 'గమనించండి', 58 పైన 'వెంటనే చర్య'.",
+      scoreDirectionHint: "ఎక్కువ = ఎక్కువ ప్రమాదం",
+      summaryTitle: "ఏమి జరుగుతోంది",
+      summaryLoading: "సంఖ్యలు చదువుతోంది...",
+      scoreBandLow: "తక్కువ",
+      scoreBandModerate: "మధ్యస్థం",
+      scoreBandHigh: "ఎక్కువ",
+      actionAudience: { merchant: "వ్యాపారి చేయాలి", officer: "మీరు చేయాలి", both: "మీరు మరియు వ్యాపారి" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `ధరలు తక్కువగా ఉన్నప్పుడే సుమారు ${p.months ?? 3} నెలల దాణా, సామాగ్రి ముందుగా బుక్ చేయండి. ఈనాటి ధర ఖాయమవుతుంది.`,
+        collect_udhaar: (p) =>
+          `బకాయి ఉధార్ వసూలు చేయండి${p.amount ? ` — సుమారు ₹${Math.round(p.amount).toLocaleString("en-IN")} కొనుగోలుదారుల వద్ద ఉంది` : ""}. సంపాదించిన డబ్బే చౌకైన డబ్బు.`,
+        request_bridge_loan: (p) =>
+          `ఇప్పుడే చిన్న బ్రిడ్జ్ లోన్ మొదలుపెట్టండి${p.amount ? ` — ₹${Math.round(p.amount).toLocaleString("en-IN")} లోటు కోసం` : ""}${p.days ? `, సుమారు ${p.days} రోజుల ముందు` : ""}. ఆమోదానికి సమయం పడుతుంది.`,
+        restructure_emi: () =>
+          "వాయిదా గడువు పొడిగించమని రుణదాతను అడగండి. ఆదాయం కంటే వేగంగా వాయిదాలు పోతున్నాయి.",
+        stagger_batch: (p) =>
+          `తదుపరి బ్యాచ్‌ను ఒకేసారి కాకుండా ${p.months ?? 3} నెలల్లో విభజించండి, ఖర్చు ఒకే వారంలో పడకుండా.`,
+      },
       backtestStat: (a: number, b: number) => `బ్యాక్‌టెస్ట్: 3 నెలలపై ${a}% తక్కువ లోపం · 6 నెలలపై ${b}% ఖచ్చితత్వం`,
       noMatch: "ఎంచుకున్న ఫిల్టర్లకు సరిపోలే కేటాయించిన సంస్థ లేదు.",
       historyTab: "చరిత్ర (వారంవారీ)",
@@ -620,7 +744,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "సూచించిన చర్యలు",
       marketIntelTab: "మార్కెట్ సమాచారం",
       portfolioTab: "నా పోర్ట్‌ఫోలియో",
-      voiceReviewTab: "చెల్లించిన లావాదేవీల క్యూ",
       creditHeadroom: "అదనపు రుణ సామర్థ్యం",
       headroomNote: (emi: number) => `≤₹${emi}/నెల EMI వద్ద భరించగలిగేది · 24 నెలల కాలపరిమితి`,
       metrics: {
@@ -672,6 +795,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "ఇటీవలి 90 రోజులు",
       recentCashShare: "ఇటీవలి నగదు వాటా",
       shiftText: (pct: string) => `${pct}% మార్పు`,
+      transactionsTab: "లావాదేవీలు",
+      transactionsTitle: "నమోదైన లావాదేవీలు",
+      txnAll: "అన్నీ",
+      txnLoading: "లావాదేవీలు లోడ్ అవుతున్నాయి...",
+      txnSelectEnterprise: "లావాదేవీలు చూడటానికి ఒక సంస్థను ఎంచుకోండి.",
+      txnEmptyTitle: "ఇంకా లావాదేవీలు నమోదు కాలేదు",
+      txnEmptyHint:
+        "ఈ వ్యాపారి వాయిస్ ద్వారా లేదా యాప్‌లో నమోదు చేసినప్పుడు ఎంట్రీలు ఇక్కడ కనిపిస్తాయి. అనుకరణ చరిత్ర రోజువారీ మొత్తాలుగా మాత్రమే ఉంటుంది, విడి లావాదేవీలుగా కాదు.",
+      txnUncategorised: "వర్గీకరించనివి",
+      txnHousehold: "గృహ",
+      txnShowing: (shown: number, total: number) => `${total}లో ${shown} చూపుతోంది`,
       loadingPaymentMix: "చెల్లింపుల విభజన లోడ్ అవుతోంది...",
       heatmapStatus: "స్థితి",
       heatmapPositive: "సానుకూలం",
@@ -805,6 +939,31 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       allTiers: "सर्व जोखीम स्तर",
       bankablePipeline: "कर्ज-पात्र पाइपलाइन",
       atRiskExposure: "जोखमीतील कर्ज",
+      scoreStressLabel: "रोख अडचणीची शक्यता",
+      scoreStressTooltip:
+        "पुढील 90 दिवसांत या व्यवसायाकडे रोख कमी पडण्याची किंवा हप्ता चुकण्याची किती शक्यता आहे. जास्त म्हणजे जास्त धोका.",
+      scoreOverallLabel: "एकूण जोखीम रेटिंग",
+      scoreOverallTooltip:
+        "या उद्योगाच्या श्रेणीमागील एकत्रित रेटिंग: मॉडेलचा अंदाज आणि नियम-तपासणी एकत्र करून. 38 वर 'लक्ष ठेवा', 58 वर 'त्वरित कारवाई'.",
+      scoreDirectionHint: "जास्त = जास्त धोका",
+      summaryTitle: "काय चालले आहे",
+      summaryLoading: "आकडे वाचत आहे...",
+      scoreBandLow: "कमी",
+      scoreBandModerate: "मध्यम",
+      scoreBandHigh: "जास्त",
+      actionAudience: { merchant: "व्यापारी हे करतील", officer: "तुम्ही हे करा", both: "तुम्ही आणि व्यापारी" },
+      actionGuidance: {
+        prebook_input: (p) =>
+          `दर कमी असतानाच सुमारे ${p.months ?? 3} महिन्यांचा चारा व साहित्य आधीच बुक करा. आजचा दर निश्चित होईल.`,
+        collect_udhaar: (p) =>
+          `थकीत उधारी वसूल करा${p.amount ? ` — जवळपास ₹${Math.round(p.amount).toLocaleString("en-IN")} खरेदीदारांकडे अडकले आहे` : ""}. कमावलेला पैसा सर्वात स्वस्त पैसा.`,
+        request_bridge_loan: (p) =>
+          `आताच छोटे ब्रिज कर्ज सुरू करा${p.amount ? ` — ₹${Math.round(p.amount).toLocaleString("en-IN")} ची तूट भरण्यासाठी` : ""}${p.days ? `, सुमारे ${p.days} दिवस आधी` : ""}. मंजुरीला वेळ लागतो.`,
+        restructure_emi: () =>
+          "सावकाराला हप्त्याची मुदत वाढवायला सांगा. उत्पन्नापेक्षा वेगाने हप्ते जात आहेत.",
+        stagger_batch: (p) =>
+          `पुढील बॅच एकाच वेळी न घेता ${p.months ?? 3} महिन्यांत विभागा, म्हणजे खर्च एकाच आठवड्यात पडणार नाही.`,
+      },
       backtestStat: (a: number, b: number) => `बॅकटेस्ट: ३ महिन्यांवर ${a}% कमी त्रुटी · ६ महिन्यांवर ${b}% अचूकता`,
       noMatch: "निवडलेल्या फिल्टरशी जुळणारा कोणताही उद्योग नाही.",
       historyTab: "इतिहास (साप्ताहिक)",
@@ -817,7 +976,6 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       suggestedActions: "सुचवलेल्या कृती",
       marketIntelTab: "बाजार माहिती",
       portfolioTab: "माझा पोर्टफोलिओ",
-      voiceReviewTab: "भरलेल्या व्यवहारांची रांग",
       creditHeadroom: "अतिरिक्त कर्ज क्षमता",
       headroomNote: (emi: number) => `≤₹${emi}/महिना EMI वर परवडणारे · २४ महिने मुदत`,
       metrics: {
@@ -869,6 +1027,17 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       recent90D: "अलीकडील ९० दिवस",
       recentCashShare: "अलीकडील रोख वाटा",
       shiftText: (pct: string) => `${pct}% बदल`,
+      transactionsTab: "व्यवहार",
+      transactionsTitle: "नोंदवलेले व्यवहार",
+      txnAll: "सर्व",
+      txnLoading: "व्यवहार लोड होत आहेत...",
+      txnSelectEnterprise: "व्यवहार पाहण्यासाठी एक उद्योग निवडा.",
+      txnEmptyTitle: "अद्याप कोणतेही व्यवहार नोंदवलेले नाहीत",
+      txnEmptyHint:
+        "हा व्यापारी आवाजाने किंवा अ‍ॅपमध्ये नोंदवेल तेव्हा नोंदी येथे दिसतील. सिम्युलेटेड इतिहास फक्त दैनिक एकूण म्हणून आहे, वेगळे व्यवहार म्हणून नाही.",
+      txnUncategorised: "अवर्गीकृत",
+      txnHousehold: "घरगुती",
+      txnShowing: (shown: number, total: number) => `${total} पैकी ${shown} दाखवत आहे`,
       loadingPaymentMix: "पेमेंट मिक्स तपशील लोड होत आहे...",
       heatmapStatus: "स्थिती",
       heatmapPositive: "सकारात्मक",

@@ -48,6 +48,7 @@ interface MyPortfolioTabProps {
   segments: string[];
   tierCounts: Record<string, number>;
   t: TranslationDictionary;
+  lang: string;
   onSelectTenderFilter?: (tender: string) => void;
 }
 
@@ -77,6 +78,7 @@ export default function MyPortfolioTab({
   segments,
   tierCounts,
   t,
+  lang,
   onSelectTenderFilter,
 }: MyPortfolioTabProps) {
   return (
@@ -175,6 +177,7 @@ export default function MyPortfolioTab({
 
                 <RiskAndAdvicePanel
                   enterprise={selectedEnterprise}
+                  lang={lang}
                   latestAlert={enterpriseDetails?.latest_alert}
                   prediction={riskPrediction}
                   t={t}

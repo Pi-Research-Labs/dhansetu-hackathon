@@ -225,3 +225,33 @@ export const getMarketIntelligence = async (options?: {
   const response = await apiClient.get<MarketIntelligenceDetail>('/market-intelligence', { params });
   return response.data;
 };
+
+/**
+ * Records a typed ledger entry on the server (POST /enterprise/{id}/transactions).
+ *
+ * The ledger only knows inflow/outflow, while the app's entry picker offers six
+ * types, so the caller maps them (see LEDGER_MAPPING in AddEntryScreen) and
+ * passes the resolved direction plus a category that keeps the original
+ * meaning -- an EMI and a fodder purchase are both outflows, but the category
+ * is what tells them apart later.
+ *
+ * `source` is NOT sent: the backend derives it from the token so a client
+ * cannot claim to be something it isn't.
+ */
+export const postLedgerEntry = async (
+  enterpriseId: string,
+  entry: {
+    direction: 'inflow' | 'outflow';
+    amount: number;
+    category: string;
+    event_date?: string;
+    tender?: string | null;
+    is_household?: boolean;
+    /** links the row to the utterance it came from, so the transaction list
+     *  can show what was said beside the amount */
+    voice_id?: string;
+  }
+) => {
+  const res = await apiClient.post(`/enterprise/${enterpriseId}/transactions`, entry);
+  return res.data;
+};

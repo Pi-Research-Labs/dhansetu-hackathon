@@ -22,6 +22,12 @@ export interface Entry {
   amount: number;
   note: string;
   date: string;
+  /** false until the server has accepted this entry. Entries are written
+   *  locally first so recording still works with no signal -- rural
+   *  connectivity is exactly when a merchant is standing at the shop. */
+  synced?: boolean;
+  /** entry_id returned by the backend, once synced */
+  serverId?: string;
 }
 
 export interface MarketRisk {
@@ -86,7 +92,8 @@ export interface MerchantStore {
 
   // Entries ledger
   entries: Entry[];
-  addEntry: (entry: Omit<Entry, 'id' | 'date'>) => void;
+  addEntry: (entry: Omit<Entry, 'id' | 'date'>) => string;
+  markEntrySynced: (localId: string, serverId: string) => void;
 }
 
 export const useMerchantStore = create<MerchantStore>()(
@@ -416,15 +423,29 @@ export const useMerchantStore = create<MerchantStore>()(
   },
 
   // Local additions to transaction entry list
-  addEntry: (newEntry) => set((state) => ({
-    entries: [
-      {
-        ...newEntry,
-        id: `e_${Date.now()}`,
-        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
-      },
-      ...state.entries,
-    ],
+  // Returns the local id so the caller can mark it synced once the server
+  // accepts it. Local-first on purpose: the entry is on screen immediately
+  // and survives a failed request, rather than being lost with the network.
+  addEntry: (newEntry) => {
+    const localId = `e_${Date.now()}`;
+    set((state) => ({
+      entries: [
+        {
+          ...newEntry,
+          id: localId,
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+          synced: false,
+        },
+        ...state.entries,
+      ],
+    }));
+    return localId;
+  },
+
+  markEntrySynced: (localId, serverId) => set((state) => ({
+    entries: state.entries.map((e) =>
+      e.id === localId ? { ...e, synced: true, serverId } : e
+    ),
   })),
 }), {
   name: 'dhansetu-merchant-storage',
