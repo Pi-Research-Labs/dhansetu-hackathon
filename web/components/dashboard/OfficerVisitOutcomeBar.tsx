@@ -29,33 +29,30 @@ export default function OfficerVisitOutcomeBar({
   const [task, setTask] = useState<OfficerTask | null>(null);
   const [loadingTask, setLoadingTask] = useState(false);
 
+  // The API returns live-alert tasks first, so [0] is the visit that matches
+  // the alert shown on the card rather than merely the oldest one.
+  const loadTask = React.useCallback(async (entId: string) => {
+    setLoadingTask(true);
+    try {
+      const tasks = await getOfficerTasks({ status: "open", enterprise_id: entId });
+      setTask(tasks.length > 0 ? tasks[0] : null);
+    } catch {
+      setTask(null);
+    } finally {
+      setLoadingTask(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!enterprise?.id || enterprise.id === "N/A") {
       setTask(null);
       return;
     }
-    let cancelled = false;
     setTask(null);
     setSubmittedOutcomeId(null);
     setSubmitError(null);
-    setLoadingTask(true);
-    // Oldest open task for this enterprise: the API already sorts oldest
-    // first, so [0] is the one most overdue and the pick is deterministic
-    // when there are several.
-    getOfficerTasks({ status: "open", enterprise_id: enterprise.id })
-      .then((tasks) => {
-        if (!cancelled) setTask(tasks.length > 0 ? tasks[0] : null);
-      })
-      .catch(() => {
-        if (!cancelled) setTask(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingTask(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [enterprise?.id]);
+    void loadTask(enterprise.id);
+  }, [enterprise?.id, loadTask]);
 
   const handleSubmitOutcome = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +68,13 @@ export default function OfficerVisitOutcomeBar({
         note_lang: "gu",
       });
       setSubmittedOutcomeId(res.outcome_id);
+      // Re-read the queue: the task just closed, so without this the stale
+      // task stayed in state with the button enabled and a second click sent
+      // the same task_id again. The backend now rejects that, but the button
+      // should not invite it -- and if the enterprise has another open visit,
+      // this surfaces it instead of looking finished.
+      setTask(null);
+      void loadTask(enterprise.id);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to record outcome");
     } finally {

@@ -328,6 +328,9 @@ export interface OfficerTask {
   assigned_on?: string | null;
   priority_score?: number | null;
   status?: string | null;
+  alert_expires_at?: string | null;
+  /** false when the alert behind this task has already expired */
+  alert_live?: boolean | null;
 }
 
 /**
