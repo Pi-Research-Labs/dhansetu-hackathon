@@ -27,7 +27,7 @@ import { Lock } from "lucide-react";
 export default function OfficerDashboard() {
   const router = useRouter();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [worklistItems, setWorklistItems] = useState<WorklistItem[]>([]);
@@ -326,6 +326,7 @@ export default function OfficerDashboard() {
             segments={segments}
             tierCounts={tierCounts}
             t={t}
+            lang={currentLanguage}
             onSelectTenderFilter={(tender: string) => {
               setSelectedTenderFilter(tender);
               setActiveTab("transactions");

@@ -1,14 +1,15 @@
 "use client";
 
-import React from "react";
-import { LatestAlert, RiskPredictionResponse } from "@/utils/api-config";
+import React, { useEffect, useState } from "react";
+import { LatestAlert, RiskPredictionResponse, getEnterpriseSummary } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
 import { Enterprise } from "@/types/enterprise";
 import { ActionParams, TranslationDictionary } from "@/utils/translations/dictionary";
-import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles, Info, TrendingUp } from "lucide-react";
+import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles, Info, TrendingUp, BookOpen } from "lucide-react";
 
 interface RiskAndAdvicePanelProps {
   enterprise: Enterprise;
+  lang: string;
   latestAlert?: LatestAlert | null;
   prediction?: RiskPredictionResponse | null;
   t: TranslationDictionary;
@@ -16,10 +17,41 @@ interface RiskAndAdvicePanelProps {
 
 export default function RiskAndAdvicePanel({
   enterprise,
+  lang,
   latestAlert,
   prediction,
   t,
 }: RiskAndAdvicePanelProps) {
+  // Fetched separately from the detail card on purpose: a cache miss costs a
+  // ~5s model call, and the card must not wait on it. Null stays null on
+  // failure — the panel simply renders without a summary rather than showing
+  // an error for something optional.
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  useEffect(() => {
+    if (!enterprise?.id || enterprise.id === "N/A") {
+      setSummary(null);
+      return;
+    }
+    let cancelled = false;
+    setSummary(null);
+    setSummaryLoading(true);
+    getEnterpriseSummary(enterprise.id, lang)
+      .then((r) => {
+        if (!cancelled) setSummary(r.summary);
+      })
+      .catch(() => {
+        if (!cancelled) setSummary(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSummaryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [enterprise?.id, lang]);
+
   // Round to 3dp before scaling, because v_officer_worklist does
   // ROUND(fused_score, 3) in SQL and this panel reads the raw value from
   // /risk/{id}/predict. Without this the same enterprise reads 42/100 in the
@@ -55,6 +87,23 @@ export default function RiskAndAdvicePanel({
             </span>
           )}
         </div>
+
+        {/* Plain-language read on the numbers below. Written by the model from
+            figures supplied server-side, and only shown when it renders —
+            never a placeholder or an error. */}
+        {(summary || summaryLoading) && (
+          <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-3 rounded-xl space-y-1">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5F6656] uppercase tracking-wider">
+              <BookOpen className="w-3.5 h-3.5 text-[#2E7D32]" />
+              <span>{t.dash.summaryTitle}</span>
+            </div>
+            {summary ? (
+              <p className="text-[11.5px] text-[#1A2016] leading-relaxed">{summary}</p>
+            ) : (
+              <p className="text-[11px] text-[#5F6656] italic">{t.dash.summaryLoading}</p>
+            )}
+          </div>
+        )}
 
         {/* Active Alert Shortfall Info */}
         {latestAlert && (

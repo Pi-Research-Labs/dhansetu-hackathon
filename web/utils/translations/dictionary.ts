@@ -77,6 +77,8 @@ export interface TranslationDictionary {
     scoreOverallLabel: string;
     scoreOverallTooltip: string;
     scoreDirectionHint: string;
+    summaryTitle: string;
+    summaryLoading: string;
     scoreBandLow: string;
     scoreBandModerate: string;
     scoreBandHigh: string;
@@ -248,6 +250,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreOverallTooltip:
         "The combined rating behind this enterprise's tier: the model's prediction blended with the rule checks. 38 and above is Watch, 58 and above is Act now.",
       scoreDirectionHint: "Higher = more risk",
+      summaryTitle: "What's going on",
+      summaryLoading: "Reading the numbers...",
       scoreBandLow: "Low",
       scoreBandModerate: "Moderate",
       scoreBandHigh: "High",
@@ -478,6 +482,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreOverallTooltip:
         "इस उद्यम के स्तर के पीछे की संयुक्त रेटिंग: मॉडल का अनुमान और नियम-जाँच मिलाकर। 38 से ऊपर 'निगरानी', 58 से ऊपर 'तुरंत कार्रवाई'।",
       scoreDirectionHint: "ज़्यादा = ज़्यादा जोखिम",
+      summaryTitle: "क्या हो रहा है",
+      summaryLoading: "आँकड़े पढ़े जा रहे हैं...",
       scoreBandLow: "कम",
       scoreBandModerate: "मध्यम",
       scoreBandHigh: "ऊँचा",
@@ -708,6 +714,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreOverallTooltip:
         "ఈ సంస్థ స్థాయి వెనుక ఉన్న సంయుక్త రేటింగ్: మోడల్ అంచనా మరియు రూల్ తనిఖీలు కలిపి. 38 పైన 'గమనించండి', 58 పైన 'వెంటనే చర్య'.",
       scoreDirectionHint: "ఎక్కువ = ఎక్కువ ప్రమాదం",
+      summaryTitle: "ఏమి జరుగుతోంది",
+      summaryLoading: "సంఖ్యలు చదువుతోంది...",
       scoreBandLow: "తక్కువ",
       scoreBandModerate: "మధ్యస్థం",
       scoreBandHigh: "ఎక్కువ",
@@ -938,6 +946,8 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       scoreOverallTooltip:
         "या उद्योगाच्या श्रेणीमागील एकत्रित रेटिंग: मॉडेलचा अंदाज आणि नियम-तपासणी एकत्र करून. 38 वर 'लक्ष ठेवा', 58 वर 'त्वरित कारवाई'.",
       scoreDirectionHint: "जास्त = जास्त धोका",
+      summaryTitle: "काय चालले आहे",
+      summaryLoading: "आकडे वाचत आहे...",
       scoreBandLow: "कमी",
       scoreBandModerate: "मध्यम",
       scoreBandHigh: "जास्त",

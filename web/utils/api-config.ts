@@ -454,6 +454,26 @@ export async function getNetInflowHeatmap(enterpriseId: string, weeks?: 7 | 14):
   return await apiClient.get<NetInflowHeatmapItem[]>(`/enterprise/${enterpriseId}/net-inflow-heatmap${query}`);
 }
 
+// Enterprise Summary (LLM-written, cached server-side per assessment vintage)
+export interface EnterpriseSummaryResponse {
+  enterprise_id: string;
+  as_of: string;
+  lang: string;
+  summary: string;
+  model: string;
+  generated_at: string;
+  cached: boolean;
+}
+
+export async function getEnterpriseSummary(
+  enterpriseId: string,
+  lang: string
+): Promise<EnterpriseSummaryResponse> {
+  return await apiClient.get<EnterpriseSummaryResponse>(
+    `/enterprise/${enterpriseId}/summary?lang=${encodeURIComponent(lang)}`
+  );
+}
+
 // Ledger Transactions
 export async function getTransactions(
   enterpriseId: string,

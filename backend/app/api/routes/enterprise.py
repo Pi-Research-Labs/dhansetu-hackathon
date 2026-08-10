@@ -7,6 +7,7 @@ from app.schemas.enterprise import (
     DailyTotals,
     DigitalVisibilityDay,
     EnterpriseDetail,
+    EnterpriseSummary,
     ForecastConfidencePoint,
     LedgerEntryCreate,
     LedgerTransaction,
@@ -16,6 +17,7 @@ from app.schemas.enterprise import (
     TransactionPage,
     WeeklyCashflow,
 )
+from app.services.summary import get_enterprise_summary
 from app.services.enterprise import (
     create_transaction,
     enterprise_exists,
@@ -240,3 +242,34 @@ async def create_enterprise_transaction(
         source=source,
         voice_id=str(payload.voice_id) if payload.voice_id else None,
     )
+
+
+_SUMMARY_LANGS = {"en", "hi", "te", "mr", "gu"}
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/summary",
+    response_model=EnterpriseSummary,
+)
+async def enterprise_summary(
+    enterprise_id: str,
+    lang: str = Query("en", description="en | hi | te | mr | gu"),
+    refresh: bool = Query(False, description="bypass the cache and regenerate"),
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    """A short plain-language read on why this enterprise looks the way it does.
+
+    Separate from GET /enterprise/{id} on purpose: generation costs ~1.4s on a
+    cache miss, and the detail card must not wait on it. The client renders the
+    card first and fills this in when it arrives.
+    """
+    _check_access(claims, enterprise_id)
+    if lang not in _SUMMARY_LANGS:
+        raise HTTPException(status_code=422, detail=f"lang must be one of {', '.join(sorted(_SUMMARY_LANGS))}")
+
+    result = await get_enterprise_summary(enterprise_id, lang, refresh)
+    if result is None:
+        # No assessment to describe, or the model call failed. Either way the
+        # card is fine without it, so this is a 404 rather than a 5xx.
+        raise HTTPException(status_code=404, detail="No summary available for this enterprise")
+    return result

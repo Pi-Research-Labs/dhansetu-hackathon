@@ -99,6 +99,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/net-inflow-heatmap` | officer any, merchant own | array of JSON | net inflow per week, trailing 7 or 14 weeks via `?weeks=` |
 | `GET /enterprise/{id}/transactions` | officer any, merchant own | JSON | itemised real ledger entries, paged, newest first |
 | `GET /enterprise/{id}/daily-totals` | officer any, merchant own | JSON | one day's inflow/expense totals — merchant home screen |
+| `GET /enterprise/{id}/summary` | officer any, merchant own | JSON | LLM-written plain-language read on the numbers, cached |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — transcribes and parses only, writes no ledger row |
 | `POST /outcome` | officer only | JSON | closes a field-visit task |

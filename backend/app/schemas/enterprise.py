@@ -254,3 +254,17 @@ class LedgerEntryCreate(BaseModel):
     # it, which is what puts the transcript beside the amount in the
     # transaction list. Omitted for a purely typed entry.
     voice_id: UUID | None = None
+
+
+class EnterpriseSummary(BaseModel):
+    """Plain-language situation summary, cached per assessment vintage."""
+
+    enterprise_id: str
+    as_of: date
+    lang: str
+    summary: str
+    model: str
+    generated_at: datetime
+    # False means this request paid the ~1.4s generation; useful when checking
+    # whether the cache is doing its job.
+    cached: bool
