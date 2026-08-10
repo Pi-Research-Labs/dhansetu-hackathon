@@ -5,7 +5,7 @@ import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X, Calendar } f
 import { useMerchantStore, Entry } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
-import { postVoiceEntry, getTransactions, Transaction } from '@/utils/api-config';
+import { postVoiceEntry, getTransactions, Transaction, postTransaction } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
 
 const VoiceAgentL: Record<string, {
@@ -342,6 +342,10 @@ export function AddEntryScreen() {
   const [modalAmount, setModalAmount] = useState('');
   const [modalType, setModalType] = useState<Entry['type']>('income');
   const [isSaved, setIsSaved] = useState(false);
+  const [modalVoiceId, setModalVoiceId] = useState<string | null>(null);
+
+  // Saving state
+  const [isSaving, setIsSaving] = useState(false);
 
   // Timers and Refs
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -472,6 +476,7 @@ export function AddEntryScreen() {
       }
 
       // Populate modal state
+      setModalVoiceId(data.voice_id || null);
       setModalTranscript(data.transcript || '');
       setModalAmount(data.amount && data.amount > 0 ? formatInputValue(data.amount.toString()) : '');
 
@@ -515,41 +520,79 @@ export function AddEntryScreen() {
     setIsSaved(false);
     setModalAmount('');
     setModalTranscript('');
+    setModalVoiceId(null);
   };
 
-  const handleModalSave = () => {
+  const handleModalSave = async () => {
     const numAmount = parseFloat(modalAmount.replace(/,/g, ''));
     if (!numAmount || numAmount <= 0) {
       showAlert('Invalid Amount', 'Please enter a valid positive number for the amount.', 'warning');
       return;
     }
 
-    addEntry({
-      type: modalType,
-      amount: numAmount,
-      note: modalTranscript.trim() || 'Recorded transaction',
-    });
+    setIsSaving(true);
+    try {
+      const enterpriseId = useMerchantStore.getState().enterpriseId;
+      if (!enterpriseId) {
+        showAlert('Auth Error', 'No active merchant enterprise ID found.', 'error');
+        setIsSaving(false);
+        return;
+      }
 
-    // Clear main form inputs
-    setAmount('');
-    setNote('');
+      let direction: 'inflow' | 'outflow' = 'inflow';
+      if (modalType === 'expense' || modalType === 'savdep' || modalType === 'emi') {
+        direction = 'outflow';
+      }
 
-    // Trigger success screen inside the voice modal
-    setIsSaved(true);
+      const cleanNote = modalTranscript.trim();
+      const category = cleanNote
+        ? cleanNote.toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '')
+        : (modalType === 'income' ? 'sale' : modalType);
 
-    // Refresh transactions
-    setTimeout(() => {
+      await postTransaction(enterpriseId, {
+        direction,
+        amount: numAmount,
+        category: category || 'sale',
+        tender: 'cash',
+        voice_id: modalVoiceId,
+      });
+
+      const localId = addEntry({
+        type: modalType,
+        amount: numAmount,
+        note: cleanNote || 'Recorded transaction',
+      });
+      useMerchantStore.getState().markEntrySynced(localId, 'server-synced');
+
+      // Clear main form inputs
+      setAmount('');
+      setNote('');
+
+      // Trigger success screen inside the voice modal
+      setIsSaved(true);
+
+      // Refresh merchant data (totals, forecasting, flags, etc.)
+      useMerchantStore.getState().fetchMerchantData().catch(err => {
+        console.error('Failed to fetch merchant data after save', err);
+      });
+
+      // Refresh transactions list
       setCurrentPage(1);
       fetchLedger(1, true);
-    }, 500);
 
-    // Auto-close in 5 seconds
-    if (autoCloseTimerRef.current) {
-      clearTimeout(autoCloseTimerRef.current);
+      // Auto-close in 5 seconds
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+      }
+      autoCloseTimerRef.current = setTimeout(() => {
+        closeVoiceModal();
+      }, 5000);
+    } catch (err: any) {
+      console.error('Failed to save voice transaction', err);
+      showAlert('Save Error', err?.response?.data?.message || err?.message || 'Failed to save transaction to server.', 'error');
+    } finally {
+      setIsSaving(false);
     }
-    autoCloseTimerRef.current = setTimeout(() => {
-      closeVoiceModal();
-    }, 5000);
   };
 
   const showToast = (message: string) => {
@@ -571,28 +614,64 @@ export function AddEntryScreen() {
     }, 5000); // Auto close in 5 seconds
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const numAmount = parseFloat(amount.replace(/,/g, ''));
     if (!numAmount || numAmount <= 0) {
       showAlert('Invalid Amount', 'Please enter a valid positive number for the amount.', 'warning');
       return;
     }
 
-    addEntry({
-      type,
-      amount: numAmount,
-      note: note.trim() || 'Recorded transaction',
-    });
+    setIsSaving(true);
+    try {
+      const enterpriseId = useMerchantStore.getState().enterpriseId;
+      if (!enterpriseId) {
+        showAlert('Auth Error', 'No active merchant enterprise ID found.', 'error');
+        setIsSaving(false);
+        return;
+      }
 
-    setAmount('');
-    setNote('');
-    showToast(lang === 'hi' ? 'लेनदेन प्रविष्टि सफलतापूर्वक सहेजी गई।' : 'Transaction entry successfully recorded into your digital ledger.');
+      let direction: 'inflow' | 'outflow' = 'inflow';
+      if (type === 'expense' || type === 'savdep' || type === 'emi') {
+        direction = 'outflow';
+      }
 
-    // Refresh transactions
-    setTimeout(() => {
+      const cleanNote = note.trim();
+      const category = cleanNote
+        ? cleanNote.toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '')
+        : (type === 'income' ? 'sale' : type);
+
+      await postTransaction(enterpriseId, {
+        direction,
+        amount: numAmount,
+        category: category || 'sale',
+        tender: 'cash',
+      });
+
+      const localId = addEntry({
+        type,
+        amount: numAmount,
+        note: cleanNote || 'Recorded transaction',
+      });
+      useMerchantStore.getState().markEntrySynced(localId, 'server-synced');
+
+      setAmount('');
+      setNote('');
+      showToast(lang === 'hi' ? 'लेनदेन प्रविष्टि सफलतापूर्वक सहेजी गई।' : 'Transaction entry successfully recorded into your digital ledger.');
+
+      // Refresh merchant data (totals, forecasting, flags, etc.)
+      useMerchantStore.getState().fetchMerchantData().catch(err => {
+        console.error('Failed to fetch merchant data after save', err);
+      });
+
+      // Refresh transactions list
       setCurrentPage(1);
       fetchLedger(1, true);
-    }, 500);
+    } catch (err: any) {
+      console.error('Failed to save transaction', err);
+      showAlert('Save Error', err?.response?.data?.message || err?.message || 'Failed to save transaction to server.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -705,9 +784,20 @@ export function AddEntryScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSave} activeOpacity={0.85}>
-            <CheckCircle2 size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.submitBtnText}>{t.saveEntryBtn}</Text>
+          <TouchableOpacity
+            style={[styles.submitBtn, isSaving && { backgroundColor: '#A5D6A7' }]}
+            onPress={handleSave}
+            disabled={isSaving}
+            activeOpacity={0.85}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 6 }} />
+            ) : (
+              <CheckCircle2 size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            )}
+            <Text style={styles.submitBtnText}>
+              {isSaving ? 'SAVING...' : t.saveEntryBtn}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -1048,17 +1138,25 @@ export function AddEntryScreen() {
                   <TouchableOpacity
                     style={styles.modalCancelBtn}
                     onPress={closeVoiceModal}
+                    disabled={isSaving}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.modalCancelBtnText}>{vm.discardBtn}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.modalConfirmBtn}
+                    style={[styles.modalConfirmBtn, isSaving && { backgroundColor: '#A5D6A7' }]}
                     onPress={handleModalSave}
+                    disabled={isSaving}
                     activeOpacity={0.85}
                   >
-                    <CheckCircle2 size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.modalConfirmBtnText}>{vm.saveBtn}</Text>
+                    {isSaving ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 6 }} />
+                    ) : (
+                      <CheckCircle2 size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    )}
+                    <Text style={styles.modalConfirmBtnText}>
+                      {isSaving ? 'Saving...' : vm.saveBtn}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </>
