@@ -18,3 +18,8 @@ class OfficerTask(BaseModel):
     assigned_on: date | None
     priority_score: float | None
     status: str | None
+    # Whether the alert behind this task is still open. Surfaced because most
+    # open tasks in the panel hang off long-expired alerts, and a client
+    # choosing a task needs to be able to tell the difference.
+    alert_expires_at: date | None
+    alert_live: bool | None
