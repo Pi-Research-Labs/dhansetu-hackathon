@@ -319,6 +319,47 @@ export interface TransactionPage {
   transactions: LedgerTransaction[];
 }
 
+// Officer Tasks
+export interface OfficerTask {
+  task_id: string;
+  alert_id?: string | null;
+  enterprise_id?: string | null;
+  officer_id?: string | null;
+  assigned_on?: string | null;
+  priority_score?: number | null;
+  status?: string | null;
+  alert_expires_at?: string | null;
+  /** false when the alert behind this task has already expired */
+  alert_live?: boolean | null;
+  // Why this visit exists — the alert that raised it
+  alert_raised_at?: string | null;
+  alert_risk_tier?: string | null;
+  alert_reason_1?: string | null;
+  alert_reason_2?: string | null;
+  alert_reason_3?: string | null;
+  projected_shortfall?: number | string | null;
+  shortfall_week_of?: string | null;
+  deadline_date?: string | null;
+}
+
+/**
+ * The calling officer's field-visit tasks, oldest first.
+ *
+ * POST /outcome needs a real task_id and ids are sequential (TK00004), so one
+ * cannot be built from the enterprise or alert id -- this is the only way to
+ * get a valid one.
+ */
+export async function getOfficerTasks(params?: {
+  status?: string;
+  enterprise_id?: string;
+}): Promise<OfficerTask[]> {
+  const qs = new URLSearchParams();
+  if (params?.status) qs.set("status", params.status);
+  if (params?.enterprise_id) qs.set("enterprise_id", params.enterprise_id);
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+  return await apiClient.get<OfficerTask[]>(`/tasks${query}`);
+}
+
 // Task Outcome types
 export interface PostOutcomePayload {
   task_id: string;

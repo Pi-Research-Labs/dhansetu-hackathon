@@ -321,15 +321,27 @@ LANGUAGE plpgsql
 SET search_path = dhansetu, public
 AS $$
 DECLARE
-    v_ent  TEXT;
-    v_id   TEXT;
+    v_ent    TEXT;
+    v_status TEXT;
+    v_id     TEXT;
 BEGIN
     IF p_outcome NOT IN ('stress_confirmed', 'false_positive', 'unreachable') THEN
         RAISE EXCEPTION 'invalid outcome: %', p_outcome;
     END IF;
-    SELECT enterprise_id INTO v_ent FROM officer_tasks WHERE task_id = p_task_id;
+    SELECT enterprise_id, status INTO v_ent, v_status
+    FROM officer_tasks WHERE task_id = p_task_id;
     IF v_ent IS NULL THEN
         RAISE EXCEPTION 'unknown task_id: %', p_task_id;
+    END IF;
+    -- One visit, one outcome. Without this the function happily inserted a
+    -- second visit_outcomes row and re-closed an already-closed task, and
+    -- nothing downstream noticed: v_alert_precision counts these rows as
+    -- "visits" and derives confirm_pct from them, so a double submission
+    -- quietly inflated the confirmation rate that decides whether AMBER
+    -- alerts are worth an officer's petrol. Raised rather than silently
+    -- ignored, so the caller learns the visit was already recorded.
+    IF v_status = 'closed' THEN
+        RAISE EXCEPTION 'task already closed: % (an outcome is already recorded for this visit)', p_task_id;
     END IF;
     v_id := 'OC' || LPAD((COALESCE(
         (SELECT MAX(SUBSTRING(outcome_id FROM 3)::int) FROM visit_outcomes), 0) + 1)::text, 5, '0');

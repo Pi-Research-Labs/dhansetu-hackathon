@@ -67,3 +67,18 @@ body {
     opacity: 0;
   }
 }
+
+@media (min-width: 1024px) {
+  .dashboard-body {
+    overflow: hidden !important;
+  }
+}
+
+.recharts-wrapper, 
+.recharts-surface, 
+.recharts-surface *, 
+.recharts-wrapper * {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-focus-ring-color: transparent !important;
+}

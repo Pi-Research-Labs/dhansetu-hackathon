@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppSelector } from "@/redux/hooks";
 import { checkIsAuthenticated } from "@/utils/auth";
 import { useTranslation } from "@/utils/translations/useTranslation";
@@ -22,9 +22,9 @@ import { Enterprise } from "@/types/enterprise";
 import MyPortfolioTab from "@/components/dashboard/MyPortfolioTab";
 import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import MarketIntelligenceTab from "@/components/dashboard/MarketIntelligenceTab";
-import { Lock } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 
-export default function OfficerDashboard() {
+function OfficerDashboardContent() {
   const router = useRouter();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { t, currentLanguage } = useTranslation();
@@ -49,12 +49,32 @@ export default function OfficerDashboard() {
   const [riskPrediction, setRiskPrediction] = useState<RiskPredictionResponse | null>(null);
   const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
 
-  // Route protection guard & API Worklist fetcher
+  const searchParams = useSearchParams();
+  const queryId = searchParams?.get("enterprise_id");
+
+  // Sync query parameter changes to selectedId state
   useEffect(() => {
-    // Hide main page scrollbar when on dashboard
-    document.body.style.overflow = "hidden";
+    if (queryId && queryId !== selectedId) {
+      setSelectedId(queryId);
+    }
+  }, [queryId, selectedId]);
+
+  // Sync selectedId changes back to query parameters
+  useEffect(() => {
+    if (selectedId) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("enterprise_id") !== selectedId) {
+        params.set("enterprise_id", selectedId);
+        router.replace(`${window.location.pathname}?${params.toString()}`);
+      }
+    }
+  }, [selectedId, router]);
+
+  useEffect(() => {
+    // Enable responsive desktop-only body overflow hidden
+    document.body.classList.add("dashboard-body");
     return () => {
-      document.body.style.overflow = "";
+      document.body.classList.remove("dashboard-body");
     };
   }, []);
 
@@ -78,7 +98,9 @@ export default function OfficerDashboard() {
           const list = Array.isArray(data) ? data : [];
           setWorklistItems(list);
           if (list.length > 0) {
-            setSelectedId(list[0].enterprise_id);
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryId = urlParams.get("enterprise_id");
+            setSelectedId(queryId || list[0].enterprise_id);
           }
         }
       } catch (err) {
@@ -249,7 +271,7 @@ export default function OfficerDashboard() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-62px)] lg:h-[calc(100vh-62px)] lg:max-h-[calc(100vh-62px)] bg-[#F4F5F0] text-[#1A2016] p-4 lg:p-5 flex flex-col overflow-y-auto lg:overflow-hidden">
+    <div className="min-h-[calc(100vh-62px)] lg:h-[calc(100vh-62px)] lg:max-h-[calc(100vh-62px)] bg-[#F4F5F0] text-[#1A2016] p-4 lg:p-5 flex flex-col overflow-visible lg:overflow-hidden">
       {/* Top Title Bar */}
       <div className="w-full max-w-7xl mx-auto mb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-[#E2E6D8] pb-2 shrink-0">
         <div className="flex items-baseline gap-2">
@@ -341,9 +363,23 @@ export default function OfficerDashboard() {
             initialTenderFilter={selectedTenderFilter}
             onTenderFilterChange={setSelectedTenderFilter}
             t={t}
+            worklistItems={worklistItems}
           />
         )}
       </div>
     </div>
+  );
+}
+
+export default function OfficerDashboard() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-[calc(100vh-62px)] bg-[#F4F5F0] flex flex-col items-center justify-center text-[#5F6656]">
+        <Loader2 className="w-8 h-8 text-[#2E7D32] animate-spin mb-3" />
+        <p className="text-xs font-semibold">Loading Dashboard...</p>
+      </div>
+    }>
+      <OfficerDashboardContent />
+    </React.Suspense>
   );
 }
