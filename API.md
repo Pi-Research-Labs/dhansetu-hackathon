@@ -100,7 +100,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/transactions` | officer any, merchant own | JSON | itemised real ledger entries, paged, newest first |
 | `GET /enterprise/{id}/daily-totals` | officer any, merchant own | JSON | one day's inflow/expense totals — merchant home screen |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
-| `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
+| `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — transcribes and parses only, writes no ledger row |
 | `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
 | `POST /voice/review/{extraction_id}` | officer only | JSON | confirms an amount → writes ledger |
 | `POST /outcome` | officer only | JSON | closes a field-visit task |
@@ -464,7 +464,8 @@ returns, so a client can prepend the response straight onto its list.
   "category": "milk_sale",      // required — free text, non-blank
   "event_date": "2026-08-10",   // optional — defaults to today, cannot be future
   "tender": "cash",             // optional — cash | upi | wallet | bank | credit
-  "is_household": false         // optional — true = drawings, not a business cost
+  "is_household": false,        // optional — true = drawings, not a business cost
+  "voice_id": null              // optional — links the row to a voice capture
 }
 
 // Response 201
@@ -487,9 +488,18 @@ returns, so a client can prepend the response straight onto its list.
 }
 ```
 
-`source` records **who typed it**, taken from the token rather than the body so
-a client can't claim to be something it isn't: a merchant entering their own
-book is `manual`, an officer entering it sitting beside them is `assisted`.
+`source` records **how it was captured**, derived server-side rather than taken
+from the body so a client can't claim to be something it isn't: a confirmed
+voice capture is `voice`, a merchant typing their own book is `manual`, an
+officer typing it beside them is `assisted`.
+
+`voice_id` is how a spoken entry reaches the ledger. `POST /voice/entries`
+transcribes and parses but **writes nothing**; the client shows the parsed
+amount back to the merchant, and posts here once they confirm it. Passing the
+`voice_id` keeps the row joined to the utterance, which is what puts the
+transcript beside the amount in `GET .../transactions`. A `voice_id` belonging
+to a different enterprise is a `422` — otherwise a caller could staple someone
+else's utterance onto their own row.
 
 `confidence` is `1.0` because nothing was inferred — a person typed the number.
 That also keeps typed entries out of the voice review queue, which exists to

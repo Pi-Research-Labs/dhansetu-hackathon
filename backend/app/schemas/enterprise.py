@@ -249,3 +249,8 @@ class LedgerEntryCreate(BaseModel):
     event_date: date | None = None
     tender: str | None = None
     is_household: bool = False
+    # Set when this entry came from a voice capture the merchant has just
+    # confirmed. Keeps the ledger row joined to the utterance that produced
+    # it, which is what puts the transcript beside the amount in the
+    # transaction list. Omitted for a purely typed entry.
+    voice_id: UUID | None = None

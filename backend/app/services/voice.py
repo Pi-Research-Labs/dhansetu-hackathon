@@ -19,20 +19,17 @@ which this integration deliberately does not call yet (its exact endpoint
 shape wasn't verified against raw docs, and guessing API shapes has bitten
 this project before — see the Mappls thread).
 
-Posting is immediate, not gated on review. Anything the regex fully parses
-(BOTH an amount and a direction) is written straight to ledger_entries_live
-in the same transaction, so the merchant sees the entry the moment they
-speak it rather than waiting on an officer. Review did not go away, it
-stopped being a gate: confidence stays at 0.5, below
-voice_extractions.needs_review's 0.70 threshold, so every regex-parsed entry
-still surfaces in the officer queue — and confirming it there writes a
-CORRECTION row (corrects_entry) rather than a second entry, so verifying an
-already-posted utterance can never double-count it.
+This module transcribes and parses; it does NOT write to the ledger. The
+regex reads an amount and a direction out of the transcript and returns them,
+and the client shows that back to the merchant to confirm or correct before
+anything is recorded. The confirmed entry is written by
+POST /enterprise/{id}/transactions, which takes the voice_id so the ledger
+row stays linked to the utterance that produced it.
 
-A partial parse is not posted. Amount without direction would mean guessing
-whether money came in or went out, and getting that backwards turns a
-payment into income — so those stay unposted and the queue is the only way
-they reach the ledger, exactly as before.
+That keeps a single write path into ledger_entries_live rather than two, and
+means a regex guess is never recorded until a human agrees to it — which
+matters when the guess is an amount of money and nobody may notice that
+"panchaas" came back as 500.
 """
 
 import json
@@ -82,18 +79,6 @@ _OUTFLOW_WORDS = (
     "kharida", "kharidi", "kharcha", "diya", "diye", "bhara", "chukaya",
     "kharidyu", "apya", "chukavya",
 )
-
-# voice_entries.channel and ledger_entries_live.source use different
-# vocabularies for the same thing: an app capture is channel 'app' but
-# source 'voice'. The other two happen to match.
-_CHANNEL_SOURCE = {"app": "voice", "ivr": "ivr", "assisted": "assisted"}
-
-# ledger_entries_live.category is NOT NULL, and the regex extractor infers no
-# category at all. Labelling it honestly beats inventing one from the
-# transcript: the officer sets a real category when they review, and the
-# correction carries it.
-_UNCLASSIFIED = "unclassified"
-
 
 class SarvamError(Exception):
     pass
@@ -204,8 +189,6 @@ async def create_voice_entry(
                 "direction": None,
                 "confidence": None,
                 "needs_review": True,
-                "entry_id": None,
-                "posted_to_ledger": False,
             }
 
         amount, direction = extract_amount_direction(result["transcript"])
@@ -225,36 +208,7 @@ async def create_voice_entry(
             json.dumps({"transcript": result["transcript"], "language_code": result["language_code"]}),
         )
 
-        # Post straight to the ledger on a full parse, inside the same
-        # transaction as the extraction -- a caller can never see an
-        # extraction whose entry failed to write, or the reverse.
-        entry_id = None
-        if amount is not None and direction is not None:
-            entry_id = await conn.fetchval(
-                """
-                INSERT INTO dhansetu.ledger_entries_live
-                    (enterprise_id, event_date, recorded_at, direction, amount,
-                     category, tender, is_household, source, voice_id, confidence)
-                VALUES ($1, $2::timestamptz::date, now(), $3, $4, $5,
-                        NULL, FALSE, $6, $7, $8)
-                RETURNING entry_id
-                """,
-                enterprise_id,
-                spoken_at,
-                direction,
-                amount,
-                _UNCLASSIFIED,
-                _CHANNEL_SOURCE[channel],
-                voice_row["voice_id"],
-                confidence,
-            )
-
-    return {
-        **dict(voice_row),
-        **dict(extraction_row),
-        "entry_id": entry_id,
-        "posted_to_ledger": entry_id is not None,
-    }
+    return {**dict(voice_row), **dict(extraction_row)}
 
 
 async def get_review_queue(officer_id: str) -> list[dict]:

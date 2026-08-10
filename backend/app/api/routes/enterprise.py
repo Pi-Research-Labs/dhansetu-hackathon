@@ -30,6 +30,7 @@ from app.services.enterprise import (
     get_receivables_ageing,
     get_transactions,
     get_weekly_cashflow,
+    voice_entry_belongs_to,
 )
 
 router = APIRouter(tags=["enterprise"])
@@ -211,11 +212,22 @@ async def create_enterprise_transaction(
     if event_date > date.today():
         raise HTTPException(status_code=422, detail="event_date cannot be in the future")
 
-    # Who typed it, in the schema's own vocabulary: a merchant entering their
-    # own book is 'manual'; an officer entering it sitting beside them is
-    # 'assisted'. Taken from the token, never from the request body, so a
-    # client cannot claim to be something it isn't.
-    source = "assisted" if claims.get("role") == "officer" else "manual"
+    # A voice_id has to belong to THIS enterprise, or a caller could staple
+    # someone else's utterance (and its transcript) onto their own ledger row.
+    if payload.voice_id is not None and not await voice_entry_belongs_to(
+        str(payload.voice_id), enterprise_id
+    ):
+        raise HTTPException(status_code=422, detail="voice_id does not belong to this enterprise")
+
+    # How it was captured, in the schema's own vocabulary, and taken from the
+    # token rather than the request body so a client cannot claim to be
+    # something it isn't: a confirmed voice capture is 'voice', a merchant
+    # typing their own book is 'manual', an officer typing it beside them is
+    # 'assisted'.
+    if payload.voice_id is not None:
+        source = "voice"
+    else:
+        source = "assisted" if claims.get("role") == "officer" else "manual"
 
     return await create_transaction(
         enterprise_id=enterprise_id,
@@ -226,4 +238,5 @@ async def create_enterprise_transaction(
         tender=payload.tender,
         is_household=payload.is_household,
         source=source,
+        voice_id=str(payload.voice_id) if payload.voice_id else None,
     )

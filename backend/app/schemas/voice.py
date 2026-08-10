@@ -19,11 +19,6 @@ class VoiceEntryResponse(BaseModel):
     direction: str | None
     confidence: Decimal | None
     needs_review: bool
-    # Set when the regex parsed both an amount and a direction and the entry
-    # went straight to the ledger. A partial parse leaves these null/false and
-    # only the officer queue can post it.
-    entry_id: UUID | None
-    posted_to_ledger: bool
 
 
 class VoiceReviewItem(BaseModel):

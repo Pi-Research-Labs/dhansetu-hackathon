@@ -235,6 +235,7 @@ async def create_transaction(
     tender: str | None,
     is_household: bool,
     source: str,
+    voice_id: str | None = None,
 ) -> dict:
     """Insert a typed ledger entry and return it in the read shape.
 
@@ -253,7 +254,7 @@ async def create_transaction(
             INSERT INTO dhansetu.ledger_entries_live
                 (enterprise_id, event_date, recorded_at, direction, amount,
                  category, tender, is_household, source, voice_id, confidence)
-            VALUES ($1, $2, now(), $3, $4, $5, $6, $7, $8, NULL, 1.0)
+            VALUES ($1, $2, now(), $3, $4, $5, $6, $7, $8, $9, 1.0)
             RETURNING entry_id
             """,
             enterprise_id,
@@ -264,9 +265,25 @@ async def create_transaction(
             tender,
             is_household,
             source,
+            voice_id,
         )
         row = await conn.fetchrow(
             "SELECT * FROM dhansetu.v_enterprise_transactions WHERE entry_id = $1",
             entry_id,
         )
         return dict(row)
+
+
+async def voice_entry_belongs_to(voice_id: str, enterprise_id: str) -> bool:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        return bool(
+            await conn.fetchval(
+                """
+                SELECT 1 FROM dhansetu.voice_entries
+                WHERE voice_id = $1::uuid AND enterprise_id = $2
+                """,
+                voice_id,
+                enterprise_id,
+            )
+        )
