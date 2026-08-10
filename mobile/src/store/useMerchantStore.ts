@@ -30,6 +30,10 @@ export interface Entry {
   synced?: boolean;
   /** entry_id returned by the backend, once synced */
   serverId?: string;
+  /** How this entry was created */
+  source?: 'manual' | 'voice' | 'sms';
+  /** Dedup key for SMS-sourced entries to prevent duplicate detection */
+  dedupKey?: string;
 }
 
 export interface TodaysTotals {
@@ -94,6 +98,16 @@ export interface MerchantStore {
   // Unread alerts indicator
   hasUnreadAlerts: boolean;
   markAlertsAsRead: () => void;
+
+  // SMS Auto-Detect
+  smsAutoDetectEnabled: boolean;
+  setSmsAutoDetectEnabled: (enabled: boolean) => void;
+  smsDetectedCount: number;
+  incrementSmsDetectedCount: () => void;
+  smsHistoricalScanDone: boolean;
+  setSmsHistoricalScanDone: (done: boolean) => void;
+  /** Check if a dedup key already exists in recent entries */
+  hasDedupKey: (key: string) => boolean;
 
   // Entries ledger
   entries: Entry[];
@@ -199,6 +213,24 @@ export const useMerchantStore = create<MerchantStore>()(
 
   markAlertsAsRead: () => {
     set({ hasUnreadAlerts: false });
+  },
+
+  // SMS Auto-Detect State
+  smsAutoDetectEnabled: true,
+  setSmsAutoDetectEnabled: (enabled) => {
+    set({ smsAutoDetectEnabled: enabled });
+    AsyncStorage.setItem('@dhansetu_sms_auto_detect', enabled ? 'true' : 'false').catch((e) => console.log('Error saving sms toggle', e));
+  },
+  smsDetectedCount: 0,
+  incrementSmsDetectedCount: () => set((state) => ({ smsDetectedCount: state.smsDetectedCount + 1 })),
+  smsHistoricalScanDone: false,
+  setSmsHistoricalScanDone: (done) => {
+    set({ smsHistoricalScanDone: done });
+    AsyncStorage.setItem('@dhansetu_sms_scan_done', done ? 'true' : 'false').catch((e) => console.log('Error saving scan flag', e));
+  },
+  hasDedupKey: (key) => {
+    const entries = get().entries;
+    return entries.some((e) => e.dedupKey === key);
   },
 
   // Restore Session Action

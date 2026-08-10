@@ -7,6 +7,7 @@ import { L } from '@/i18n/translations';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
 import { postVoiceEntry, getTransactions, Transaction, postTransaction } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
+import { useSmsAutoDetect } from '@/hooks/useSmsAutoDetect';
 
 const VoiceAgentL: Record<string, {
   title: string;
@@ -157,6 +158,9 @@ export function AddEntryScreen() {
   const { lang, entries, addEntry } = useMerchantStore();
   const t = L[lang];
   const vm = VoiceModalL[lang] || VoiceModalL.en;
+
+  // SMS Auto-Detect Hook
+  const smsAutoDetect = useSmsAutoDetect();
 
   const [type, setType] = useState<Entry['type']>('income');
   const [amount, setAmount] = useState('');
@@ -421,6 +425,20 @@ export function AddEntryScreen() {
       }
     };
   }, []);
+
+  // SMS Auto-Detection Toast — show notification when a bank SMS is parsed
+  useEffect(() => {
+    if (smsAutoDetect.lastDetected && smsAutoDetect.lastDetected.success) {
+      const txn = smsAutoDetect.lastDetected;
+      const dirSymbol = txn.direction === 'inflow' ? '+' : '-';
+      const toastMsg = `✅ ${dirSymbol}₹${txn.amount.toLocaleString('en-IN')} ${txn.direction === 'inflow' ? 'credited' : 'debited'} — ${txn.bankName} (auto-detected from SMS)`;
+      showToast(toastMsg);
+
+      // Refresh transaction list
+      setCurrentPage(1);
+      fetchLedger(1, true);
+    }
+  }, [smsAutoDetect.lastDetected]);
 
   const startRecording = async () => {
     try {
@@ -856,7 +874,9 @@ export function AddEntryScreen() {
                 const isOutflow = en.direction === 'outflow';
                 const title = formatCategoryName(en.category) || (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
                 const confidencePct = en.confidence ? Math.round(parseFloat(en.confidence) * 100) : null;
-                const sourceText = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : 'Manual';
+                const sourceIcon = en.source === 'voice' ? '🎙️' : en.source === 'sms' ? '📱' : '✏️';
+                const sourceLabel = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : en.source === 'sms' ? 'SMS' : 'Manual';
+                const sourceText = `${sourceIcon} ${sourceLabel}`;
                 return (
                   <View key={en.entry_id} style={styles.entryRowItem}>
                     <View style={styles.entryMainInfo}>
