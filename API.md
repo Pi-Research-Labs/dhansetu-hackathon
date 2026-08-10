@@ -97,10 +97,11 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/weekly-cashflow` | officer any, merchant own | array of JSON | historical weekly inflow/outflow/net, default trailing 26 weeks |
 | `GET /enterprise/{id}/cashflow-forecast` | officer any, merchant own | array of JSON | 6-month forecast band + confidence score per horizon |
 | `GET /enterprise/{id}/net-inflow-heatmap` | officer any, merchant own | array of JSON | net inflow per week, trailing 7 or 14 weeks via `?weeks=` |
+| `GET /enterprise/{id}/transactions` | officer any, merchant own | JSON | itemised real ledger entries, paged, newest first |
+| `GET /enterprise/{id}/daily-totals` | officer any, merchant own | JSON | one day's inflow/expense totals — merchant home screen |
+| `GET /enterprise/{id}/summary` | officer any, merchant own | JSON | LLM-written plain-language read on the numbers, cached |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
-| `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — audio upload |
-| `GET /voice/review-queue` | officer only | array of JSON | officer's own pending voice entries |
-| `POST /voice/review/{extraction_id}` | officer only | JSON | confirms an amount → writes ledger |
+| `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — transcribes and parses only, writes no ledger row |
 | `POST /outcome` | officer only | JSON | closes a field-visit task |
 | `GET /evidence/district-events` | officer only | array of JSON | shocks hitting ≥30% of a district×sector cohort |
 | `GET /evidence/alert-precision` | officer only | array of JSON | confirmation rate by tier, book-wide |
@@ -115,9 +116,14 @@ The two rows in **bold** are the ones that don't behave like a normal JSON
 
 ## `GET /worklist` — officer only
 
-Returns the calling officer's own ranked shortlist (AMBER/RED enterprises
-only, sorted by risk score descending). No query params — the officer is
-identified from the token, not a request parameter.
+Returns the calling officer's own book — every enterprise assigned to them,
+all tiers, sorted by risk score descending so the cases needing action come
+first. No query params — the officer is identified from the token, not a
+request parameter.
+
+GREEN rows are included: the dashboard counts both halves of the portfolio
+off this one response (the "Stable" tier pill and the "Bankable Pipeline"
+KPI), so tier filtering is the client's job, not the server's.
 
 ```json
 // Response 200 — array of:
@@ -381,6 +387,182 @@ of the most recent weeks, oldest first.
 }
 ```
 
+## `GET /enterprise/{enterprise_id}/transactions` — officer (any) or merchant (own only)
+
+The itemised **real** ledger — one row per entry actually captured from a
+merchant (voice, IVR, assisted, manual, UPI feed). Backed by
+`v_enterprise_transactions`, which reads `v_ledger_live_effective`, so voided
+rows and superseded corrections are already gone: an edited entry appears
+once, at its corrected value.
+
+This is the only endpoint that returns individual transactions. Everything
+else in this file is daily-or-coarser aggregates, because the synthetic panel
+has daily totals and no itemised rows behind them — so this list contains
+real captures only, and is empty for an enterprise nobody has recorded
+against yet.
+
+Query params, all optional:
+
+| param | default | notes |
+|---|---|---|
+| `limit` | `50` | 1–200 |
+| `offset` | `0` | for paging |
+| `date_from` | none | inclusive lower bound on `event_date` |
+| `date_to` | none | inclusive upper bound on `event_date` |
+
+`date_from` later than `date_to` is a `422`. `total` is the count **before**
+paging, so a client can drive infinite scroll without a second request.
+
+```json
+// Response 200
+{
+  "enterprise_id": "ENT0031",
+  "total": 4,
+  "limit": 50,
+  "offset": 0,
+  "transactions": [
+    {
+      "entry_id": "2d36354a-2965-4d19-b6b5-7abe87d7c01b",
+      "enterprise_id": "ENT0031",
+      "event_date": "2026-08-09",
+      "recorded_at": "2026-08-09T06:02:53.134364Z",
+      "direction": "inflow",          // inflow | outflow
+      "amount": "1250.00",
+      "category": "milk_sale",
+      "tender": "upi",                // cash | upi | wallet | bank | credit
+      "is_household": false,          // true = drawings, not a business cost
+      "source": "voice",              // voice | ivr | assisted | manual | upi_feed
+      "confidence": "0.9900",
+      "voice_id": "…",                // null for non-voice sources
+      "transcript": "aaj pandrah litre doodh becha",
+      "detected_lang": "gu-IN",
+      "channel": "app"                // app | ivr | assisted
+    }
+  ]
+}
+```
+
+`transcript`/`detected_lang`/`channel` come from `voice_entries` and are
+`null` for anything not spoken — they let the app show *what was said* beside
+the amount, which is the whole justification for a voice ledger the merchant
+can audit.
+
+## `POST /enterprise/{enterprise_id}/transactions` — officer (any) or merchant (own only)
+
+Record a transaction the merchant **typed** rather than spoke. Until this
+existed, the only route into the ledger was `POST /voice/entries` — a merchant
+in a noisy shop, or one who simply wanted to correct a figure, had nowhere to
+go. Returns `201` with the created entry in the same shape `GET .../transactions`
+returns, so a client can prepend the response straight onto its list.
+
+```json
+// Request
+{
+  "direction": "inflow",        // required — inflow | outflow
+  "amount": 740.50,             // required — must be > 0
+  "category": "milk_sale",      // required — free text, non-blank
+  "event_date": "2026-08-10",   // optional — defaults to today, cannot be future
+  "tender": "cash",             // optional — cash | upi | wallet | bank | credit
+  "is_household": false,        // optional — true = drawings, not a business cost
+  "voice_id": null              // optional — links the row to a voice capture
+}
+
+// Response 201
+{
+  "entry_id": "61c7360b-624a-4b2c-af1f-676d90df1b5c",
+  "enterprise_id": "ENT0031",
+  "event_date": "2026-08-10",
+  "recorded_at": "2026-08-10T04:51:09.630475Z",
+  "direction": "inflow",
+  "amount": "740.50",
+  "category": "milk_sale",
+  "tender": "cash",
+  "is_household": false,
+  "source": "manual",           // set from the token, never the request body
+  "confidence": "1.0000",
+  "voice_id": null,
+  "transcript": null,
+  "detected_lang": null,
+  "channel": null
+}
+```
+
+`source` records **how it was captured**, derived server-side rather than taken
+from the body so a client can't claim to be something it isn't: a confirmed
+voice capture is `voice`, a merchant typing their own book is `manual`, an
+officer typing it beside them is `assisted`.
+
+`voice_id` is how a spoken entry reaches the ledger. `POST /voice/entries`
+transcribes and parses but **writes nothing**; the client shows the parsed
+amount back to the merchant, and posts here once they confirm it. Passing the
+`voice_id` keeps the row joined to the utterance, which is what puts the
+transcript beside the amount in `GET .../transactions`. A `voice_id` belonging
+to a different enterprise is a `422` — otherwise a caller could staple someone
+else's utterance onto their own row.
+
+`confidence` is `1.0` because nothing was inferred — a person typed the number.
+That also keeps typed entries out of the voice review queue, which exists to
+catch bad regex parses and has nothing to check here.
+
+Validation failures all return `422`: unknown `direction`, `amount <= 0`, blank
+`category`, unrecognised `tender`, or an `event_date` in the future. `403` for a
+merchant posting to another enterprise, `404` for an unknown one.
+
+Entries land in `ledger_entries_live` and flow straight into
+`GET .../transactions`, `GET .../daily-totals` and the weekly cashflow views —
+same as a voice entry, because it is the same table.
+
+## `GET /enterprise/{enterprise_id}/daily-totals` — officer (any) or merchant (own only)
+
+One day's money in and money out — built for the mobile app's landing
+screen, so it's a single indexed lookup rather than summing a transaction
+list client-side.
+
+`?on=YYYY-MM-DD` — the day to total. Defaults to **today**.
+
+Totals are the synthetic panel **plus** live captures for that day; the two
+are additive, because a spoken transaction is one the panel never knew about
+rather than a restatement of one it did. The `live_*` fields break out the
+merchant's own recorded share of the total, so the UI can say "₹15,800 today,
+of which you recorded ₹500."
+
+Note the panel ends **2026-07-31**. Any date after that has no synthetic
+component, so `total_*` equals `live_*` — which is exactly the case for
+"today" during a demo.
+
+A real enterprise with no activity on that date returns zeros, not a `404` —
+a quiet day is a legitimate answer for a home screen. A `404` means the
+enterprise itself doesn't exist (officers only; a merchant asking about
+someone else gets `403` first, which avoids leaking whether an id exists).
+
+```json
+// Response 200
+{
+  "enterprise_id": "ENT0031",
+  "event_date": "2026-07-31",
+  "total_inflow": "15800.00",     // panel 15300 + live 500
+  "total_expenses": "2030.00",    // panel  1830 + live 200
+  "net": "13770.00",
+  "txn_count": 6,               // all transactions that day
+  "live_inflow": "500.00",
+  "live_outflow": "200.00",
+  "live_txn_count": 2,
+  "has_live_entries": true,
+  "inflow_count": 2,            // how many were money IN
+  "outflow_count": 1            // how many were money OUT
+}
+```
+
+`inflow_count`/`outflow_count` are counted off the **live** ledger only, and
+that's a hard limit rather than an omission: `daily_ledger` carries one
+`txn_count` per day with no per-transaction direction behind it (it stores
+daily inflow/outflow *amounts*), so there is nothing to split on a panel day.
+
+On any date after the panel ends — **including today** — every transaction is
+live, so `inflow_count + outflow_count == txn_count` and both are the true
+figures. On earlier dates they count only what was captured live, while
+`txn_count` stays the honest combined number.
+
 ## `GET /enterprise/{enterprise_id}/map-tile` — officer (any) or merchant (own only)
 
 Same access rule as `GET /enterprise/{id}`. Returns a static map PNG
@@ -566,28 +748,20 @@ output works as-is — no client-side transcoding needed. Keep recordings
 **under 30 seconds**; that's Sarvam's sync-API hard limit, not a
 choice made here — anything longer needs the batch API (not wired up).
 
-## `GET /voice/review-queue` — officer only
+## Voice review endpoints — removed
 
-The calling officer's own pending voice entries (their enterprises only),
-backed by `v_voice_review_queue`. Same array-of-rows shape as `/worklist`.
+`GET /voice/review-queue` and `POST /voice/review/{extraction_id}` no longer
+exist. They were the officer-confirmation step from when a spoken entry needed
+approval before it could reach the ledger. Voice capture now parses only, and
+the merchant confirms the parsed amount in the app, so the queue had nothing
+left to gate and its POST was a second way into `ledger_entries_live`.
 
-## `POST /voice/review/{extraction_id}` — officer only
+`POST /enterprise/{id}/transactions` is now the **only** write path into the
+ledger — typed or spoken, merchant or officer.
 
-Officer confirms (or corrects) the amount, closing the loop into a real
-ledger row.
-
-```json
-// Request
-{ "reviewed_amount": 1500.00, "direction": "inflow", "category": "milk_sale", "is_household": false, "tender": "cash" }
-
-// Response 200
-{ "entry_id": "bad5a37c-...", "enterprise_id": "ENT0031", "event_date": "2026-08-03", "direction": "inflow", "amount": 1500.00 }
-```
-Writes `voice_extractions.reviewed_by`/`reviewed_amount` and a new
-`ledger_entries_live` row (`source = 'voice'`, `confidence = 1.0` since a
-human just confirmed it) — this is what feeds `v_daily_from_voice` and,
-from there, the same pipeline `daily_ledger` already feeds. Unknown
-`extraction_id` → `404`.
+The `v_voice_review_queue` view still exists in the database, so utterances the
+regex failed to parse remain inspectable over SQL. There is simply no endpoint
+serving them.
 
 ## `/evidence/*` — officer only, book-wide (not scoped to the caller)
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.core.db import get_pool
 
 # Metadata per sub_type category
@@ -232,6 +233,16 @@ async def get_market_categories(enterprise_id: str | None = None) -> list[dict]:
     return cats
 
 
+def _get_trailing_12_months_labels() -> list[str]:
+    today = datetime.now()
+    labels = []
+    for i in range(11, -1, -1):
+        m = (today.month - i - 1) % 12 + 1
+        y = today.year + (today.month - i - 1) // 12
+        labels.append(f"{m:02d}-{y}")
+    return labels
+
+
 async def get_market_intelligence(sub_type_query: str | None = None, enterprise_id: str | None = None) -> dict:
     merchant_info = None
     if enterprise_id:
@@ -324,7 +335,16 @@ async def get_market_intelligence(sub_type_query: str | None = None, enterprise_
                 "seasonal_pattern": fallback_meta["seasonal_pattern"],
             }
         if not chart_data:
-            chart_data = fallback_meta["chart_data"]
+            trailing_labels = _get_trailing_12_months_labels()
+            raw_chart = fallback_meta["chart_data"]
+            chart_data = [
+                {
+                    "month": trailing_labels[idx] if idx < len(trailing_labels) else pt["month"],
+                    "price_index": pt["price_index"],
+                    "rainfall_mm": pt["rainfall_mm"],
+                }
+                for idx, pt in enumerate(raw_chart)
+            ]
 
     if not risks:
         if sector_name == "DAIRY":

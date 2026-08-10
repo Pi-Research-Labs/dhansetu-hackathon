@@ -76,7 +76,7 @@ export default function PaymentMixCard({ data, isLoading = false, t, onSelectTen
                 onClick={() => onSelectTender?.("upi")}
                 style={{ width: `${upiVal}%` }}
                 className="bg-[#2E7D32] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
-                title={`UPI: ${upiPct}% - Click to filter queue`}
+                title={`UPI: ${upiPct}% — ${t?.dash.transactionsTab ?? "Transactions"}`}
               />
             )}
             {walletVal > 0 && (
@@ -85,7 +85,7 @@ export default function PaymentMixCard({ data, isLoading = false, t, onSelectTen
                 onClick={() => onSelectTender?.("wallet")}
                 style={{ width: `${walletVal}%` }}
                 className="bg-[#1565C0] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
-                title={`Wallet: ${walletPct}% - Click to filter queue`}
+                title={`Wallet: ${walletPct}% — ${t?.dash.transactionsTab ?? "Transactions"}`}
               />
             )}
             {cashVal > 0 && (
@@ -94,12 +94,13 @@ export default function PaymentMixCard({ data, isLoading = false, t, onSelectTen
                 onClick={() => onSelectTender?.("cash")}
                 style={{ width: `${cashVal}%` }}
                 className="bg-[#E65100] h-full transition-all cursor-pointer hover:opacity-90 focus:outline-none"
-                title={`Cash: ${cashPct}% - Click to filter queue`}
+                title={`Cash: ${cashPct}% — ${t?.dash.transactionsTab ?? "Transactions"}`}
               />
             )}
           </div>
 
-          {/* Legend detailing the distribution */}
+          {/* Legend doubles as navigation: clicking a tender opens the
+              Transactions tab filtered to it. */}
           <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
             <button
               type="button"

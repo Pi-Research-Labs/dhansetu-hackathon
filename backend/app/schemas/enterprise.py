@@ -1,6 +1,7 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -171,3 +172,99 @@ class NetInflowHeatmapWeek(BaseModel):
     week_start: date
     week_end: date
     net_inflow: Decimal | None
+
+
+class LedgerTransaction(BaseModel):
+    """One real, itemised ledger entry (v_enterprise_transactions).
+
+    Distinct from the daily aggregates elsewhere in this module: those blend
+    the synthetic panel with live entries, this is live entries only, because
+    the panel has no itemised transactions to show.
+    """
+
+    entry_id: UUID
+    enterprise_id: str
+    event_date: date
+    recorded_at: datetime
+    direction: str
+    amount: Decimal
+    category: str | None
+    tender: str | None
+    is_household: bool
+    source: str
+    confidence: Decimal | None
+    voice_id: UUID | None
+    # present only for voice/IVR entries — lets the app show what was said
+    transcript: str | None
+    detected_lang: str | None
+    channel: str | None
+
+
+class TransactionPage(BaseModel):
+    enterprise_id: str
+    total: int
+    limit: int
+    offset: int
+    transactions: list[LedgerTransaction]
+
+
+class DailyTotals(BaseModel):
+    """Merchant home-screen figures for a single day.
+
+    Totals are the synthetic panel plus live entries (see
+    v_ledger_daily_effective); the live_* fields break out the merchant's own
+    recorded share of that total.
+    """
+
+    enterprise_id: str
+    event_date: date
+    total_inflow: Decimal
+    total_expenses: Decimal
+    net: Decimal
+    txn_count: int
+    live_inflow: Decimal
+    live_outflow: Decimal
+    live_txn_count: int
+    has_live_entries: bool
+    # How many in vs out. Live entries only -- the synthetic panel has one
+    # txn_count per day with no direction behind it. For any date after the
+    # panel ends (2026-07-31), including today, everything is live and these
+    # are the true counts.
+    inflow_count: int
+    outflow_count: int
+
+
+class LedgerEntryCreate(BaseModel):
+    """A transaction the merchant (or an officer sitting with them) typed in.
+
+    No voice_id and no extraction: a typed amount was never guessed at, so it
+    carries confidence 1.0 and skips the review queue entirely.
+    """
+
+    direction: str
+    amount: Decimal
+    category: str
+    # defaults to today in the route -- a merchant recording a sale means
+    # today unless they say otherwise
+    event_date: date | None = None
+    tender: str | None = None
+    is_household: bool = False
+    # Set when this entry came from a voice capture the merchant has just
+    # confirmed. Keeps the ledger row joined to the utterance that produced
+    # it, which is what puts the transcript beside the amount in the
+    # transaction list. Omitted for a purely typed entry.
+    voice_id: UUID | None = None
+
+
+class EnterpriseSummary(BaseModel):
+    """Plain-language situation summary, cached per assessment vintage."""
+
+    enterprise_id: str
+    as_of: date
+    lang: str
+    summary: str
+    model: str
+    generated_at: datetime
+    # False means this request paid the ~1.4s generation; useful when checking
+    # whether the cache is doing its job.
+    cached: bool

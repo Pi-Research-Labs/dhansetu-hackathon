@@ -1,17 +1,28 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.deps import get_token_claims
 from app.schemas.enterprise import (
+    DailyTotals,
     DigitalVisibilityDay,
     EnterpriseDetail,
+    EnterpriseSummary,
     ForecastConfidencePoint,
+    LedgerEntryCreate,
+    LedgerTransaction,
     NetInflowHeatmapWeek,
     PaymentMix,
     ReceivablesAgeing,
+    TransactionPage,
     WeeklyCashflow,
 )
+from app.services.summary import get_enterprise_summary
 from app.services.enterprise import (
+    create_transaction,
+    enterprise_exists,
     get_cashflow_forecast,
+    get_daily_totals,
     get_digital_heatmap,
     get_enterprise_card,
     get_latest_alert,
@@ -19,10 +30,18 @@ from app.services.enterprise import (
     get_net_inflow_heatmap,
     get_payment_mix,
     get_receivables_ageing,
+    get_transactions,
     get_weekly_cashflow,
+    voice_entry_belongs_to,
 )
 
 router = APIRouter(tags=["enterprise"])
+
+
+# Mirrors ledger_entries_live.tender's CHECK constraint. Validated here so a
+# typo comes back as a 422 rather than an empty page that looks like "this
+# merchant has no UPI transactions".
+_TENDERS = {"cash", "upi", "wallet", "bank", "credit"}
 
 
 def _check_access(claims: dict, enterprise_id: str) -> None:
@@ -119,3 +138,138 @@ async def enterprise_net_inflow_heatmap(
     if weeks not in (7, 14):
         raise HTTPException(status_code=422, detail="weeks must be 7 or 14")
     return await get_net_inflow_heatmap(enterprise_id, weeks)
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/transactions",
+    response_model=TransactionPage,
+)
+async def enterprise_transactions(
+    enterprise_id: str,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    date_from: date | None = Query(None, description="inclusive lower bound on event_date"),
+    date_to: date | None = Query(None, description="inclusive upper bound on event_date"),
+    tender: str | None = Query(None, description="cash | upi | wallet | bank | credit"),
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    _check_access(claims, enterprise_id)
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(status_code=422, detail="date_from must be on or before date_to")
+    if tender is not None and tender not in _TENDERS:
+        raise HTTPException(status_code=422, detail=f"tender must be one of {', '.join(sorted(_TENDERS))}")
+    return await get_transactions(enterprise_id, limit, offset, date_from, date_to, tender)
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/daily-totals",
+    response_model=DailyTotals,
+)
+async def enterprise_daily_totals(
+    enterprise_id: str,
+    on: date | None = Query(None, description="day to total, defaults to today"),
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    _check_access(claims, enterprise_id)
+    # 404 on an unknown enterprise, but a real enterprise with a quiet day
+    # gets zeros -- "you took nothing today" is a legitimate answer for a
+    # home screen, and the panel ends before today in any case.
+    if not await enterprise_exists(enterprise_id):
+        raise HTTPException(status_code=404, detail="Enterprise not found")
+    return await get_daily_totals(enterprise_id, on or date.today())
+
+
+@router.post(
+    "/enterprise/{enterprise_id}/transactions",
+    response_model=LedgerTransaction,
+    status_code=201,
+)
+async def create_enterprise_transaction(
+    enterprise_id: str,
+    payload: LedgerEntryCreate,
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    """Record a transaction the merchant typed rather than spoke.
+
+    Until now the only way into the ledger was to say it out loud: a merchant
+    with a noisy shop, no confidence speaking to a phone, or simply a
+    correction to make had nowhere to go. The schema always allowed for this
+    ('manual'/'assisted' are in ledger_entries_live.source's CHECK, and the
+    INSERT grant exists) -- only the route was missing.
+    """
+    _check_access(claims, enterprise_id)
+    if not await enterprise_exists(enterprise_id):
+        raise HTTPException(status_code=404, detail="Enterprise not found")
+
+    if payload.direction not in ("inflow", "outflow"):
+        raise HTTPException(status_code=422, detail="direction must be inflow or outflow")
+    if payload.amount <= 0:
+        raise HTTPException(status_code=422, detail="amount must be greater than 0")
+    if not payload.category.strip():
+        raise HTTPException(status_code=422, detail="category is required")
+    if payload.tender is not None and payload.tender not in _TENDERS:
+        raise HTTPException(status_code=422, detail=f"tender must be one of {', '.join(sorted(_TENDERS))}")
+
+    event_date = payload.event_date or date.today()
+    if event_date > date.today():
+        raise HTTPException(status_code=422, detail="event_date cannot be in the future")
+
+    # A voice_id has to belong to THIS enterprise, or a caller could staple
+    # someone else's utterance (and its transcript) onto their own ledger row.
+    if payload.voice_id is not None and not await voice_entry_belongs_to(
+        str(payload.voice_id), enterprise_id
+    ):
+        raise HTTPException(status_code=422, detail="voice_id does not belong to this enterprise")
+
+    # How it was captured, in the schema's own vocabulary, and taken from the
+    # token rather than the request body so a client cannot claim to be
+    # something it isn't: a confirmed voice capture is 'voice', a merchant
+    # typing their own book is 'manual', an officer typing it beside them is
+    # 'assisted'.
+    if payload.voice_id is not None:
+        source = "voice"
+    else:
+        source = "assisted" if claims.get("role") == "officer" else "manual"
+
+    return await create_transaction(
+        enterprise_id=enterprise_id,
+        direction=payload.direction,
+        amount=payload.amount,
+        category=payload.category.strip(),
+        event_date=event_date,
+        tender=payload.tender,
+        is_household=payload.is_household,
+        source=source,
+        voice_id=str(payload.voice_id) if payload.voice_id else None,
+    )
+
+
+_SUMMARY_LANGS = {"en", "hi", "te", "mr", "gu"}
+
+
+@router.get(
+    "/enterprise/{enterprise_id}/summary",
+    response_model=EnterpriseSummary,
+)
+async def enterprise_summary(
+    enterprise_id: str,
+    lang: str = Query("en", description="en | hi | te | mr | gu"),
+    refresh: bool = Query(False, description="bypass the cache and regenerate"),
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    """A short plain-language read on why this enterprise looks the way it does.
+
+    Separate from GET /enterprise/{id} on purpose: generation costs ~1.4s on a
+    cache miss, and the detail card must not wait on it. The client renders the
+    card first and fills this in when it arrives.
+    """
+    _check_access(claims, enterprise_id)
+    if lang not in _SUMMARY_LANGS:
+        raise HTTPException(status_code=422, detail=f"lang must be one of {', '.join(sorted(_SUMMARY_LANGS))}")
+
+    result = await get_enterprise_summary(enterprise_id, lang, refresh)
+    if result is None:
+        # No assessment to describe, or the model call failed. Either way the
+        # card is fine without it, so this is a 404 rather than a 5xx.
+        raise HTTPException(status_code=404, detail="No summary available for this enterprise")
+    return result
