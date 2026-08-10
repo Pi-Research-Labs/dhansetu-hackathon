@@ -5,7 +5,7 @@ import { LatestAlert, RiskPredictionResponse, getEnterpriseSummary } from "@/uti
 import { formatCurrency } from "@/utils/formatters";
 import { Enterprise } from "@/types/enterprise";
 import { ActionParams, TranslationDictionary } from "@/utils/translations/dictionary";
-import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles, Info, TrendingUp, BookOpen } from "lucide-react";
+import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles, Info, TrendingUp, BookOpen, Loader2 } from "lucide-react";
 
 interface RiskAndAdvicePanelProps {
   enterprise: Enterprise;
@@ -73,7 +73,7 @@ export default function RiskAndAdvicePanel({
   const stressColor = stressPct >= 50 ? "#C62828" : stressPct >= 20 ? "#E65100" : "#2E7D32";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
       {/* Risk Warnings & Alert Panel */}
       <div className="bg-white border border-[#E2E6D8] p-4.5 rounded-2xl shadow-2xs space-y-3">
         <div className="flex items-center justify-between border-b border-[#E2E6D8] pb-2.5">
@@ -100,7 +100,10 @@ export default function RiskAndAdvicePanel({
             {summary ? (
               <p className="text-[11.5px] text-[#1A2016] leading-relaxed">{summary}</p>
             ) : (
-              <p className="text-[11px] text-[#5F6656] italic">{t.dash.summaryLoading}</p>
+              <div className="flex items-center gap-2 py-1 text-[11px] text-[#5F6656] italic">
+                <Loader2 className="w-3.5 h-3.5 text-[#2E7D32] animate-spin" />
+                <span>{t.dash.summaryLoading}</span>
+              </div>
             )}
           </div>
         )}
