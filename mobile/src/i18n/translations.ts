@@ -22,9 +22,11 @@ export interface Translations {
   channelsTitle: string;
   channelsSub: string;
   upiLabel: string;
-  appsLabel: string;
+  walletLabel: string;
   cashLabel: string;
   recordedEntriesTitle: string;
+  todaysEntryTitle: string;
+  todayTotalLabel: (total: string, live: string) => string;
   addNew: string;
   noEntries: string;
 
@@ -123,9 +125,11 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'Collection Channels',
     channelsSub: 'How your customers pay you',
     upiLabel: 'UPI',
-    appsLabel: 'Apps',
+    walletLabel: 'Wallet',
     cashLabel: 'Cash',
     recordedEntriesTitle: 'Recorded Entries',
+    todaysEntryTitle: "Today's Entry",
+    todayTotalLabel: (total, live) => `${total} today, of which you recorded ${live}.`,
     addNew: '+ Add New',
     noEntries: 'No transaction entries recorded yet.',
 
@@ -224,9 +228,11 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'भुगतान संग्रह चैनल',
     channelsSub: 'ग्राहक आपको कैसे भुगतान करते हैं',
     upiLabel: 'UPI',
-    appsLabel: 'ऐप्स',
+    walletLabel: 'वॉलेट',
     cashLabel: 'नकद',
     recordedEntriesTitle: 'दर्ज प्रविष्टियाँ',
+    todaysEntryTitle: 'आज की प्रविष्टि',
+    todayTotalLabel: (total, live) => `आज ${total}, जिसमें से आपने ${live} दर्ज किया।`,
     addNew: '+ नई प्रविष्टि',
     noEntries: 'अभी कोई प्रविष्टि दर्ज नहीं की गई है।',
 
@@ -325,9 +331,11 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'पेमेंट वसुली चॅनेल',
     channelsSub: 'ग्राहक तुम्हाला कसे पैसे देतात',
     upiLabel: 'UPI',
-    appsLabel: 'अ‍ॅप्स',
+    walletLabel: 'वॉलेट',
     cashLabel: 'रोख',
     recordedEntriesTitle: 'नोंदवलेल्या नोंदी',
+    todaysEntryTitle: 'आजची नोंद',
+    todayTotalLabel: (total, live) => `आज ${total}, ज्यापैकी तुम्ही ${live} नोंदवले।`,
     addNew: '+ नवीन नोंद',
     noEntries: 'अद्याप कोणतीही नोंद जतन केलेली नाही.',
 
@@ -426,9 +434,11 @@ export const L: Record<SupportedLang, Translations> = {
     channelsTitle: 'చెల్లింపుల సేకరణ మార్గాలు',
     channelsSub: 'వినియోగదారులు మీకు ఎలా చెల్లిస్తారు',
     upiLabel: 'UPI',
-    appsLabel: 'యాప్‌లు',
+    walletLabel: 'వాలెట్',
     cashLabel: 'నగదు',
     recordedEntriesTitle: 'నమోదైన ఎంట్రీలు',
+    todaysEntryTitle: 'ఈరోజు నమోదు',
+    todayTotalLabel: (total, live) => `ఈరోజు ${total}, ఇందులో మీరు నమోదు చేసినది ${live}.`,
     addNew: '+ కొత్తది జత చేయి',
     noEntries: 'ఇంకా ఎంట్రీలు ఏవీ నమోదు కాలేదు.',
 

@@ -5,7 +5,7 @@ import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X, Calendar } f
 import { useMerchantStore, Entry } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
-import { postVoiceEntry, postLedgerEntry } from '@/utils/api-config';
+import { postVoiceEntry, getTransactions, Transaction } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
 
 const VoiceAgentL: Record<string, {
@@ -154,7 +154,7 @@ const monthNames = [
 
 export function AddEntryScreen() {
   const insets = useSafeAreaInsets();
-  const { lang, entries, addEntry, markEntrySynced, enterpriseId } = useMerchantStore();
+  const { lang, entries, addEntry } = useMerchantStore();
   const t = L[lang];
   const vm = VoiceModalL[lang] || VoiceModalL.en;
 
@@ -167,6 +167,90 @@ export function AddEntryScreen() {
   const [customDatePickerVisible, setCustomDatePickerVisible] = useState(false);
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
+
+  const [apiTransactions, setApiTransactions] = useState<Transaction[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingLedger, setIsLoadingLedger] = useState(false);
+
+  const fetchLedger = async (pageNumber: number, replaceList: boolean) => {
+    const enterpriseId = useMerchantStore.getState().enterpriseId;
+    if (!enterpriseId) return;
+
+    setIsLoadingLedger(true);
+    try {
+      let date_from: string | undefined;
+      let date_to: string | undefined;
+      const now = new Date();
+
+      if (dateFilter === 'today') {
+        const todayStr = now.toISOString().split('T')[0];
+        date_from = todayStr;
+        date_to = todayStr;
+      } else if (dateFilter === '7days') {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        date_from = sevenDaysAgo.toISOString().split('T')[0];
+        date_to = now.toISOString().split('T')[0];
+      } else if (dateFilter === 'month') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        date_from = startOfMonth.toISOString().split('T')[0];
+        date_to = now.toISOString().split('T')[0];
+      } else if (dateFilter === 'custom' && customStartDate) {
+        date_from = customStartDate.toISOString().split('T')[0];
+        if (customEndDate) {
+          date_to = customEndDate.toISOString().split('T')[0];
+        } else {
+          date_to = date_from;
+        }
+      }
+
+      const data = await getTransactions(enterpriseId, {
+        page: pageNumber,
+        limit: 10,
+        date_from,
+        date_to,
+      });
+
+      if (replaceList) {
+        setApiTransactions(data.transactions);
+      } else {
+        setApiTransactions((prev) => [...prev, ...data.transactions]);
+      }
+      setTotalCount(data.total);
+    } catch (err) {
+      console.error('Failed to fetch transactions:', err);
+    } finally {
+      setIsLoadingLedger(false);
+    }
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchLedger(1, true);
+  }, [dateFilter, customStartDate, customEndDate]);
+
+  const handleLoadMore = () => {
+    if (isLoadingLedger || apiTransactions.length >= totalCount) return;
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchLedger(nextPage, false);
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  };
+
+  const formatCategoryName = (cat?: string) => {
+    if (!cat) return '';
+    return cat
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
@@ -257,9 +341,6 @@ export function AddEntryScreen() {
   const [modalTranscript, setModalTranscript] = useState('');
   const [modalAmount, setModalAmount] = useState('');
   const [modalType, setModalType] = useState<Entry['type']>('income');
-  // Held between transcription and the merchant confirming, so the ledger row
-  // can be linked back to what was actually said.
-  const [modalVoiceId, setModalVoiceId] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
   // Timers and Refs
@@ -311,42 +392,6 @@ export function AddEntryScreen() {
   const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
     setAlertConfig({ title, message, type });
     setAlertVisible(true);
-  };
-
-  // The ledger stores direction + category; this picker offers six types. Both
-  // an EMI and a fodder purchase are outflows, so the category is what keeps
-  // them distinguishable once they are in ledger_entries_live.
-  const LEDGER_MAPPING: Record<Entry['type'], { direction: 'inflow' | 'outflow'; category: string }> = {
-    income:  { direction: 'inflow',  category: 'sale' },
-    expense: { direction: 'outflow', category: 'expense' },
-    savdep:  { direction: 'outflow', category: 'savings_deposit' },
-    savwd:   { direction: 'inflow',  category: 'savings_withdrawal' },
-    emi:     { direction: 'outflow', category: 'emi' },
-    newloan: { direction: 'inflow',  category: 'loan_received' },
-  };
-
-  /** Push a locally-saved entry to the server. Never throws: the entry is
-   *  already on the device, so a failure here downgrades to "not synced yet"
-   *  rather than losing what the merchant typed. */
-  const syncEntry = async (
-    localId: string,
-    entryType: Entry['type'],
-    numAmount: number,
-    voiceId?: string | null
-  ) => {
-    if (!enterpriseId) return;
-    const mapped = LEDGER_MAPPING[entryType];
-    try {
-      const created = await postLedgerEntry(enterpriseId, {
-        direction: mapped.direction,
-        amount: numAmount,
-        category: mapped.category,
-        voice_id: voiceId ?? undefined,
-      });
-      if (created?.entry_id) markEntrySynced(localId, created.entry_id);
-    } catch (e) {
-      console.log('Ledger sync failed, entry kept locally', e);
-    }
   };
 
   const typeKeys: Entry['type'][] = ['income', 'expense', 'savdep', 'savwd', 'emi', 'newloan'];
@@ -427,7 +472,6 @@ export function AddEntryScreen() {
       }
 
       // Populate modal state
-      setModalVoiceId(data.voice_id || null);
       setModalTranscript(data.transcript || '');
       setModalAmount(data.amount && data.amount > 0 ? formatInputValue(data.amount.toString()) : '');
 
@@ -471,7 +515,6 @@ export function AddEntryScreen() {
     setIsSaved(false);
     setModalAmount('');
     setModalTranscript('');
-    setModalVoiceId(null);
   };
 
   const handleModalSave = () => {
@@ -481,12 +524,11 @@ export function AddEntryScreen() {
       return;
     }
 
-    const localId = addEntry({
+    addEntry({
       type: modalType,
       amount: numAmount,
       note: modalTranscript.trim() || 'Recorded transaction',
     });
-    void syncEntry(localId, modalType, numAmount, modalVoiceId);
 
     // Clear main form inputs
     setAmount('');
@@ -494,6 +536,12 @@ export function AddEntryScreen() {
 
     // Trigger success screen inside the voice modal
     setIsSaved(true);
+
+    // Refresh transactions
+    setTimeout(() => {
+      setCurrentPage(1);
+      fetchLedger(1, true);
+    }, 500);
 
     // Auto-close in 5 seconds
     if (autoCloseTimerRef.current) {
@@ -530,16 +578,21 @@ export function AddEntryScreen() {
       return;
     }
 
-    const localId = addEntry({
+    addEntry({
       type,
       amount: numAmount,
       note: note.trim() || 'Recorded transaction',
     });
-    void syncEntry(localId, type, numAmount);
 
     setAmount('');
     setNote('');
     showToast(lang === 'hi' ? 'लेनदेन प्रविष्टि सफलतापूर्वक सहेजी गई।' : 'Transaction entry successfully recorded into your digital ledger.');
+
+    // Refresh transactions
+    setTimeout(() => {
+      setCurrentPage(1);
+      fetchLedger(1, true);
+    }, 500);
   };
 
   return (
@@ -662,7 +715,7 @@ export function AddEntryScreen() {
         <View style={styles.historyCard}>
           <View style={styles.historyHeader}>
             <History size={16} color="#1D261F" />
-            <Text style={styles.historyTitle}>{t.recentLedgerEntries} ({filteredEntries.length})</Text>
+            <Text style={styles.historyTitle}>{t.recentLedgerEntries} ({totalCount})</Text>
           </View>
 
           {/* Date Range Selector */}
@@ -700,32 +753,73 @@ export function AddEntryScreen() {
             })}
           </View>
 
-          {filteredEntries.length === 0 ? (
+          {isLoadingLedger && apiTransactions.length === 0 ? (
+            <ActivityIndicator size="small" color="#2E7D32" style={{ paddingVertical: 20 }} />
+          ) : apiTransactions.length === 0 ? (
             <Text style={styles.emptyLedgerText}>
               No transaction entries found for the selected range.
             </Text>
           ) : (
-            filteredEntries.map((en) => (
-              <View key={en.id} style={styles.entryRowItem}>
-                <View style={styles.entryMainInfo}>
-                  <Text style={styles.entryTypeTitle}>{t.entryTypes[en.type] || en.type}</Text>
-                  <Text style={styles.entryNoteText}>{en.note}</Text>
-                  {/* Entries saved before this build have no `synced` flag and
-                      were never sent anywhere, so only flag ones we actually
-                      tried and failed to sync -- marking old rows "pending"
-                      would promise a retry that isn't coming. */}
-                  {en.synced === false && (
-                    <Text style={styles.entryPendingText}>Saved on device · not synced yet</Text>
+            <>
+              {apiTransactions.map((en) => {
+                const parsedAmount = parseFloat(en.amount) || 0;
+                const isOutflow = en.direction === 'outflow';
+                const title = formatCategoryName(en.category) || (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
+                const confidencePct = en.confidence ? Math.round(parseFloat(en.confidence) * 100) : null;
+                const sourceText = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : 'Manual';
+                return (
+                  <View key={en.entry_id} style={styles.entryRowItem}>
+                    <View style={styles.entryMainInfo}>
+                      <View style={styles.entryTitleRow}>
+                        <Text style={styles.entryTypeTitle}>{title}</Text>
+                        {en.is_household && (
+                          <View style={styles.householdBadge}>
+                            <Text style={styles.householdBadgeText}>Household</Text>
+                          </View>
+                        )}
+                      </View>
+                      
+                      <View style={styles.entryMetaRow}>
+                        <Text style={styles.entryMetaText}>
+                          {en.tender ? `${en.tender.toUpperCase()}` : ''}
+                          {en.source ? ` • ${sourceText}` : ''}
+                        </Text>
+                      </View>
+
+                      {en.transcript ? (
+                        <View style={styles.transcriptContainer}>
+                          <Mic size={10} color="#475569" style={{ marginRight: 4 }} />
+                          <Text style={styles.transcriptText} numberOfLines={2}>
+                            "{en.transcript}"
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <View style={styles.entryAmountInfo}>
+                      <Text style={[styles.entryAmtText, isOutflow ? styles.textRed : styles.textGreen]}>
+                        {isOutflow ? `-₹ ${parsedAmount.toLocaleString('en-IN')}` : `+₹ ${parsedAmount.toLocaleString('en-IN')}`}
+                      </Text>
+                      <Text style={styles.entryDateText}>{formatDate(en.event_date || en.recorded_at)}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+
+              {apiTransactions.length < totalCount && (
+                <TouchableOpacity
+                  style={styles.loadMoreBtn}
+                  onPress={handleLoadMore}
+                  disabled={isLoadingLedger}
+                  activeOpacity={0.8}
+                >
+                  {isLoadingLedger ? (
+                    <ActivityIndicator size="small" color="#2E7D32" />
+                  ) : (
+                    <Text style={styles.loadMoreBtnText}>Load More</Text>
                   )}
-                </View>
-                <View style={styles.entryAmountInfo}>
-                  <Text style={[styles.entryAmtText, en.type === 'expense' || en.type === 'emi' ? styles.textRed : styles.textGreen]}>
-                    {en.type === 'expense' || en.type === 'emi' ? `-₹ ${en.amount.toLocaleString('en-IN')}` : `+₹ ${en.amount.toLocaleString('en-IN')}`}
-                  </Text>
-                  <Text style={styles.entryDateText}>{en.date}</Text>
-                </View>
-              </View>
-            ))
+                </TouchableOpacity>
+              )}
+            </>
           )}
         </View>
       </ScrollView>
@@ -1187,11 +1281,6 @@ const styles = StyleSheet.create({
     color: '#1D261F',
     fontSize: 13,
     fontWeight: '600',
-  },
-  entryPendingText: {
-    fontSize: 10,
-    color: '#B26A00',
-    marginTop: 2,
   },
   entryNoteText: {
     color: '#6F6B5E',
@@ -1674,5 +1763,64 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  transcriptContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    maxWidth: '90%',
+  },
+  transcriptText: {
+    color: '#475569',
+    fontSize: 10,
+    fontStyle: 'italic',
+  },
+  loadMoreBtn: {
+    marginTop: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAF5',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadMoreBtnText: {
+    color: '#2E7D32',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  entryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  householdBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  householdBadgeText: {
+    color: '#475569',
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  entryMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
+  entryMetaText: {
+    color: '#64748B',
+    fontSize: 10,
+    fontWeight: '500',
   },
 });

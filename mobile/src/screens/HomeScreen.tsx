@@ -34,6 +34,7 @@ export function HomeScreen() {
     weeklyHistory,
     entries,
     receivables,
+    todaysTotals,
     fetchMerchantData,
   } = useMerchantStore();
 
@@ -156,7 +157,7 @@ export function HomeScreen() {
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#1565C0' }]} />
               <CreditCard size={12} color="#6F6B5E" />
-              <Text style={styles.legendText}>{t.appsLabel} ({Math.round(appShare * 100)}%)</Text>
+              <Text style={styles.legendText}>{t.walletLabel} ({Math.round(appShare * 100)}%)</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: '#C9CDBF' }]} />
@@ -200,33 +201,46 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* Recorded Entries Ledger */}
+        {/* Today's Entry Summary */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>{t.recordedEntriesTitle}</Text>
+            <Text style={styles.sectionTitle}>{t.todaysEntryTitle}</Text>
             <TouchableOpacity onPress={() => router.push('/add-entry')}>
               <Text style={styles.actionLinkText}>{t.addNew}</Text>
             </TouchableOpacity>
           </View>
 
-          {entries.length === 0 ? (
-            <Text style={styles.emptyLedgerText}>{t.noEntries}</Text>
-          ) : (
-            entries.slice(0, 5).map((en) => (
-              <View key={en.id} style={styles.entryRowItem}>
-                <View style={styles.entryMainInfo}>
-                  <Text style={styles.entryTypeTitle}>{t.entryTypes[en.type] || en.type}</Text>
-                  <Text style={styles.entryNoteText}>{en.note}</Text>
-                </View>
-                <View style={styles.entryAmountInfo}>
-                  <Text style={[styles.entryAmtText, en.type === 'expense' || en.type === 'emi' ? styles.textRed : styles.textGreen]}>
-                    {en.type === 'expense' || en.type === 'emi' ? `-₹ ${en.amount.toLocaleString('en-IN')}` : `+₹ ${en.amount.toLocaleString('en-IN')}`}
-                  </Text>
-                  <Text style={styles.entryDateText}>{en.date}</Text>
-                </View>
+          <View style={styles.todayTotalsGrid}>
+            <View style={styles.todayTotalBox}>
+              <View style={styles.todayHeaderRow}>
+                <Text style={styles.todayBoxLabel}>{t.inflowLabel} (Money In)</Text>
               </View>
-            ))
-          )}
+              <Text style={[styles.todayBoxValue, styles.textGreen]}>
+                +₹ {(todaysTotals?.total_inflow ?? 0).toLocaleString('en-IN')}
+              </Text>
+              <Text style={styles.todayBoxSubText}>
+                {t.todayTotalLabel(
+                  `₹ ${(todaysTotals?.total_inflow ?? 0).toLocaleString('en-IN')}`,
+                  `₹ ${(todaysTotals?.live_inflow ?? 0).toLocaleString('en-IN')}`
+                )}
+              </Text>
+            </View>
+
+            <View style={styles.todayTotalBox}>
+              <View style={styles.todayHeaderRow}>
+                <Text style={styles.todayBoxLabel}>{t.outflowLabel} (Money Out)</Text>
+              </View>
+              <Text style={[styles.todayBoxValue, styles.textRed]}>
+                -₹ {(todaysTotals?.total_outflow ?? 0).toLocaleString('en-IN')}
+              </Text>
+              <Text style={styles.todayBoxSubText}>
+                {t.todayTotalLabel(
+                  `₹ ${(todaysTotals?.total_outflow ?? 0).toLocaleString('en-IN')}`,
+                  `₹ ${(todaysTotals?.live_outflow ?? 0).toLocaleString('en-IN')}`
+                )}
+              </Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -527,5 +541,39 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '600',
     marginTop: 2,
+  },
+  todayTotalsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  todayTotalBox: {
+    flex: 1,
+    backgroundColor: '#FAFAF5',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+  },
+  todayHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  todayBoxLabel: {
+    color: '#6F6B5E',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  todayBoxValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  todayBoxSubText: {
+    color: '#6F6B5E',
+    fontSize: 10,
+    marginTop: 4,
+    lineHeight: 13,
   },
 });
