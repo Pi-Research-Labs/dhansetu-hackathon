@@ -448,6 +448,61 @@ paging, so a client can drive infinite scroll without a second request.
 the amount, which is the whole justification for a voice ledger the merchant
 can audit.
 
+## `POST /enterprise/{enterprise_id}/transactions` — officer (any) or merchant (own only)
+
+Record a transaction the merchant **typed** rather than spoke. Until this
+existed, the only route into the ledger was `POST /voice/entries` — a merchant
+in a noisy shop, or one who simply wanted to correct a figure, had nowhere to
+go. Returns `201` with the created entry in the same shape `GET .../transactions`
+returns, so a client can prepend the response straight onto its list.
+
+```json
+// Request
+{
+  "direction": "inflow",        // required — inflow | outflow
+  "amount": 740.50,             // required — must be > 0
+  "category": "milk_sale",      // required — free text, non-blank
+  "event_date": "2026-08-10",   // optional — defaults to today, cannot be future
+  "tender": "cash",             // optional — cash | upi | wallet | bank | credit
+  "is_household": false         // optional — true = drawings, not a business cost
+}
+
+// Response 201
+{
+  "entry_id": "61c7360b-624a-4b2c-af1f-676d90df1b5c",
+  "enterprise_id": "ENT0031",
+  "event_date": "2026-08-10",
+  "recorded_at": "2026-08-10T04:51:09.630475Z",
+  "direction": "inflow",
+  "amount": "740.50",
+  "category": "milk_sale",
+  "tender": "cash",
+  "is_household": false,
+  "source": "manual",           // set from the token, never the request body
+  "confidence": "1.0000",
+  "voice_id": null,
+  "transcript": null,
+  "detected_lang": null,
+  "channel": null
+}
+```
+
+`source` records **who typed it**, taken from the token rather than the body so
+a client can't claim to be something it isn't: a merchant entering their own
+book is `manual`, an officer entering it sitting beside them is `assisted`.
+
+`confidence` is `1.0` because nothing was inferred — a person typed the number.
+That also keeps typed entries out of the voice review queue, which exists to
+catch bad regex parses and has nothing to check here.
+
+Validation failures all return `422`: unknown `direction`, `amount <= 0`, blank
+`category`, unrecognised `tender`, or an `event_date` in the future. `403` for a
+merchant posting to another enterprise, `404` for an unknown one.
+
+Entries land in `ledger_entries_live` and flow straight into
+`GET .../transactions`, `GET .../daily-totals` and the weekly cashflow views —
+same as a voice entry, because it is the same table.
+
 ## `GET /enterprise/{enterprise_id}/daily-totals` — officer (any) or merchant (own only)
 
 One day's money in and money out — built for the mobile app's landing

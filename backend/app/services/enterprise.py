@@ -224,3 +224,49 @@ async def enterprise_exists(enterprise_id: str) -> bool:
                 enterprise_id,
             )
         )
+
+
+async def create_transaction(
+    enterprise_id: str,
+    direction: str,
+    amount: Decimal,
+    category: str,
+    event_date: date,
+    tender: str | None,
+    is_household: bool,
+    source: str,
+) -> dict:
+    """Insert a typed ledger entry and return it in the read shape.
+
+    confidence is 1.0 because nothing was inferred -- a person typed the
+    number. That also keeps it out of the voice review queue, which exists to
+    catch bad regex parses and has nothing to check here.
+
+    Returns the row via v_enterprise_transactions rather than the INSERT's own
+    RETURNING, so a created entry is byte-identical to what GET .../transactions
+    would hand back for it -- same columns, same transcript/channel nulls.
+    """
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        entry_id = await conn.fetchval(
+            """
+            INSERT INTO dhansetu.ledger_entries_live
+                (enterprise_id, event_date, recorded_at, direction, amount,
+                 category, tender, is_household, source, voice_id, confidence)
+            VALUES ($1, $2, now(), $3, $4, $5, $6, $7, $8, NULL, 1.0)
+            RETURNING entry_id
+            """,
+            enterprise_id,
+            event_date,
+            direction,
+            amount,
+            category,
+            tender,
+            is_household,
+            source,
+        )
+        row = await conn.fetchrow(
+            "SELECT * FROM dhansetu.v_enterprise_transactions WHERE entry_id = $1",
+            entry_id,
+        )
+        return dict(row)

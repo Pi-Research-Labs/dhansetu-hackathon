@@ -8,6 +8,8 @@ from app.schemas.enterprise import (
     DigitalVisibilityDay,
     EnterpriseDetail,
     ForecastConfidencePoint,
+    LedgerEntryCreate,
+    LedgerTransaction,
     NetInflowHeatmapWeek,
     PaymentMix,
     ReceivablesAgeing,
@@ -15,6 +17,7 @@ from app.schemas.enterprise import (
     WeeklyCashflow,
 )
 from app.services.enterprise import (
+    create_transaction,
     enterprise_exists,
     get_cashflow_forecast,
     get_daily_totals,
@@ -171,3 +174,56 @@ async def enterprise_daily_totals(
     if not await enterprise_exists(enterprise_id):
         raise HTTPException(status_code=404, detail="Enterprise not found")
     return await get_daily_totals(enterprise_id, on or date.today())
+
+
+@router.post(
+    "/enterprise/{enterprise_id}/transactions",
+    response_model=LedgerTransaction,
+    status_code=201,
+)
+async def create_enterprise_transaction(
+    enterprise_id: str,
+    payload: LedgerEntryCreate,
+    claims: dict = Depends(get_token_claims),
+) -> dict:
+    """Record a transaction the merchant typed rather than spoke.
+
+    Until now the only way into the ledger was to say it out loud: a merchant
+    with a noisy shop, no confidence speaking to a phone, or simply a
+    correction to make had nowhere to go. The schema always allowed for this
+    ('manual'/'assisted' are in ledger_entries_live.source's CHECK, and the
+    INSERT grant exists) -- only the route was missing.
+    """
+    _check_access(claims, enterprise_id)
+    if not await enterprise_exists(enterprise_id):
+        raise HTTPException(status_code=404, detail="Enterprise not found")
+
+    if payload.direction not in ("inflow", "outflow"):
+        raise HTTPException(status_code=422, detail="direction must be inflow or outflow")
+    if payload.amount <= 0:
+        raise HTTPException(status_code=422, detail="amount must be greater than 0")
+    if not payload.category.strip():
+        raise HTTPException(status_code=422, detail="category is required")
+    if payload.tender is not None and payload.tender not in _TENDERS:
+        raise HTTPException(status_code=422, detail=f"tender must be one of {', '.join(sorted(_TENDERS))}")
+
+    event_date = payload.event_date or date.today()
+    if event_date > date.today():
+        raise HTTPException(status_code=422, detail="event_date cannot be in the future")
+
+    # Who typed it, in the schema's own vocabulary: a merchant entering their
+    # own book is 'manual'; an officer entering it sitting beside them is
+    # 'assisted'. Taken from the token, never from the request body, so a
+    # client cannot claim to be something it isn't.
+    source = "assisted" if claims.get("role") == "officer" else "manual"
+
+    return await create_transaction(
+        enterprise_id=enterprise_id,
+        direction=payload.direction,
+        amount=payload.amount,
+        category=payload.category.strip(),
+        event_date=event_date,
+        tender=payload.tender,
+        is_household=payload.is_household,
+        source=source,
+    )

@@ -232,3 +232,20 @@ class DailyTotals(BaseModel):
     # are the true counts.
     inflow_count: int
     outflow_count: int
+
+
+class LedgerEntryCreate(BaseModel):
+    """A transaction the merchant (or an officer sitting with them) typed in.
+
+    No voice_id and no extraction: a typed amount was never guessed at, so it
+    carries confidence 1.0 and skips the review queue entirely.
+    """
+
+    direction: str
+    amount: Decimal
+    category: str
+    # defaults to today in the route -- a merchant recording a sale means
+    # today unless they say otherwise
+    event_date: date | None = None
+    tender: str | None = None
+    is_household: bool = False
