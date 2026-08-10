@@ -305,13 +305,14 @@ async def get_market_intelligence(sub_type_query: str | None = None, enterprise_
                 sub_type_id,
             )
             if chart_rows:
+                trailing_labels = _get_trailing_12_months_labels()
                 chart_data = [
                     {
-                        "month": r["month"],
+                        "month": trailing_labels[idx] if idx < len(trailing_labels) else r["month"],
                         "price_index": float(r["price_index"]) if r["price_index"] is not None else 100.0,
                         "rainfall_mm": float(r["rainfall_mm"]) if r["rainfall_mm"] is not None else 0.0,
                     }
-                    for r in chart_rows
+                    for idx, r in enumerate(chart_rows)
                 ]
 
             # 3. Risk cards view
