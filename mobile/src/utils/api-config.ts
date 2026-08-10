@@ -287,6 +287,27 @@ export const getTransactions = async (
   return response.data;
 };
 
+export interface PostTransactionRequest {
+  direction: 'inflow' | 'outflow' | string;
+  amount: number;
+  category: string;
+  tender?: string;
+  voice_id?: string | null;
+}
+
+/**
+ * Record a new transaction entry (manual or voice-derived)
+ * @param enterpriseId Enterprise ID
+ * @param data Transaction payload
+ */
+export const postTransaction = async (
+  enterpriseId: string,
+  data: PostTransactionRequest
+): Promise<Transaction> => {
+  const response = await apiClient.post<Transaction>(`/enterprise/${enterpriseId}/transactions`, data);
+  return response.data;
+};
+
 /**
  * Fetch daily cashflow totals (money in/out) for the enterprise
  * @param id Enterprise ID
