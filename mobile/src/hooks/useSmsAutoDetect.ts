@@ -351,9 +351,9 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
             setIsListening(true);
             console.log('[SMS] Auto-started listener on mount');
 
-            // Run historical scan if not done yet
+            // Run historical scan only if the user has opted in AND it hasn't been done yet
             const state = store.getState();
-            if (!state.smsHistoricalScanDone) {
+            if (state.smsHistoryImportEnabled && !state.smsHistoricalScanDone) {
               runHistoricalScan();
             }
           })

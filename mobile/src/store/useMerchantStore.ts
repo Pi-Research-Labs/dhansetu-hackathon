@@ -106,6 +106,10 @@ export interface MerchantStore {
   incrementSmsDetectedCount: () => void;
   smsHistoricalScanDone: boolean;
   setSmsHistoricalScanDone: (done: boolean) => void;
+
+  // SMS History Import (opt-in, disabled by default)
+  smsHistoryImportEnabled: boolean;
+  setSmsHistoryImportEnabled: (enabled: boolean) => void;
   /** Check if a dedup key already exists in recent entries */
   hasDedupKey: (key: string) => boolean;
 
@@ -227,6 +231,13 @@ export const useMerchantStore = create<MerchantStore>()(
   setSmsHistoricalScanDone: (done) => {
     set({ smsHistoricalScanDone: done });
     AsyncStorage.setItem('@dhansetu_sms_scan_done', done ? 'true' : 'false').catch((e) => console.log('Error saving scan flag', e));
+  },
+
+  // SMS History Import (opt-in, disabled by default)
+  smsHistoryImportEnabled: false,
+  setSmsHistoryImportEnabled: (enabled) => {
+    set({ smsHistoryImportEnabled: enabled });
+    AsyncStorage.setItem('@dhansetu_sms_history_import', enabled ? 'true' : 'false').catch((e) => console.log('Error saving history import toggle', e));
   },
   hasDedupKey: (key) => {
     const entries = get().entries;

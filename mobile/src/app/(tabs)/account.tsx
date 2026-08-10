@@ -22,6 +22,7 @@ import {
   Minus,
   MessageSquare,
   Smartphone,
+  History,
 } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L, SupportedLang } from '@/i18n/translations';
@@ -57,6 +58,8 @@ export default function AccountScreen() {
     smsAutoDetectEnabled,
     setSmsAutoDetectEnabled,
     smsDetectedCount,
+    smsHistoryImportEnabled,
+    setSmsHistoryImportEnabled,
   } = useMerchantStore();
 
   // SMS Auto-Detect Hook
@@ -337,10 +340,68 @@ export default function AccountScreen() {
                 ]} />
               </View>
 
+              <Text style={styles.smsPrivacyNote}>
+                🔒 All SMS parsing happens on your device. No message data is uploaded.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* SMS History Import Setting Card (Opt-In, disabled by default) */}
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={[styles.settingIconBox, { backgroundColor: '#FFF3E0' }]}>
+              <History size={18} color="#E65100" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>Import SMS History</Text>
+              <Text style={styles.settingSub}>
+                {smsHistoryImportEnabled
+                  ? smsAutoDetect.isScanning
+                    ? 'Scanning past SMS inbox...'
+                    : smsAutoDetect.historicalScanCount > 0
+                      ? `${smsAutoDetect.historicalScanCount} past transactions imported`
+                      : 'Enabled · Will scan on next listener start'
+                  : 'Scan past bank SMS to import older transactions'}
+              </Text>
+            </View>
+            <Switch
+              value={smsHistoryImportEnabled}
+              onValueChange={async (value) => {
+                if (value) {
+                  // Need SMS permission for history scan too
+                  if (smsAutoDetect.permissionStatus !== 'granted') {
+                    const granted = await smsAutoDetect.requestPermission();
+                    if (!granted) {
+                      showAlert(
+                        'Permission Required',
+                        'SMS permission is needed to scan your inbox for past bank transactions. Please grant the permission in your device settings.',
+                        'warning'
+                      );
+                      return;
+                    }
+                  }
+                  setSmsHistoryImportEnabled(true);
+                  // Trigger the scan immediately if the listener is already running
+                  if (smsAutoDetect.isListening) {
+                    smsAutoDetect.runHistoricalScan();
+                  }
+                } else {
+                  setSmsHistoryImportEnabled(false);
+                }
+              }}
+              trackColor={{ false: '#E7E5DA', true: '#FFCC80' }}
+              thumbColor={smsHistoryImportEnabled ? '#E65100' : '#BDBDBD'}
+            />
+          </View>
+
+          {/* History scan status */}
+          {smsHistoryImportEnabled && (
+            <View style={styles.smsStatusContainer}>
               {smsAutoDetect.isScanning && (
                 <View style={styles.smsStatusRow}>
-                  <ActivityIndicator size={10} color="#1565C0" />
-                  <Text style={[styles.smsStatusText, { color: '#1565C0' }]}>
+                  <ActivityIndicator size={10} color="#E65100" />
+                  <Text style={[styles.smsStatusText, { color: '#E65100' }]}>
                     Scanning past SMS for transactions...
                   </Text>
                 </View>
@@ -356,7 +417,7 @@ export default function AccountScreen() {
               )}
 
               <Text style={styles.smsPrivacyNote}>
-                🔒 All SMS parsing happens on your device. No message data is uploaded.
+                🔒 Scans your SMS inbox on-device only. No message data is uploaded.
               </Text>
             </View>
           )}
