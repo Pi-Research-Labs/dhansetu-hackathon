@@ -102,6 +102,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /enterprise/{id}/summary` | officer any, merchant own | JSON | LLM-written plain-language read on the numbers, cached |
 | `GET /risk/{id}/predict` | officer any, merchant own | JSON | serving stub, not live ML yet |
 | `POST /voice/entries` | merchant only | JSON | **multipart**, not JSON body — transcribes and parses only, writes no ledger row |
+| `GET /tasks` | officer only | array of JSON | caller's own field-visit tasks — where a valid `task_id` comes from |
 | `POST /outcome` | officer only | JSON | closes a field-visit task |
 | `GET /evidence/district-events` | officer only | array of JSON | shocks hitting ≥30% of a district×sector cohort |
 | `GET /evidence/alert-precision` | officer only | array of JSON | confirmation rate by tier, book-wide |
@@ -809,6 +810,44 @@ only 9 out-of-time episodes. Show the n alongside the number; don't quote
 calling officer — there's no `officer_id` on the underlying view yet, so a
 per-officer breakdown isn't available without extending it first (see
 `KPIS.md`'s "Gaps worth naming").
+
+## `GET /tasks` — officer only
+
+The calling officer's field-visit tasks, **oldest first**. Scoped to the caller
+from the token, never a request param, so one officer cannot see or close
+another's visits.
+
+This exists because `POST /outcome` needs a real `task_id` and nothing served
+one. Task ids are **sequential** (`TK00112`), so a client cannot construct one
+from the enterprise or alert id — the dashboard was building
+`` `TK-${alert_id}` ``, which never matched a row and made every outcome
+submission fail with `400 unknown task_id`.
+
+| param | default | notes |
+|---|---|---|
+| `status` | `open` | `open`, `closed`, or `all`; anything else is a `422` |
+| `enterprise_id` | none | only tasks for that enterprise |
+
+```json
+// Response 200 — array of:
+{
+  "task_id": "TK00112",
+  "alert_id": "AL00116",
+  "enterprise_id": "ENT0031",
+  "officer_id": "FO1",
+  "assigned_on": "2025-10-01",
+  "priority_score": 0.8728,
+  "status": "open"
+}
+```
+
+Ordering is `assigned_on ASC, priority_score DESC, task_id ASC` — the
+longest-open task is the most overdue, and the tiebreakers make the first
+element a deterministic pick rather than whatever the planner returned. The
+dashboard takes `[0]` of `?status=open&enterprise_id=…` and disables its submit
+button when the list is empty.
+
+A merchant token on this route → `403`.
 
 ## `POST /outcome` — officer only
 
