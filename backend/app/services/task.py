@@ -27,7 +27,21 @@ async def get_officer_tasks(
             SELECT t.task_id, t.alert_id, t.enterprise_id, t.officer_id,
                    t.assigned_on, t.priority_score, t.status,
                    a.expires_at    AS alert_expires_at,
-                   (a.expires_at >= CURRENT_DATE) AS alert_live
+                   (a.expires_at >= CURRENT_DATE) AS alert_live,
+                   -- Why this visit exists. A task is never created on its
+                   -- own: an alert fires and a task is raised off it a day or
+                   -- two later, so the alert's reasons and figures ARE the
+                   -- task's justification. Returned here so a client does not
+                   -- have to fetch the alert separately just to explain the
+                   -- task it is about to close.
+                   a.raised_at     AS alert_raised_at,
+                   a.risk_tier     AS alert_risk_tier,
+                   a.reason_1      AS alert_reason_1,
+                   a.reason_2      AS alert_reason_2,
+                   a.reason_3      AS alert_reason_3,
+                   a.projected_shortfall,
+                   a.shortfall_week_of,
+                   a.deadline_date
             FROM dhansetu.officer_tasks t
             LEFT JOIN dhansetu.alerts a ON a.alert_id = t.alert_id
             WHERE t.officer_id = $1

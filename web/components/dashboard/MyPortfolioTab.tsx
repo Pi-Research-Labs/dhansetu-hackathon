@@ -140,6 +140,7 @@ export default function MyPortfolioTab({
           <>
             {/* Top Officer Field Visit Outcome Checkbar */}
             <OfficerVisitOutcomeBar
+              t={t}
               enterprise={selectedEnterprise}
               latestAlert={enterpriseDetails?.latest_alert}
             />
