@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image, ActivityIndicator, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -20,6 +20,9 @@ import {
   MapPin,
   Plus,
   Minus,
+  MessageSquare,
+  Smartphone,
+  History,
 } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L, SupportedLang } from '@/i18n/translations';
@@ -27,12 +30,13 @@ import { GovHeader } from '@/components/common/GovHeader';
 import { SecurityBadge } from '@/components/common/SecurityBadge';
 import { API_BASE_URL, apiClient } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
+import { useSmsAutoDetect } from '@/hooks/useSmsAutoDetect';
 
-const LANG_LIST: { id: SupportedLang; label: string; flag: string }[] = [
-  { id: 'en', label: 'English', flag: '🇬🇧' },
-  { id: 'hi', label: 'हिन्दी (Hindi)', flag: '🇮🇳' },
-  { id: 'mr', label: 'मराठी (Marathi)', flag: '🇮🇳' },
-  { id: 'te', label: 'తెలుగు (Telugu)', flag: '🇮🇳' },
+const LANG_LIST: { id: SupportedLang; label: string }[] = [
+  { id: 'en', label: 'English' },
+  { id: 'hi', label: 'हिन्दी (Hindi)' },
+  { id: 'mr', label: 'मराठी (Marathi)' },
+  { id: 'te', label: 'తెలుగు (Telugu)' },
 ];
 
 export default function AccountScreen() {
@@ -51,7 +55,15 @@ export default function AccountScreen() {
     logout,
     token,
     enterpriseId,
+    smsAutoDetectEnabled,
+    setSmsAutoDetectEnabled,
+    smsDetectedCount,
+    smsHistoryImportEnabled,
+    setSmsHistoryImportEnabled,
   } = useMerchantStore();
+
+  // SMS Auto-Detect Hook
+  const smsAutoDetect = useSmsAutoDetect();
 
   const t = L[lang];
 
@@ -177,11 +189,7 @@ export default function AccountScreen() {
             <Text style={styles.infoVal}>{gstin}</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Phone size={15} color="#6F6B5E" />
-            <Text style={styles.infoLabel}>Registered Mobile:</Text>
-            <Text style={styles.infoVal}>{phone}</Text>
-          </View>
+
 
           <View style={styles.infoRow}>
             <Award size={15} color="#2E7D32" />
@@ -218,7 +226,7 @@ export default function AccountScreen() {
                   onPress={() => setLang(item.id)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.langFlag}>{item.flag}</Text>
+                  <Globe size={14} color={isSelected ? "#2E7D32" : "#6F6B5E"} />
                   <Text style={[styles.langChipText, isSelected && styles.langChipTextSelected]}>
                     {item.label}
                   </Text>
@@ -264,6 +272,158 @@ export default function AccountScreen() {
             <ChevronRight size={18} color="#6F6B5E" />
           </View>
         </TouchableOpacity>
+
+        {/* SMS Auto-Detect Setting Card */}
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={[styles.settingIconBox, { backgroundColor: '#E8F0FE' }]}>
+              <MessageSquare size={18} color="#1565C0" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>Auto-Detect Bank SMS</Text>
+              <Text style={styles.settingSub}>
+                {smsAutoDetect.isListening
+                  ? `Active · ${smsDetectedCount} entries auto-detected`
+                  : smsAutoDetect.permissionStatus === 'unavailable'
+                    ? 'Available on Android only'
+                    : smsAutoDetect.permissionStatus === 'denied'
+                      ? 'SMS permission required'
+                      : 'Detect transactions from bank SMS'}
+              </Text>
+            </View>
+            <Switch
+              value={smsAutoDetectEnabled}
+              onValueChange={async (value) => {
+                if (value) {
+                  // Request permission first if not granted
+                  if (smsAutoDetect.permissionStatus !== 'granted') {
+                    const granted = await smsAutoDetect.requestPermission();
+                    if (!granted) {
+                      showAlert(
+                        'Permission Required',
+                        'SMS permission is needed to auto-detect bank transactions. Please grant the permission in your device settings.',
+                        'warning'
+                      );
+                      return;
+                    }
+                  }
+                  setSmsAutoDetectEnabled(true);
+                  await smsAutoDetect.startListening();
+                } else {
+                  setSmsAutoDetectEnabled(false);
+                  await smsAutoDetect.stopListening();
+                }
+              }}
+              trackColor={{ false: '#E7E5DA', true: '#A5D6A7' }}
+              thumbColor={smsAutoDetectEnabled ? '#2E7D32' : '#BDBDBD'}
+            />
+          </View>
+
+          {/* Status Indicators */}
+          {smsAutoDetectEnabled && (
+            <View style={styles.smsStatusContainer}>
+              <View style={styles.smsStatusRow}>
+                <Smartphone size={12} color={smsAutoDetect.isListening ? '#2E7D32' : '#C77700'} />
+                <Text style={[
+                  styles.smsStatusText,
+                  { color: smsAutoDetect.isListening ? '#2E7D32' : '#C77700' }
+                ]}>
+                  {smsAutoDetect.isListening ? 'Listening for bank SMS' : 'Starting listener...'}
+                </Text>
+                <View style={[
+                  styles.smsStatusDot,
+                  { backgroundColor: smsAutoDetect.isListening ? '#4CAF50' : '#FFA726' }
+                ]} />
+              </View>
+
+              <View style={styles.smsPrivacyNoteContainer}>
+                <Lock size={10} color="#9E9E9E" />
+                <Text style={styles.smsPrivacyNote}>
+                  All SMS parsing happens on your device. No message data is uploaded.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* SMS History Import Setting Card (Opt-In, disabled by default) */}
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={[styles.settingIconBox, { backgroundColor: '#FFF3E0' }]}>
+              <History size={18} color="#E65100" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>Import SMS History</Text>
+              <Text style={styles.settingSub}>
+                {smsHistoryImportEnabled
+                  ? smsAutoDetect.isScanning
+                    ? 'Scanning past SMS inbox...'
+                    : smsAutoDetect.historicalScanCount > 0
+                      ? `${smsAutoDetect.historicalScanCount} past transactions imported`
+                      : 'Enabled · Will scan on next listener start'
+                  : 'Scan past bank SMS to import older transactions'}
+              </Text>
+            </View>
+            <Switch
+              value={smsHistoryImportEnabled}
+              onValueChange={async (value) => {
+                if (value) {
+                  // Need SMS permission for history scan too
+                  if (smsAutoDetect.permissionStatus !== 'granted') {
+                    const granted = await smsAutoDetect.requestPermission();
+                    if (!granted) {
+                      showAlert(
+                        'Permission Required',
+                        'SMS permission is needed to scan your inbox for past bank transactions. Please grant the permission in your device settings.',
+                        'warning'
+                      );
+                      return;
+                    }
+                  }
+                  setSmsHistoryImportEnabled(true);
+                  // Trigger the scan immediately if the listener is already running
+                  if (smsAutoDetect.isListening) {
+                    smsAutoDetect.runHistoricalScan();
+                  }
+                } else {
+                  setSmsHistoryImportEnabled(false);
+                }
+              }}
+              trackColor={{ false: '#E7E5DA', true: '#FFCC80' }}
+              thumbColor={smsHistoryImportEnabled ? '#E65100' : '#BDBDBD'}
+            />
+          </View>
+
+          {/* History scan status */}
+          {smsHistoryImportEnabled && (
+            <View style={styles.smsStatusContainer}>
+              {smsAutoDetect.isScanning && (
+                <View style={styles.smsStatusRow}>
+                  <ActivityIndicator size={10} color="#E65100" />
+                  <Text style={[styles.smsStatusText, { color: '#E65100' }]}>
+                    Scanning past SMS for transactions...
+                  </Text>
+                </View>
+              )}
+
+              {smsAutoDetect.historicalScanCount > 0 && !smsAutoDetect.isScanning && (
+                <View style={styles.smsStatusRow}>
+                  <CheckCircle2 size={12} color="#2E7D32" />
+                  <Text style={[styles.smsStatusText, { color: '#2E7D32' }]}>
+                    {smsAutoDetect.historicalScanCount} past transactions imported
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.smsPrivacyNoteContainer}>
+                <Lock size={10} color="#9E9E9E" />
+                <Text style={styles.smsPrivacyNote}>
+                  Scans your SMS inbox on-device only. No message data is uploaded.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
 
         {/* Verified Business Location Card */}
         {enterpriseId && token && (
@@ -706,6 +866,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  /* SMS Auto-Detect Styles */
+  smsStatusContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E7E5DA',
+    gap: 8,
+  },
+  smsStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  smsStatusText: {
+    fontSize: 11,
+    fontWeight: '500',
+    flex: 1,
+  },
+  smsStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  smsPrivacyNote: {
+    fontSize: 10,
+    color: '#9E9E9E',
+    flex: 1,
+    lineHeight: 14,
+  },
+  smsPrivacyNoteContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
   },
   /* Custom Modal Styles */
   modalOverlay: {

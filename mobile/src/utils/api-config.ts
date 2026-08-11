@@ -279,11 +279,16 @@ export const getTransactions = async (
   params: {
     page?: number;
     limit?: number;
+    offset?: number;
     date_from?: string;
     date_to?: string;
   } = {}
 ): Promise<GetTransactionsResponse> => {
-  const response = await apiClient.get<GetTransactionsResponse>(`/enterprise/${id}/transactions`, { params });
+  const queryParams: any = { ...params };
+  if (params.page && params.limit) {
+    queryParams.offset = (params.page - 1) * params.limit;
+  }
+  const response = await apiClient.get<GetTransactionsResponse>(`/enterprise/${id}/transactions`, { params: queryParams });
   return response.data;
 };
 

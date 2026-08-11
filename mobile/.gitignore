@@ -13,8 +13,14 @@ web-build/
 expo-env.d.ts
 
 # Native builds & generated folders
-/ios
-/android
+# NOTE: /android and /ios are NOT ignored because we have custom native
+# modules (SmsListenerModule, SmsReceiver). These must be committed.
+# Only build artifacts are ignored:
+/ios/build/
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/local.properties
 .kotlin/
 *.orig.*
 *.jks

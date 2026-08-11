@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal, Animated, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X, Calendar } from 'lucide-react-native';
+import { PlusCircle, CheckCircle2, History, Mic, Square, Trash2, X, Calendar, Smartphone, Edit } from 'lucide-react-native';
 import { useMerchantStore, Entry } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
 import { postVoiceEntry, getTransactions, Transaction, postTransaction } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
+import { useSmsAutoDetect } from '@/hooks/useSmsAutoDetect';
 
 const VoiceAgentL: Record<string, {
   title: string;
@@ -158,6 +159,9 @@ export function AddEntryScreen() {
   const t = L[lang];
   const vm = VoiceModalL[lang] || VoiceModalL.en;
 
+  // SMS Auto-Detect Hook
+  const smsAutoDetect = useSmsAutoDetect();
+
   const [type, setType] = useState<Entry['type']>('income');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -178,6 +182,7 @@ export function AddEntryScreen() {
     if (!enterpriseId) return;
 
     setIsLoadingLedger(true);
+    console.log('[fetchLedger] Fetching ledger for page:', pageNumber, 'replaceList:', replaceList);
     try {
       let date_from: string | undefined;
       let date_to: string | undefined;
@@ -205,6 +210,7 @@ export function AddEntryScreen() {
         }
       }
 
+      console.log('[fetchLedger] Calling getTransactions with filters:', { page: pageNumber, limit: 10, date_from, date_to });
       const data = await getTransactions(enterpriseId, {
         page: pageNumber,
         limit: 10,
@@ -212,12 +218,18 @@ export function AddEntryScreen() {
         date_to,
       });
 
+      console.log('[fetchLedger] Received transactions count:', data.transactions?.length, 'total count on server:', data.total);
       if (replaceList) {
         setApiTransactions(data.transactions);
       } else {
-        setApiTransactions((prev) => [...prev, ...data.transactions]);
+        setApiTransactions((prev) => {
+          const existingIds = new Set(prev.map(t => t.entry_id));
+          const newOnly = data.transactions.filter(t => !existingIds.has(t.entry_id));
+          console.log('[fetchLedger] Appending new items:', newOnly.length);
+          return [...prev, ...newOnly];
+        });
       }
-      setTotalCount(data.total);
+      setTotalCount(Number(data.total) || 0);
     } catch (err) {
       console.error('Failed to fetch transactions:', err);
     } finally {
@@ -231,9 +243,14 @@ export function AddEntryScreen() {
   }, [dateFilter, customStartDate, customEndDate]);
 
   const handleLoadMore = () => {
-    if (isLoadingLedger || apiTransactions.length >= totalCount) return;
+    console.log('[handleLoadMore] Clicked. isLoadingLedger:', isLoadingLedger, 'apiTransactions.length:', apiTransactions.length, 'totalCount:', totalCount);
+    if (isLoadingLedger || apiTransactions.length >= totalCount) {
+      console.log('[handleLoadMore] Aborted. Length >= totalCount or loading.');
+      return;
+    }
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
+    console.log('[handleLoadMore] Triggering fetchLedger for page:', nextPage);
     fetchLedger(nextPage, false);
   };
 
@@ -421,6 +438,20 @@ export function AddEntryScreen() {
       }
     };
   }, []);
+
+  // SMS Auto-Detection Toast — show notification when a bank SMS is parsed
+  useEffect(() => {
+    if (smsAutoDetect.lastDetected && smsAutoDetect.lastDetected.success) {
+      const txn = smsAutoDetect.lastDetected;
+      const dirSymbol = txn.direction === 'inflow' ? '+' : '-';
+      const toastMsg = `Auto-Detected: ${dirSymbol}₹${txn.amount.toLocaleString('en-IN')} ${txn.direction === 'inflow' ? 'credited' : 'debited'} — ${txn.bankName}`;
+      showToast(toastMsg);
+
+      // Refresh transaction list
+      setCurrentPage(1);
+      fetchLedger(1, true);
+    }
+  }, [smsAutoDetect.lastDetected]);
 
   const startRecording = async () => {
     try {
@@ -851,14 +882,14 @@ export function AddEntryScreen() {
             </Text>
           ) : (
             <>
-              {apiTransactions.map((en) => {
+              {apiTransactions.map((en, idx) => {
                 const parsedAmount = parseFloat(en.amount) || 0;
                 const isOutflow = en.direction === 'outflow';
                 const title = formatCategoryName(en.category) || (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
                 const confidencePct = en.confidence ? Math.round(parseFloat(en.confidence) * 100) : null;
-                const sourceText = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : 'Manual';
+                const sourceLabel = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : en.source === 'sms' ? 'SMS' : 'Manual';
                 return (
-                  <View key={en.entry_id} style={styles.entryRowItem}>
+                  <View key={`${en.entry_id}_${idx}`} style={styles.entryRowItem}>
                     <View style={styles.entryMainInfo}>
                       <View style={styles.entryTitleRow}>
                         <Text style={styles.entryTypeTitle}>{title}</Text>
@@ -870,10 +901,22 @@ export function AddEntryScreen() {
                       </View>
                       
                       <View style={styles.entryMetaRow}>
-                        <Text style={styles.entryMetaText}>
-                          {en.tender ? `${en.tender.toUpperCase()}` : ''}
-                          {en.source ? ` • ${sourceText}` : ''}
-                        </Text>
+                        {en.tender ? (
+                          <Text style={styles.entryMetaText}>{en.tender.toUpperCase()}</Text>
+                        ) : null}
+                        {en.source ? (
+                          <>
+                            <Text style={styles.entryMetaText}> • </Text>
+                            {en.source === 'voice' ? (
+                              <Mic size={10} color="#6F6B5E" style={{ marginRight: 3, marginTop: 2 }} />
+                            ) : en.source === 'sms' ? (
+                              <Smartphone size={10} color="#6F6B5E" style={{ marginRight: 3, marginTop: 2 }} />
+                            ) : (
+                              <Edit size={10} color="#6F6B5E" style={{ marginRight: 3, marginTop: 2 }} />
+                            )}
+                            <Text style={styles.entryMetaText}>{sourceLabel}</Text>
+                          </>
+                        ) : null}
                       </View>
 
                       {en.transcript ? (
