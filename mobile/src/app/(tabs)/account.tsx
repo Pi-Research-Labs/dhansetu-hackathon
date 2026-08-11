@@ -32,11 +32,11 @@ import { API_BASE_URL, apiClient } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
 import { useSmsAutoDetect } from '@/hooks/useSmsAutoDetect';
 
-const LANG_LIST: { id: SupportedLang; label: string; flag: string }[] = [
-  { id: 'en', label: 'English', flag: '🇬🇧' },
-  { id: 'hi', label: 'हिन्दी (Hindi)', flag: '🇮🇳' },
-  { id: 'mr', label: 'मराठी (Marathi)', flag: '🇮🇳' },
-  { id: 'te', label: 'తెలుగు (Telugu)', flag: '🇮🇳' },
+const LANG_LIST: { id: SupportedLang; label: string }[] = [
+  { id: 'en', label: 'English' },
+  { id: 'hi', label: 'हिन्दी (Hindi)' },
+  { id: 'mr', label: 'मराठी (Marathi)' },
+  { id: 'te', label: 'తెలుగు (Telugu)' },
 ];
 
 export default function AccountScreen() {
@@ -189,11 +189,7 @@ export default function AccountScreen() {
             <Text style={styles.infoVal}>{gstin}</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Phone size={15} color="#6F6B5E" />
-            <Text style={styles.infoLabel}>Registered Mobile:</Text>
-            <Text style={styles.infoVal}>{phone}</Text>
-          </View>
+
 
           <View style={styles.infoRow}>
             <Award size={15} color="#2E7D32" />
@@ -230,7 +226,7 @@ export default function AccountScreen() {
                   onPress={() => setLang(item.id)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.langFlag}>{item.flag}</Text>
+                  <Globe size={14} color={isSelected ? "#2E7D32" : "#6F6B5E"} />
                   <Text style={[styles.langChipText, isSelected && styles.langChipTextSelected]}>
                     {item.label}
                   </Text>
@@ -340,9 +336,12 @@ export default function AccountScreen() {
                 ]} />
               </View>
 
-              <Text style={styles.smsPrivacyNote}>
-                🔒 All SMS parsing happens on your device. No message data is uploaded.
-              </Text>
+              <View style={styles.smsPrivacyNoteContainer}>
+                <Lock size={10} color="#9E9E9E" />
+                <Text style={styles.smsPrivacyNote}>
+                  All SMS parsing happens on your device. No message data is uploaded.
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -416,9 +415,12 @@ export default function AccountScreen() {
                 </View>
               )}
 
-              <Text style={styles.smsPrivacyNote}>
-                🔒 Scans your SMS inbox on-device only. No message data is uploaded.
-              </Text>
+              <View style={styles.smsPrivacyNoteContainer}>
+                <Lock size={10} color="#9E9E9E" />
+                <Text style={styles.smsPrivacyNote}>
+                  Scans your SMS inbox on-device only. No message data is uploaded.
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -891,8 +893,14 @@ const styles = StyleSheet.create({
   smsPrivacyNote: {
     fontSize: 10,
     color: '#9E9E9E',
-    marginTop: 4,
+    flex: 1,
     lineHeight: 14,
+  },
+  smsPrivacyNoteContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
   },
   /* Custom Modal Styles */
   modalOverlay: {
