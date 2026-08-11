@@ -37,17 +37,20 @@ export default function OfficerVisitOutcomeBar({
   const [openTasks, setOpenTasks] = useState<OfficerTask[]>([]);
   const [loadingTask, setLoadingTask] = useState(false);
 
-  // The API returns live-alert tasks first, so [0] is the visit that matches
-  // the alert shown on the card rather than merely the oldest one.
   const loadTask = React.useCallback(async (entId: string) => {
     setLoadingTask(true);
     try {
       const tasks = await getOfficerTasks({ status: "open", enterprise_id: entId });
       setOpenTasks(tasks);
-      setTask(tasks.length > 0 ? tasks[0] : null);
+      const firstTask = tasks.length > 0 ? tasks[0] : null;
+      setTask(firstTask);
+      if (!firstTask) {
+        setIsChecked(false);
+      }
     } catch {
       setOpenTasks([]);
       setTask(null);
+      setIsChecked(false);
     } finally {
       setLoadingTask(false);
     }
@@ -93,16 +96,35 @@ export default function OfficerVisitOutcomeBar({
     }
   };
 
+  const hasOpenTasks = !!task || !!submittedOutcomeId;
+  const isExpanded = isChecked && hasOpenTasks;
+
+  const toggleDropdown = () => {
+    if (!hasOpenTasks) {
+      setIsChecked(false);
+      return;
+    }
+    setIsChecked((prev) => !prev);
+  };
+
   return (
     <div className="bg-white border border-[#E2E6D8] rounded-2xl shadow-2xs overflow-hidden transition-all">
       {/* Top Banner / Checkbox Header */}
-      <div className="p-4 flex items-center justify-between bg-[#FAFBF6] border-b border-[#E2E6D8]">
-        <label className="flex items-center gap-3 cursor-pointer select-none">
+      <div
+        onClick={toggleDropdown}
+        className={`p-4 flex items-center justify-between border-b border-[#E2E6D8] select-none transition-all duration-200 ${
+          hasOpenTasks
+            ? "bg-[#FAFBF6] cursor-pointer hover:bg-[#F2F4EC] active:bg-[#E8EBE0] active:scale-[0.99]"
+            : "bg-[#F5F5F5] cursor-not-allowed opacity-60"
+        }`}
+      >
+        <div className="flex items-center gap-3 select-none pointer-events-none">
           <input
             type="checkbox"
-            checked={isChecked}
-            onChange={(e) => setIsChecked(e.target.checked)}
-            className="w-4 h-4 text-[#2E7D32] bg-white border-[#E2E6D8] rounded focus:ring-[#2E7D32] accent-[#2E7D32] cursor-pointer"
+            checked={isExpanded}
+            disabled={!hasOpenTasks}
+            readOnly
+            className="w-4 h-4 text-[#2E7D32] bg-white border-[#E2E6D8] rounded focus:ring-[#2E7D32] accent-[#2E7D32] disabled:opacity-50"
           />
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-4.5 h-4.5 text-[#2E7D32]" />
@@ -110,9 +132,9 @@ export default function OfficerVisitOutcomeBar({
               Log Officer Field Visit Outcome
             </span>
           </div>
-        </label>
+        </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pointer-events-none">
           {submittedOutcomeId && (
             <span className="bg-[#E8F5E9] border border-[#2E7D32]/30 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-[#2E7D32] flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
@@ -120,18 +142,20 @@ export default function OfficerVisitOutcomeBar({
             </span>
           )}
 
-          <button
-            type="button"
-            onClick={() => setIsChecked(!isChecked)}
-            className="text-[#5F6656] hover:text-[#1A2016] p-1 rounded-lg transition-colors cursor-pointer"
-          >
-            {isChecked ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+          {!hasOpenTasks ? (
+            <span className="text-xs font-semibold text-[#5F6656] uppercase tracking-wide bg-[#FAFBF6] px-2 py-0.5 rounded border border-[#E2E6D8]">
+              no visit scheduled
+            </span>
+          ) : (
+            <div className="text-[#5F6656] hover:text-[#1A2016] p-1 rounded-lg transition-colors">
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Expandable Form Body */}
-      {isChecked && (
+      {isExpanded && (
         <div className="p-4.5 bg-white border-t border-[#E2E6D8]/60 space-y-3 animate-in fade-in duration-200">
           {/* Why this visit is on the list. A task is always raised off an
               alert, so the alert's reasons and figures are the task's
@@ -203,13 +227,20 @@ export default function OfficerVisitOutcomeBar({
               </select>
             </div>
 
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-3 flex flex-col justify-end gap-1.5">
+              {task && (
+                <p className="text-[9.5px] text-[#5F6656] text-center font-mono uppercase tracking-wider mb-0.5">
+                  Task {task.task_id}
+                  {task.assigned_on ? ` · assigned ${task.assigned_on}` : ""}
+                  {openTasks.length > 1 ? ` · 1 of ${openTasks.length} open` : ""}
+                </p>
+              )}
               {/* Disabled without a task rather than submitting and failing:
                   an outcome must attach to a real visit task, so there is
                   nothing to record for an enterprise with none open. */}
               <button
                 type="submit"
-                disabled={isSubmitting || loadingTask || !task}
+                disabled={isSubmitting || loadingTask || !task || !!submittedOutcomeId}
                 title={!task && !loadingTask ? "No open visit task for this enterprise" : undefined}
                 className="w-full bg-[#2E7D32] hover:bg-[#1b4d1f] text-white text-xs font-bold py-2 px-3 rounded-lg transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -223,6 +254,11 @@ export default function OfficerVisitOutcomeBar({
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     <span>Finding task...</span>
                   </>
+                ) : submittedOutcomeId ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Visit Logged</span>
+                  </>
                 ) : !task ? (
                   <>
                     <Send className="w-3.5 h-3.5" />
@@ -235,19 +271,19 @@ export default function OfficerVisitOutcomeBar({
                   </>
                 )}
               </button>
-              {task && (
-                <p className="text-[9.5px] text-[#5F6656] mt-1 text-center font-mono">
-                  Task {task.task_id}
-                  {task.assigned_on ? ` · assigned ${task.assigned_on}` : ""}
-                  {openTasks.length > 1 ? ` · 1 of ${openTasks.length} open` : ""}
-                </p>
-              )}
             </div>
           </form>
 
           {submitError && (
             <div className="text-[11px] text-[#C62828] bg-[#FFEBEE] p-2 rounded-lg border border-[#C62828]/20 font-mono">
               {submitError}
+            </div>
+          )}
+
+          {submittedOutcomeId && (
+            <div className="text-[11px] text-[#2E7D32] bg-[#E8F5E9] p-3 rounded-lg border border-[#2E7D32]/20 font-medium flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2E7D32]" />
+              <span>Officer field visit outcome has been successfully logged. The merchant risk tier has been updated in real-time.</span>
             </div>
           )}
         </div>

@@ -380,13 +380,11 @@ export default function TransactionsTab({
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="bg-[#FAFBF6] border-b border-[#E2E6D8] text-[9.5px] font-bold text-[#5F6656] uppercase tracking-wider">
-                  <th className="px-4 py-3">Business Name & ID</th>
-                  <th className="px-4 py-3">Spoken Transcript</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Lang</th>
-                  <th className="px-4 py-3">Tender</th>
-                  <th className="px-4 py-3 text-right">Amount</th>
-                  <th className="px-4 py-3 text-center">Confidence</th>
+                  <th className="px-4 py-3.5">Business Name & ID</th>
+                  <th className="px-4 py-3.5">Spoken Transcript</th>
+                  <th className="px-4 py-3.5">Date</th>
+                  <th className="px-4 py-3.5">Tender</th>
+                  <th className="px-4 py-3.5 text-right">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E2E6D8]/60 text-xs text-[#1A2016]">
@@ -428,13 +426,7 @@ export default function TransactionsTab({
                         </div>
                       </td>
 
-                      {/* Language */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-[10.5px] font-medium text-[#5F6656]">
-                        <div className="flex items-center gap-1 uppercase">
-                          <Globe className="w-3.5 h-3.5 text-[#5F6656]/70" />
-                          <span>{item.detected_lang || "—"}</span>
-                        </div>
-                      </td>
+
 
                       {/* Tender Mode */}
                       <td className="px-4 py-3.5 whitespace-nowrap text-[10.5px] font-semibold text-[#5F6656] capitalize">
@@ -443,7 +435,6 @@ export default function TransactionsTab({
                           <span>{tenderVal}</span>
                         </div>
                       </td>
-
                       {/* Amount & Direction */}
                       <td className="px-4 py-3.5 text-right whitespace-nowrap font-mono font-bold">
                         <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px]">
@@ -458,28 +449,6 @@ export default function TransactionsTab({
                               <span>-{formatCurrency(Number(item.amount) || 0)}</span>
                             </span>
                           )}
-                        </div>
-                      </td>
-
-                      {/* Confidence */}
-                      <td className="px-4 py-3.5 whitespace-nowrap text-center">
-                        <div className="inline-flex flex-col items-center justify-center">
-                          <span className="font-mono font-bold text-[10.5px] text-[#1A2016]">
-                            {confidencePct}%
-                          </span>
-                          {/* Small visual bar */}
-                          <div className="w-16 bg-[#E2E6D8] h-1.5 rounded-full overflow-hidden mt-1">
-                            <div
-                              className={`h-full rounded-full ${
-                                confidencePct >= 80
-                                  ? "bg-[#2E7D32]"
-                                  : confidencePct >= 50
-                                  ? "bg-[#E65100]"
-                                  : "bg-[#C62828]"
-                              }`}
-                              style={{ width: `${confidencePct}%` }}
-                            />
-                          </div>
                         </div>
                       </td>
                     </tr>
