@@ -119,7 +119,7 @@ export function AlertsScreen() {
             <View style={styles.flagTitleRow}>
               <View style={styles.flagTitleMain}>
                 <AlertTriangle size={15} color={flagText} />
-                <Text style={[styles.flagTagText, { color: flagText }]}>{flag.tag}</Text>
+                <Text style={[styles.flagTagText, { color: flagText }]}>{t.mechanisms[flag.key] || flag.tag}</Text>
               </View>
               {hasUnreadAlerts ? (
                 <View style={styles.newAlertBadge}>
@@ -131,7 +131,9 @@ export function AlertsScreen() {
                 </View>
               )}
             </View>
-            <Text style={styles.flagDetailText}>{flag.detail}</Text>
+            <Text style={styles.flagDetailText}>
+              {t.flagDetails[flag.key] ? t.flagDetails[flag.key](flag.params || {}) : flag.detail}
+            </Text>
           </View>
         ))}
 

@@ -885,7 +885,10 @@ export function AddEntryScreen() {
               {apiTransactions.map((en, idx) => {
                 const parsedAmount = parseFloat(en.amount) || 0;
                 const isOutflow = en.direction === 'outflow';
-                const title = formatCategoryName(en.category) || (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
+                const title =
+                  t.ledgerCategories[en.category ?? ''] ||
+                  formatCategoryName(en.category) ||
+                  (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
                 const confidencePct = en.confidence ? Math.round(parseFloat(en.confidence) * 100) : null;
                 const sourceLabel = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : en.source === 'sms' ? 'SMS' : 'Manual';
                 return (

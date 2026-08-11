@@ -92,7 +92,16 @@ export interface MerchantStore {
   todaysTotals: TodaysTotals;
 
   // Risk Flags & Advice
-  flags: { key: string; tag: string; detail: string }[];
+  // key is the backend reason code and params are the figures its sentence
+  // quotes; tag/detail stay as an English fallback for anything the dictionary
+  // does not cover. Rendering is the screen's job -- building the sentence here
+  // is what left it in English when the language changed.
+  flags: {
+    key: string;
+    tag: string;
+    detail: string;
+    params?: { marginGapPct?: number | null; missedEmi?: number | null; bufferMonths?: number | null };
+  }[];
   advice: string[];
 
   // Unread alerts indicator
@@ -350,6 +359,22 @@ export const useMerchantStore = create<MerchantStore>()(
               tag: 'Spend Exceeds Earnings',
               detail: 'Outflows exceeding inflows over recent trailing periods.',
             },
+            // These three are real backend mechanisms (see mechanisms.csv) that
+            // had no entry here, so an enterprise flagged for any of them
+            // showed no early warning at all -- receivable_stretch is the most
+            // common reason code in the panel.
+            receivable_stretch: {
+              tag: 'Receivable Stretch',
+              detail: 'Buyers are taking a long time to pay, so earned money has not arrived.',
+            },
+            demand_trough: {
+              tag: 'Demand Trough',
+              detail: 'Demand has dropped off, so sales are below the usual level.',
+            },
+            climate_shock: {
+              tag: 'Climate Shock',
+              detail: 'Weather has hit output or costs in this area.',
+            },
             thin_buffer: {
               tag: 'Thin Savings Buffer',
               detail: card.net_buffer_days
@@ -360,13 +385,46 @@ export const useMerchantStore = create<MerchantStore>()(
 
           const flags: { key: string; tag: string; detail: string }[] = [];
           if (card.reason_1 && reasonMapping[card.reason_1]) {
-            flags.push({ key: card.reason_1, ...reasonMapping[card.reason_1] });
+            flags.push({
+              key: card.reason_1,
+              ...reasonMapping[card.reason_1],
+              params: {
+                marginGapPct: card.margin_gap_90d ?? null,
+                missedEmi: card.missed_emi ?? null,
+                bufferMonths:
+                  card.net_buffer_days != null
+                    ? Number(Math.max(0, card.net_buffer_days / 30).toFixed(1))
+                    : null,
+              },
+            });
           }
           if (card.reason_2 && reasonMapping[card.reason_2]) {
-            flags.push({ key: card.reason_2, ...reasonMapping[card.reason_2] });
+            flags.push({
+              key: card.reason_2,
+              ...reasonMapping[card.reason_2],
+              params: {
+                marginGapPct: card.margin_gap_90d ?? null,
+                missedEmi: card.missed_emi ?? null,
+                bufferMonths:
+                  card.net_buffer_days != null
+                    ? Number(Math.max(0, card.net_buffer_days / 30).toFixed(1))
+                    : null,
+              },
+            });
           }
           if (card.reason_3 && reasonMapping[card.reason_3]) {
-            flags.push({ key: card.reason_3, ...reasonMapping[card.reason_3] });
+            flags.push({
+              key: card.reason_3,
+              ...reasonMapping[card.reason_3],
+              params: {
+                marginGapPct: card.margin_gap_90d ?? null,
+                missedEmi: card.missed_emi ?? null,
+                bufferMonths:
+                  card.net_buffer_days != null
+                    ? Number(Math.max(0, card.net_buffer_days / 30).toFixed(1))
+                    : null,
+              },
+            });
           }
 
           // Default fallback warning flag

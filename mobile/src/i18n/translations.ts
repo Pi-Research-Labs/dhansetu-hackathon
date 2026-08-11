@@ -1,5 +1,12 @@
 export type SupportedLang = 'en' | 'hi' | 'mr' | 'te';
 
+/** Figures the early-warning sentences quote, passed from the risk card. */
+export interface FlagParams {
+  marginGapPct?: number | null;
+  missedEmi?: number | null;
+  bufferMonths?: number | null;
+}
+
 export interface Translations {
   langName: string;
   portalTitle: string;
@@ -62,6 +69,19 @@ export interface Translations {
   suggestedActionsTitle: string;
   recNumber: (n: number) => string;
   tiers: Record<string, string>;
+  // Backend enum values arrive as keys (margin_squeeze, cooperative, ...).
+  // They are a closed set, so they are translated from a table here rather
+  // than sent through a translation API: instant, free, and impossible to
+  // get wrong on a bad network.
+  mechanisms: Record<string, string>;
+  counterpartyTypes: Record<string, string>;
+  riskTypes: Record<string, string>;
+  ledgerCategories: Record<string, string>;
+  // Early-warning detail per reason code. Functions, not strings, because the
+  // sentences carry real figures (margin gap, missed EMIs, months of runway).
+  // The store used to build these in English at fetch time, so switching
+  // language left them untranslated until the next refetch.
+  flagDetails: Record<string, (p: FlagParams) => string>;
 
   // Login Screen
   merchantAccessPortal: string;
@@ -169,6 +189,21 @@ export const L: Record<SupportedLang, Translations> = {
     suggestedActionsTitle: 'Suggested Actions for You',
     recNumber: (n) => `Recommendation #${n}`,
     tiers: { GREEN: 'Stable', AMBER: 'Watch', RED: 'Act Now' },
+    mechanisms: { margin_squeeze: 'Margin squeeze', working_capital_erosion: 'Working capital erosion', debt_overhang: 'Debt overhang', climate_shock: 'Climate shock', demand_trough: 'Demand trough', receivable_stretch: 'Receivable stretch' },
+    counterpartyTypes: { cooperative: 'Cooperative', trader: 'Trader', exporter: 'Exporter', retailer: 'Retailer', village_credit: 'Village credit' },
+    riskTypes: { climate: 'Climate', counterparty: 'Buyer risk', cycle: 'Business cycle', demand: 'Demand', disease: 'Disease', input: 'Input costs', logistics: 'Logistics', margin: 'Margins', receivable: 'Payments due', seasonality: 'Seasonality', visibility: 'Record keeping' },
+    ledgerCategories: { milk_sale: 'Milk sale', pottery_sale: 'Pottery sale', cloth_sale: 'Cloth sale', bird_sale: 'Bird sale', shop_sale: 'Shop sale', vegetable_sale: 'Vegetable sale', sale: 'Sale', feed: 'Feed', yarn: 'Yarn', clay_glaze: 'Clay & glaze', stock_purchase: 'Stock purchase', fees: 'Fees', expense: 'Expense', emi: 'Loan instalment', loan_received: 'Loan received', savings_deposit: 'Savings deposit', savings_withdrawal: 'Savings withdrawal', unclassified: 'Uncategorised' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `Input costs are squeezing margins (gap of ${p.marginGapPct}%).` : 'Input costs are squeezing operating margins.',
+      working_capital_erosion: () => 'Everyday working money is draining away against ongoing expenses.',
+      debt_overhang: (p) => p.missedEmi ? `Repayments are heavy against expected cash, with ${p.missedEmi} instalment(s) missed in 90 days.` : 'Loan repayments are heavy relative to expected cash coming in.',
+      receivable_stretch: () => 'Buyers are taking a long time to pay, so earned money has not arrived.',
+      demand_trough: () => 'Demand has dropped off, so sales are below the usual level.',
+      climate_shock: () => 'Weather has hit output or costs in this area.',
+      repayment_stress: (p) => p.missedEmi ? `${p.missedEmi} missed instalment(s) in the last 90 days.` : 'Repayment schedules are being missed.',
+      thin_buffer: (p) => p.bufferMonths != null ? `Cash runway covers only ${p.bufferMonths} month(s) of usual outflows.` : 'Savings cover less than a month of usual outflows.',
+      spend_exceeds: () => 'Money going out has exceeded money coming in recently.',
+    },
 
     merchantAccessPortal: 'Merchant Access Portal',
     officialPortalSub: 'Official portal for GST registered traders, vendors & enterprises',
@@ -272,6 +307,21 @@ export const L: Record<SupportedLang, Translations> = {
     suggestedActionsTitle: 'आपके लिए सुझाई गई कार्रवाइयाँ',
     recNumber: (n) => `सुझाव #${n}`,
     tiers: { GREEN: 'स्थिर', AMBER: 'निगरानी', RED: 'तुरंत कार्रवाई' },
+    mechanisms: { margin_squeeze: 'मार्जिन संकुचन', working_capital_erosion: 'कार्यशील पूंजी क्षरण', debt_overhang: 'ऋण भार', climate_shock: 'मौसम झटका', demand_trough: 'मांग में गिरावट', receivable_stretch: 'प्राप्य राशियों में देरी' },
+    counterpartyTypes: { cooperative: 'सहकारी समिति', trader: 'व्यापारी', exporter: 'निर्यातक', retailer: 'खुदरा विक्रेता', village_credit: 'गांव उधार' },
+    riskTypes: { climate: 'मौसम', counterparty: 'खरीदार जोखिम', cycle: 'व्यापार चक्र', demand: 'मांग', disease: 'बीमारी', input: 'लागत', logistics: 'ढुलाई', margin: 'मार्जिन', receivable: 'बकाया भुगतान', seasonality: 'मौसमी बदलाव', visibility: 'हिसाब-किताब' },
+    ledgerCategories: { milk_sale: 'दूध बिक्री', pottery_sale: 'मिट्टी के बर्तन बिक्री', cloth_sale: 'कपड़ा बिक्री', bird_sale: 'मुर्गी बिक्री', shop_sale: 'दुकान बिक्री', vegetable_sale: 'सब्ज़ी बिक्री', sale: 'बिक्री', feed: 'चारा', yarn: 'धागा', clay_glaze: 'मिट्टी और लेप', stock_purchase: 'माल खरीद', fees: 'शुल्क', expense: 'खर्च', emi: 'किस्त', loan_received: 'ऋण प्राप्त', savings_deposit: 'बचत जमा', savings_withdrawal: 'बचत निकासी', unclassified: 'अवर्गीकृत' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `लागत बढ़ने से मार्जिन दब रहा है (अंतर ${p.marginGapPct}%)।` : 'लागत बढ़ने से मार्जिन दब रहा है।',
+      working_capital_erosion: () => 'रोज़मर्रा के खर्च के मुकाबले कामकाजी पैसा घट रहा है।',
+      debt_overhang: (p) => p.missedEmi ? `आमदनी के मुकाबले किस्तें भारी हैं; 90 दिनों में ${p.missedEmi} किस्त चूकी।` : 'अपेक्षित आमदनी के मुकाबले किस्तें भारी हैं।',
+      receivable_stretch: () => 'खरीदार भुगतान में देर कर रहे हैं, कमाया पैसा अभी आया नहीं।',
+      demand_trough: () => 'मांग घट गई है, बिक्री सामान्य से कम है।',
+      climate_shock: () => 'मौसम ने इस इलाके में उत्पादन या लागत पर असर डाला है।',
+      repayment_stress: (p) => p.missedEmi ? `पिछले 90 दिनों में ${p.missedEmi} किस्त चूकी।` : 'किस्तें समय पर नहीं भर पा रहे।',
+      thin_buffer: (p) => p.bufferMonths != null ? `नकदी सिर्फ ${p.bufferMonths} महीने के खर्च के लिए बची है।` : 'बचत एक महीने के खर्च से भी कम है।',
+      spend_exceeds: () => 'हाल में खर्च आमदनी से ज़्यादा रहा है।',
+    },
 
     merchantAccessPortal: 'व्यापारी पहुँच पोर्टल',
     officialPortalSub: 'GST पंजीकृत व्यापारियों, विक्रेताओं एवं उद्यमों के लिए आधिकारिक पोर्टल',
@@ -375,6 +425,21 @@ export const L: Record<SupportedLang, Translations> = {
     suggestedActionsTitle: 'तुमच्यासाठी सुचवलेल्या कृती',
     recNumber: (n) => `मार्गदर्शन #${n}`,
     tiers: { GREEN: 'स्थिर', AMBER: 'लक्ष ठेवा', RED: 'त्वरित कृती' },
+    mechanisms: { margin_squeeze: 'मार्जिन दबाव', working_capital_erosion: 'खेळते भांडवल क्षरण', debt_overhang: 'कर्जाचा भार', climate_shock: 'हवामान धोका', demand_trough: 'मागणीतील घट', receivable_stretch: 'येणे रकमेत विलंब' },
+    counterpartyTypes: { cooperative: 'सहकारी संस्था', trader: 'व्यापारी', exporter: 'निर्यातदार', retailer: 'किरकोळ विक्रेता', village_credit: 'गाव उधारी' },
+    riskTypes: { climate: 'हवामान', counterparty: 'खरेदीदार धोका', cycle: 'व्यवसाय चक्र', demand: 'मागणी', disease: 'रोग', input: 'निविष्ठा खर्च', logistics: 'वाहतूक', margin: 'मार्जिन', receivable: 'येणी', seasonality: 'हंगामी बदल', visibility: 'नोंदी' },
+    ledgerCategories: { milk_sale: 'दूध विक्री', pottery_sale: 'मातीची भांडी विक्री', cloth_sale: 'कापड विक्री', bird_sale: 'पक्षी विक्री', shop_sale: 'दुकान विक्री', vegetable_sale: 'भाजी विक्री', sale: 'विक्री', feed: 'चारा', yarn: 'सूत', clay_glaze: 'माती व लेप', stock_purchase: 'माल खरेदी', fees: 'शुल्क', expense: 'खर्च', emi: 'हप्ता', loan_received: 'कर्ज मिळाले', savings_deposit: 'बचत ठेव', savings_withdrawal: 'बचत काढली', unclassified: 'अवर्गीकृत' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `खर्च वाढल्याने मार्जिनवर दबाव आहे (फरक ${p.marginGapPct}%).` : 'खर्च वाढल्याने मार्जिनवर दबाव आहे.',
+      working_capital_erosion: () => 'दैनंदिन खर्चाच्या तुलनेत खेळते भांडवल घटत आहे.',
+      debt_overhang: (p) => p.missedEmi ? `उत्पन्नाच्या तुलनेत हप्ते जड आहेत; 90 दिवसांत ${p.missedEmi} हप्ता चुकला.` : 'अपेक्षित उत्पन्नाच्या तुलनेत हप्ते जड आहेत.',
+      receivable_stretch: () => 'खरेदीदार पैसे द्यायला उशीर करत आहेत, कमावलेले पैसे आलेले नाहीत.',
+      demand_trough: () => 'मागणी घटली आहे, विक्री नेहमीपेक्षा कमी आहे.',
+      climate_shock: () => 'हवामानाचा या भागातील उत्पादन किंवा खर्चावर परिणाम झाला आहे.',
+      repayment_stress: (p) => p.missedEmi ? `गेल्या 90 दिवसांत ${p.missedEmi} हप्ता चुकला.` : 'हप्ते वेळेवर भरले जात नाहीत.',
+      thin_buffer: (p) => p.bufferMonths != null ? `रोख रक्कम फक्त ${p.bufferMonths} महिन्यांच्या खर्चापुरती आहे.` : 'बचत एक महिन्याच्या खर्चापेक्षा कमी आहे.',
+      spend_exceeds: () => 'अलीकडे खर्च उत्पन्नापेक्षा जास्त झाला आहे.',
+    },
 
     merchantAccessPortal: 'व्यापारी प्रवेश पोर्टल',
     officialPortalSub: 'GST नोंदणीकृत व्यापारी, विक्रेते व उद्योगांसाठी अधिकृत पोर्टल',
@@ -478,6 +543,21 @@ export const L: Record<SupportedLang, Translations> = {
     suggestedActionsTitle: 'మీ కోసం సూచించిన చర్యలు',
     recNumber: (n) => `సూచన #${n}`,
     tiers: { GREEN: 'స్థిరం', AMBER: 'పరిశీలన', RED: 'వెంటనే చర్య' },
+    mechanisms: { margin_squeeze: 'మార్జిన్ ఒత్తిడి', working_capital_erosion: 'వర్కింగ్ కేపిటల్ క్షీణత', debt_overhang: 'అప్పుల భారం', climate_shock: 'వాతావరణ షాక్', demand_trough: 'డిమాండ్ పతనం', receivable_stretch: 'వసూళ్ల ఆలస్యం' },
+    counterpartyTypes: { cooperative: 'సహకార సంఘం', trader: 'వ్యాపారి', exporter: 'ఎగుమతిదారు', retailer: 'రిటైలర్', village_credit: 'గ్రామ అప్పు' },
+    riskTypes: { climate: 'వాతావరణం', counterparty: 'కొనుగోలుదారు రిస్క్', cycle: 'వ్యాపార చక్రం', demand: 'డిమాండ్', disease: 'వ్యాధి', input: 'ఇన్‌పుట్ ఖర్చులు', logistics: 'రవాణా', margin: 'మార్జిన్లు', receivable: 'రావాల్సిన సొమ్ము', seasonality: 'కాలానుగుణత', visibility: 'లెక్కల నిర్వహణ' },
+    ledgerCategories: { milk_sale: 'పాల విక్రయం', pottery_sale: 'కుండల విక్రయం', cloth_sale: 'వస్త్ర విక్రయం', bird_sale: 'కోళ్ల విక్రయం', shop_sale: 'దుకాణ విక్రయం', vegetable_sale: 'కూరగాయల విక్రయం', sale: 'అమ్మకం', feed: 'దాణా', yarn: 'నూలు', clay_glaze: 'మట్టి & పూత', stock_purchase: 'సరుకు కొనుగోలు', fees: 'ఫీజులు', expense: 'ఖర్చు', emi: 'వాయిదా', loan_received: 'రుణం అందింది', savings_deposit: 'పొదుపు జమ', savings_withdrawal: 'పొదుపు ఉపసంహరణ', unclassified: 'వర్గీకరించనివి' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `ఖర్చులు పెరిగి మార్జిన్‌పై ఒత్తిడి ఉంది (తేడా ${p.marginGapPct}%).` : 'ఖర్చులు పెరిగి మార్జిన్‌పై ఒత్తిడి ఉంది.',
+      working_capital_erosion: () => 'రోజువారీ ఖర్చులతో పోలిస్తే వర్కింగ్ కేపిటల్ తగ్గిపోతోంది.',
+      debt_overhang: (p) => p.missedEmi ? `ఆదాయంతో పోలిస్తే వాయిదాలు భారంగా ఉన్నాయి; 90 రోజుల్లో ${p.missedEmi} వాయిదా చెల్లించలేదు.` : 'ఆశించిన ఆదాయంతో పోలిస్తే వాయిదాలు భారంగా ఉన్నాయి.',
+      receivable_stretch: () => 'కొనుగోలుదారులు చెల్లించడంలో ఆలస్యం చేస్తున్నారు, సంపాదించిన సొమ్ము రాలేదు.',
+      demand_trough: () => 'డిమాండ్ తగ్గింది, అమ్మకాలు సాధారణం కంటే తక్కువగా ఉన్నాయి.',
+      climate_shock: () => 'వాతావరణం ఈ ప్రాంతంలో ఉత్పత్తి లేదా ఖర్చులపై ప్రభావం చూపింది.',
+      repayment_stress: (p) => p.missedEmi ? `గత 90 రోజుల్లో ${p.missedEmi} వాయిదా చెల్లించలేదు.` : 'వాయిదాలు సమయానికి చెల్లించలేకపోతున్నారు.',
+      thin_buffer: (p) => p.bufferMonths != null ? `నగదు ${p.bufferMonths} నెలల ఖర్చులకే సరిపోతుంది.` : 'పొదుపు ఒక నెల ఖర్చులకూ సరిపోదు.',
+      spend_exceeds: () => 'ఇటీవల ఖర్చు ఆదాయాన్ని మించింది.',
+    },
 
     merchantAccessPortal: 'మర్చంట్ యాక్సెస్ పోర్టల్',
     officialPortalSub: 'GST నమోదు చేసుకున్న వ్యాపారులు మరియు సంస్థల కోసం అధికారిక పోర్టల్',

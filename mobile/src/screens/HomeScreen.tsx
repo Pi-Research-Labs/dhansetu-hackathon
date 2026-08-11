@@ -182,7 +182,8 @@ export function HomeScreen() {
               <View key={idx} style={styles.receivableRow}>
                 <View style={styles.receivableMain}>
                   <Text style={styles.receivableType}>
-                    {item.counterparty_type.replace('_', ' ').toUpperCase()}
+                    {t.counterpartyTypes[item.counterparty_type] ||
+                      item.counterparty_type.replace(/_/g, ' ').toUpperCase()}
                   </Text>
                   <Text style={styles.receivableInvoiceCount}>
                     {item.invoices} Invoices · Avg {item.avg_days_to_cash} Days to Cash
