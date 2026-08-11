@@ -75,6 +75,9 @@ export interface SmsAutoDetectState {
 
 const IS_ANDROID = Platform.OS === 'android';
 
+// Prevent duplicate processing of the same SMS across multiple active instances of the hook
+const processedLiveSmsKeys = new Set<string>();
+
 /* ─── Hook Implementation ───────────────────────────────────────── */
 
 export function useSmsAutoDetect(): SmsAutoDetectState {
@@ -106,7 +109,7 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
 
   /* ─── Process a single parsed transaction ───────────────────── */
 
-  const processTransaction = useCallback(async (parsed: ParsedTransaction): Promise<boolean> => {
+  const processTransaction = useCallback(async (parsed: ParsedTransaction, skipDedup = false): Promise<boolean> => {
     const state = store.getState();
     const enterpriseId = state.enterpriseId;
 
@@ -115,10 +118,21 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
       return false;
     }
 
-    // Dedup check
-    if (state.hasDedupKey(parsed.dedupKey)) {
+    // Dedup check — only for historical scan, not live SMS
+    if (!skipDedup && state.hasDedupKey(parsed.dedupKey)) {
       console.log('[SMS] Duplicate detected, skipping:', parsed.dedupKey);
       return false;
+    }
+
+    // Double execution check — prevents duplicate calls if multiple instances of this hook are mounted
+    if (skipDedup) {
+      if (processedLiveSmsKeys.has(parsed.dedupKey)) {
+        console.log('[SMS] Live duplicate skipped by in-memory dedup:', parsed.dedupKey);
+        return false;
+      }
+      processedLiveSmsKeys.add(parsed.dedupKey);
+      // Clean up after 10 seconds to keep memory clear
+      setTimeout(() => processedLiveSmsKeys.delete(parsed.dedupKey), 10000);
     }
 
     // Build the note for the entry
@@ -142,24 +156,30 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
 
     // 3. Sync to backend
     try {
+      // Map SMS tender to values the backend accepts: bank, cash, credit, upi, wallet
+      // The SMS parser produces: 'digital', 'cash', 'card'
       const tenderMap: Record<string, string> = {
-        digital: 'digital',
+        digital: 'upi',
         cash: 'cash',
-        card: 'card',
+        card: 'credit',
       };
 
-      // Sanitize category to keep alphanumeric / underscores only (same as manual form)
-      const cleanCategory = (parsed.category || (parsed.direction === 'inflow' ? 'sale' : 'expense'))
-        .toLowerCase()
-        .replace(/[\s-]+/g, '_')
-        .replace(/[^a-z0-9_]/g, '');
+      // Map SMS-parsed categories to the simple categories the backend accepts.
+      // The manual AddEntry form only sends: 'sale', 'expense', 'savdep', 'emi'.
+      // The SMS parser produces granular categories like 'upi_payment', 'atm_withdrawal', etc.
+      // We need to collapse those into what the backend recognises.
+      const category = parsed.direction === 'inflow' ? 'sale' : 'expense';
 
-      await postTransaction(enterpriseId, {
+      const payload = {
         direction: parsed.direction,
         amount: parsed.amount,
-        category: cleanCategory || (parsed.direction === 'inflow' ? 'sale' : 'expense'),
-        tender: tenderMap[parsed.tender] || 'digital',
-      });
+        category,
+        tender: tenderMap[parsed.tender] || 'cash',
+      };
+
+      console.log('[SMS] Posting transaction payload:', JSON.stringify(payload));
+
+      await postTransaction(enterpriseId, payload);
 
       store.getState().markEntrySynced(localId, 'sms-synced');
 
@@ -169,7 +189,12 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
       });
 
       return true;
-    } catch (err) {
+    } catch (err: any) {
+      // Log the full 422 response body for debugging
+      if (err?.response) {
+        console.error('[SMS] Backend rejection status:', err.response.status);
+        console.error('[SMS] Backend rejection body:', JSON.stringify(err.response.data));
+      }
       console.error('[SMS] Failed to post transaction to backend:', err);
       // Entry is still saved locally, will appear as unsynced
       return true; // Still counts as processed (locally saved)
@@ -334,7 +359,7 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
         if (parsed.success) {
           console.log(`[SMS] Parsed: ${parsed.bankName} ${parsed.direction} ₹${parsed.amount}`);
           setLastDetected(parsed);
-          processTransaction(parsed).finally(() => {
+          processTransaction(parsed, true).finally(() => {
             processingRef.current = false;
           });
         } else {
