@@ -110,7 +110,7 @@ class SmsListenerModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun requestPermission(promise: Promise) {
         try {
-            val activity = currentActivity
+            val activity = reactApplicationContext.currentActivity
             if (activity == null) {
                 promise.reject("NO_ACTIVITY", "No activity available to request permissions")
                 return
@@ -134,7 +134,7 @@ class SmsListenerModule(private val reactContext: ReactApplicationContext) :
                 return
             }
 
-            ActivityCompat.requestPermissions(activity, permissions, 1001)
+            ActivityCompat.requestPermissions(activity!!, permissions, 1001)
 
             // Note: We can't await the result here in the traditional sense.
             // The permission result will be available on the next checkPermission call.

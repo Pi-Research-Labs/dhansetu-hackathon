@@ -219,7 +219,11 @@ export function AddEntryScreen() {
       if (replaceList) {
         setApiTransactions(data.transactions);
       } else {
-        setApiTransactions((prev) => [...prev, ...data.transactions]);
+        setApiTransactions((prev) => {
+          const existingIds = new Set(prev.map(t => t.entry_id));
+          const newOnly = data.transactions.filter(t => !existingIds.has(t.entry_id));
+          return [...prev, ...newOnly];
+        });
       }
       setTotalCount(data.total);
     } catch (err) {
@@ -869,7 +873,7 @@ export function AddEntryScreen() {
             </Text>
           ) : (
             <>
-              {apiTransactions.map((en) => {
+              {apiTransactions.map((en, idx) => {
                 const parsedAmount = parseFloat(en.amount) || 0;
                 const isOutflow = en.direction === 'outflow';
                 const title = formatCategoryName(en.category) || (isOutflow ? t.entryTypes.expense : t.entryTypes.income);
@@ -878,7 +882,7 @@ export function AddEntryScreen() {
                 const sourceLabel = en.source === 'voice' ? `Voice${confidencePct !== null ? ` (${confidencePct}%)` : ''}` : en.source === 'sms' ? 'SMS' : 'Manual';
                 const sourceText = `${sourceIcon} ${sourceLabel}`;
                 return (
-                  <View key={en.entry_id} style={styles.entryRowItem}>
+                  <View key={`${en.entry_id}_${idx}`} style={styles.entryRowItem}>
                     <View style={styles.entryMainInfo}>
                       <View style={styles.entryTitleRow}>
                         <Text style={styles.entryTypeTitle}>{title}</Text>

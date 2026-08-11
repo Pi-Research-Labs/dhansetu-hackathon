@@ -148,10 +148,16 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
         card: 'card',
       };
 
+      // Sanitize category to keep alphanumeric / underscores only (same as manual form)
+      const cleanCategory = (parsed.category || (parsed.direction === 'inflow' ? 'sale' : 'expense'))
+        .toLowerCase()
+        .replace(/[\s-]+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
+
       await postTransaction(enterpriseId, {
         direction: parsed.direction,
         amount: parsed.amount,
-        category: parsed.category || 'sale',
+        category: cleanCategory || (parsed.direction === 'inflow' ? 'sale' : 'expense'),
         tender: tenderMap[parsed.tender] || 'digital',
       });
 

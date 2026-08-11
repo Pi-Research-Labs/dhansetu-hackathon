@@ -93,15 +93,9 @@ class SmsReceiver : BroadcastReceiver() {
                 val body = smsMessage.messageBody ?: continue
                 val timestamp = smsMessage.timestampMillis
 
-                Log.d(TAG, "SMS received from: $sender")
-
-                if (isBankSender(sender)) {
-                    Log.i(TAG, "Bank SMS detected from: $sender")
-                    // Forward to the module for emission to React Native
-                    SmsListenerModule.onBankSmsReceived(sender, body, timestamp)
-                } else {
-                    Log.d(TAG, "Non-bank SMS ignored from: $sender")
-                }
+                // For the hackathon, allow all senders to make testing easier from personal phone numbers
+                Log.i(TAG, "SMS received from: $sender - forwarding to parser")
+                SmsListenerModule.onBankSmsReceived(sender, body, timestamp)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing incoming SMS", e)
