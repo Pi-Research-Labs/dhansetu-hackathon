@@ -1,6 +1,7 @@
-"use client";
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useMerchantStore } from '@/store/useMerchantStore';
+import { L } from '@/i18n/translations';
+import { translateText } from '@/utils/translator';
 
 interface WeeklyData {
   week: string;
@@ -16,20 +17,65 @@ interface Props {
 }
 
 export function WeeklyCashflowChart({ data }: Props) {
+  const { lang } = useMerchantStore();
+  const t = L[lang] || L.en;
+
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-[#E7E5DA] p-10 flex flex-col items-center justify-center text-center mt-2.5">
         <p className="color-[#6F6B5E] text-sm font-bold">
-          No cashflow records available yet
+          {t.noCashflowRecords}
         </p>
         <p className="color-[#94A3B8] text-xs mt-1 max-w-xs">
-          Add daily entries to generate weekly cashflow analytics.
+          {t.addDailyEntriesHint}
         </p>
       </div>
     );
   }
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [translatedData, setTranslatedData] = useState<WeeklyData[]>([]);
+
+  const rawDisplayData = data.slice(-5); // Last 5 weeks
+
+  useEffect(() => {
+    let isMounted = true;
+    async function translateAllData() {
+      if (lang === 'en') {
+        setTranslatedData(rawDisplayData);
+        return;
+      }
+      try {
+        const translated = await Promise.all(
+          rawDisplayData.map(async (item) => {
+            const trWeek = await translateText(item.week, lang);
+            const trWeekLabel = await translateText(item.weekLabel, lang);
+            const trDateRange = await translateText(item.dateRange, lang);
+            return {
+              ...item,
+              week: trWeek,
+              weekLabel: trWeekLabel,
+              dateRange: trDateRange,
+            };
+          })
+        );
+        if (isMounted) {
+          setTranslatedData(translated);
+        }
+      } catch (err) {
+        console.error('Error translating chart data:', err);
+        if (isMounted) {
+          setTranslatedData(rawDisplayData);
+        }
+      }
+    }
+    translateAllData();
+    return () => {
+      isMounted = false;
+    };
+  }, [data, lang]);
+
+  const displayData = translatedData.length > 0 ? translatedData : rawDisplayData;
 
   const chartHeight = 190;
   const paddingLeft = 42;
@@ -37,7 +83,6 @@ export function WeeklyCashflowChart({ data }: Props) {
   const paddingTop = 20;
   const paddingBottom = 30;
 
-  const displayData = data.slice(-5); // Last 5 weeks
   const activeItem = selectedIndex !== null ? displayData[selectedIndex] : displayData[displayData.length - 1];
 
   // Scale calculations (unified scale for inflow, outflow, and net cashflow)
@@ -80,15 +125,15 @@ export function WeeklyCashflowChart({ data }: Props) {
       <div className="flex justify-center gap-4 text-xs font-semibold">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded bg-[#2E7D32]" />
-          <span className="text-[#6F6B5E]">Inflow (₹)</span>
+          <span className="text-[#6F6B5E]">{t.chartInflowLegend}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded bg-[#C0392B]" />
-          <span className="text-[#6F6B5E]">Outflow (₹)</span>
+          <span className="text-[#6F6B5E]">{t.chartOutflowLegend}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-0.5 border-t-2 border-[#1D261F]" />
-          <span className="text-[#6F6B5E]">Net Line</span>
+          <span className="text-[#6F6B5E]">{t.chartNetLegend}</span>
         </div>
       </div>
 
@@ -254,19 +299,19 @@ export function WeeklyCashflowChart({ data }: Props) {
             <span className="text-[#6F6B5E] font-semibold">{activeItem.dateRange}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[#6F6B5E]">Inflow:</span>
+            <span className="text-[#6F6B5E]">{t.inflowColon}</span>
             <span className="text-[#2E7D32] font-semibold">
               +₹ {activeItem.inflow.toLocaleString('en-IN')}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[#6F6B5E]">Outflow:</span>
+            <span className="text-[#6F6B5E]">{t.outflowColon}</span>
             <span className="text-[#C0392B] font-semibold">
               -₹ {activeItem.outflow.toLocaleString('en-IN')}
             </span>
           </div>
           <div className="flex justify-between items-center border-t border-[#E7E5DA] pt-1 mt-0.5">
-            <span className="text-[#1D261F] font-bold">Net Cashflow:</span>
+            <span className="text-[#1D261F] font-bold">{t.netCashflowColon}</span>
             <span className={`font-bold ${activeItem.net >= 0 ? 'text-[#2E7D32]' : 'text-[#C0392B]'}`}>
               {activeItem.net >= 0 ? '+' : ''}₹ {activeItem.net.toLocaleString('en-IN')}
             </span>

@@ -11,10 +11,12 @@ import {
   User,
   LogOut,
   Landmark,
+  HelpCircle,
 } from 'lucide-react';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { GovHeader } from '@/components/common/GovHeader';
+import { FirstLoadLangModal } from '@/components/common/FirstLoadLangModal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -28,10 +30,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     name,
     proprietorName,
     hasUnreadAlerts,
+    hasChosenLang,
   } = useMerchantStore();
 
   const [loading, setLoading] = useState(true);
-  const [isQrExpanded, setIsQrExpanded] = useState(false);
+  const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const t = L[lang] || L.en;
 
   // Authentication gate & session restoration
@@ -41,11 +44,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!isSessionActive) {
         router.replace('/login');
       } else {
-        setLoading(false);
+        if (lang !== 'en') {
+          // Add a brief translation delay to prevent English flash on first render
+          setTimeout(() => {
+            setLoading(false);
+          }, 800);
+        } else {
+          setLoading(false);
+        }
       }
     };
     checkSession();
-  }, [restoreSession, router]);
+  }, [restoreSession, router, lang]);
+
+  const [transitionLoading, setTransitionLoading] = useState(false);
+
+  // Transition buffer when changing tabs to resolve translations cleanly in background
+  useEffect(() => {
+    if (lang !== 'en') {
+      setTransitionLoading(false);
+      const timer = setTimeout(() => {
+        setTransitionLoading(false);
+      }, 900);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, lang]);
 
   const handleLogout = () => {
     logout();
@@ -64,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       icon: PlusCircle,
     },
     {
-      label: 'Alerts',
+      label: t.alertsTab || 'Alerts',
       path: '/dashboard/alerts',
       icon: Bell,
       badge: hasUnreadAlerts,
@@ -109,8 +132,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.path}
                   href={item.path}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all ${isActive
-                      ? 'bg-[#E7F2E7] text-[#2E7D32]'
-                      : 'text-[#6F6B5E] hover:bg-[#FAFAF5] hover:text-[#1D261F]'
+                    ? 'bg-[#E7F2E7] text-[#2E7D32]'
+                    : 'text-[#6F6B5E] hover:bg-[#FAFAF5] hover:text-[#1D261F]'
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -127,23 +150,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* QR Code Phone App Download Card */}
-        {isQrExpanded ? (
-          <div
-            onClick={() => setIsQrExpanded(false)}
-            className="bg-[#FAFBF6] border border-[#E7E5DA] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 mt-auto mb-2 select-none cursor-pointer hover:bg-[#FAFBF6]/90 transition-all"
-          >
-            <img src="/app-qr.png" alt="DhanSetu App QR" className="w-16 h-16 bg-white p-1 rounded-lg border border-[#E7E5DA] object-contain" />
-            <span className="text-[9px] font-bold text-[#1D261F]">Get DhanSetu Phone App</span>
-            <span className="text-[8px] text-[#6F6B5E] leading-normal font-semibold">Scan to sync SMS & Voice alerts</span>
-          </div>
-        ) : (
+        <div className="bg-[#FAFBF6] border border-[#E7E5DA] rounded-xl p-3 flex flex-col items-center text-center gap-2 mt-auto mb-2 select-none w-full">
+          <img src="/qrcode.png" alt="DhanSetu App QR" className="w-28 h-28 bg-white p-1.5 rounded-lg border border-[#E7E5DA] object-contain shadow-xs" />
+          <span className="text-[9.5px] font-bold text-[#1D261F] leading-tight">{t.scanQrToDownload}</span>
+
           <button
-            onClick={() => setIsQrExpanded(true)}
-            className="mt-auto mb-2 py-2 px-3 bg-[#FAFBF6] hover:bg-[#E7F2E7] border border-[#E7E5DA] rounded-lg text-[9px] font-bold text-[#2E7D32] transition-all text-center w-full cursor-pointer"
+            type="button"
+            onClick={() => setShowInstallInstructions(!showInstallInstructions)}
+            className="text-[9px] text-[#2E7D32] font-bold hover:underline flex items-center justify-center gap-1 cursor-pointer w-full mt-1.5 py-1 border border-[#2E7D32]/20 bg-white rounded-lg hover:bg-[#E7F2E7]/30 transition-colors"
           >
-            scan qr to download our dhansetu app
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>{t.howToInstall}</span>
           </button>
-        )}
+
+          {showInstallInstructions && (
+            <div className="text-left bg-white border border-[#E7E5DA] rounded-lg p-2.5 mt-1 text-[8.5px] text-[#6F6B5E] leading-relaxed space-y-2.5 max-h-48 overflow-y-auto w-full">
+              <div>
+                <p className="font-bold text-[#1D261F]">{t.installStep1Title}</p>
+                <p>{t.installStep1Desc}</p>
+              </div>
+              <div>
+                <p className="font-bold text-[#1D261F]">{t.installStep2Title}</p>
+                <p>{t.installStep2Desc}</p>
+              </div>
+              <div className="border-t border-[#E7E5DA] pt-1.5">
+                <p className="font-bold text-[#C0392B]">{t.installWarningTitle}</p>
+                <p className="text-[#C0392B] font-medium">{t.installWarningDesc}</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Card & Logout */}
         <div className="border-t border-[#E7E5DA] pt-4 flex flex-col gap-3">
@@ -185,7 +221,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Dynamic Page Content */}
         <main className="flex-grow p-4 md:p-6 pb-24 md:pb-6">
           <div className="max-w-4xl mx-auto">
-            {children}
+            {transitionLoading ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-8 h-8 border-4 border-[#2E7D32] border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-3.5 text-xs font-semibold text-[#6F6B5E]">Loading Secure Gateway...</p>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
 
@@ -214,6 +257,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
       </div>
+      <FirstLoadLangModal />
     </div>
   );
 }

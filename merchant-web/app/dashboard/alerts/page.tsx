@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
+import { translateText } from '@/utils/translator';
 
 export default function AlertsScreen() {
   const {
@@ -25,12 +26,45 @@ export default function AlertsScreen() {
 
   const t = L[lang] || L.en;
 
+  const [translatedAdvice, setTranslatedAdvice] = useState<string[]>(advice || []);
+
   // Clear unread indicator on mount
   useEffect(() => {
     if (hasUnreadAlerts) {
       markAlertsAsRead();
     }
   }, [hasUnreadAlerts, markAlertsAsRead]);
+
+  // Translate advice on change
+  useEffect(() => {
+    let isMounted = true;
+    async function performTranslation() {
+      if (!advice || advice.length === 0) {
+        setTranslatedAdvice([]);
+        return;
+      }
+      if (lang === 'en') {
+        setTranslatedAdvice(advice);
+        return;
+      }
+      try {
+        const promises = advice.map(item => translateText(item, lang));
+        const results = await Promise.all(promises);
+        if (isMounted) {
+          setTranslatedAdvice(results);
+        }
+      } catch (err) {
+        console.warn('Failed to translate advice:', err);
+        if (isMounted) {
+          setTranslatedAdvice(advice);
+        }
+      }
+    }
+    performTranslation();
+    return () => {
+      isMounted = false;
+    };
+  }, [advice, lang]);
 
   // Color mapping functions
   const getTierColor = (tVal: string) => {
@@ -97,8 +131,10 @@ export default function AlertsScreen() {
                 >
                   <TrendingDown className="w-4 h-4 text-[#C0392B] shrink-0 mt-0.5" />
                   <div className="flex-1 flex flex-col gap-1">
-                    <span className="text-xs font-bold text-[#1D261F]">{flag.tag}</span>
-                    <span className="text-[11px] font-medium text-[#6F6B5E] leading-relaxed">{flag.detail}</span>
+                    <span className="text-xs font-bold text-[#1D261F]">{t.mechanisms[flag.key] || flag.tag}</span>
+                    <span className="text-[11px] font-medium text-[#6F6B5E] leading-relaxed">
+                      {t.flagDetails[flag.key] ? t.flagDetails[flag.key](flag.params || {}) : flag.detail}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -119,7 +155,7 @@ export default function AlertsScreen() {
           </h3>
 
           <div className="flex flex-col gap-3.5">
-            {advice.map((item, i) => (
+            {translatedAdvice.map((item, i) => (
               <div key={i} className="flex gap-3 items-start">
                 <div className="w-5 h-5 rounded-full bg-[#E7F2E7] border border-[#E2E6D8] text-[#2E7D32] flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
                   {i + 1}

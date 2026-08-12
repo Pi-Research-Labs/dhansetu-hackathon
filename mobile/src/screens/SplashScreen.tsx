@@ -84,8 +84,8 @@ export function SplashScreen() {
           <View style={styles.emblemIconCircle}>
             <Image
               source={require('../../assets/icon.png')}
-              style={{ width: 44, height: 44 }}
-              resizeMode="contain"
+              style={{ width: 66, height: 66, borderRadius: 33 }}
+              resizeMode="cover"
             />
           </View>
           <Text style={styles.govTitle}>DHANSETU</Text>
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    overflow: 'hidden',
   },
   govTitle: {
     color: '#0F172A',

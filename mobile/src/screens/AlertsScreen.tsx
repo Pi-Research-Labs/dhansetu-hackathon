@@ -5,6 +5,7 @@ import { useFocusEffect } from 'expo-router';
 import { Bell, AlertTriangle, Lightbulb, ShieldCheck, Brain, CheckCircle2, Check } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
+import { translateText } from '@/utils/translator';
 
 export function AlertsScreen() {
   const insets = useSafeAreaInsets();
@@ -12,6 +13,37 @@ export function AlertsScreen() {
   const t = L[lang];
 
   const [refreshing, setRefreshing] = useState(false);
+  const [translatedAdvice, setTranslatedAdvice] = useState<string[]>(advice || []);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function performTranslation() {
+      if (!advice || advice.length === 0) {
+        setTranslatedAdvice([]);
+        return;
+      }
+      if (lang === 'en') {
+        setTranslatedAdvice(advice);
+        return;
+      }
+      try {
+        const promises = advice.map(item => translateText(item, lang));
+        const results = await Promise.all(promises);
+        if (isMounted) {
+          setTranslatedAdvice(results);
+        }
+      } catch (err) {
+        console.warn('Failed to translate advice:', err);
+        if (isMounted) {
+          setTranslatedAdvice(advice);
+        }
+      }
+    }
+    performTranslation();
+    return () => {
+      isMounted = false;
+    };
+  }, [advice, lang]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -102,12 +134,12 @@ export function AlertsScreen() {
           <Text style={styles.sectionTitle}>{t.activeFlagsTitle(flags.length)}</Text>
           {hasUnreadAlerts ? (
             <TouchableOpacity onPress={markAlertsAsRead} style={styles.markReadBtn} activeOpacity={0.7}>
-              <Text style={styles.markReadText}>Mark all as read</Text>
+              <Text style={styles.markReadText}>{t.markAllAsRead}</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.allReadBadge}>
               <Check size={11} color="#2E7D32" style={{ marginRight: 2 }} />
-              <Text style={styles.allReadText}>All Read</Text>
+              <Text style={styles.allReadText}>{t.allRead}</Text>
             </View>
           )}
         </View>
@@ -121,11 +153,11 @@ export function AlertsScreen() {
               </View>
               {hasUnreadAlerts ? (
                 <View style={styles.newAlertBadge}>
-                  <Text style={styles.newAlertText}>NEW</Text>
+                  <Text style={styles.newAlertText}>{t.tagNew}</Text>
                 </View>
               ) : (
                 <View style={styles.monitoredBadge}>
-                  <Text style={styles.monitoredText}>Monitored</Text>
+                  <Text style={styles.monitoredText}>{t.tagMonitored}</Text>
                 </View>
               )}
             </View>
@@ -140,7 +172,7 @@ export function AlertsScreen() {
           <Text style={styles.sectionTitle}>{t.suggestedActionsTitle}</Text>
         </View>
 
-        {advice.map((item, idx) => (
+        {translatedAdvice.map((item, idx) => (
           <View key={idx} style={styles.adviceCard}>
             <View style={styles.adviceHeaderRow}>
               <View style={styles.checkboxCircle}>

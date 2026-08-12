@@ -115,7 +115,16 @@ export interface MerchantStore {
   todaysTotals: TodaysTotals;
 
   // Risk Flags & Advice
-  flags: { key: string; tag: string; detail: string }[];
+  flags: {
+    key: string;
+    tag: string;
+    detail: string;
+    params?: {
+      marginGapPct?: number | null;
+      missedEmi?: number | null;
+      bufferMonths?: number | null;
+    } | null;
+  }[];
   advice: string[];
 
   // Unread alerts indicator
@@ -374,17 +383,71 @@ export const useMerchantStore = create<MerchantStore>()(
                 ? `Cash runway covers only ${Math.max(0, card.net_buffer_days / 30).toFixed(1)} months of typical outflows.`
                 : 'Savings cover less than a single month of typical outflows.',
             },
+            receivable_stretch: {
+              tag: 'Receivable Stretch',
+              detail: 'Buyers are taking a long time to pay, so earned money has not arrived.',
+            },
+            demand_trough: {
+              tag: 'Demand Trough',
+              detail: 'Demand has dropped off, so sales are below the usual level.',
+            },
+            climate_shock: {
+              tag: 'Climate Shock',
+              detail: 'Weather has hit output or costs in this area.',
+            },
           };
 
-          const flags: { key: string; tag: string; detail: string }[] = [];
+          const flags: {
+            key: string;
+            tag: string;
+            detail: string;
+            params?: {
+              marginGapPct?: number | null;
+              missedEmi?: number | null;
+              bufferMonths?: number | null;
+            } | null;
+          }[] = [];
           if (card.reason_1 && reasonMapping[card.reason_1]) {
-            flags.push({ key: card.reason_1, ...reasonMapping[card.reason_1] });
+            flags.push({
+              key: card.reason_1,
+              ...reasonMapping[card.reason_1],
+              params: {
+                marginGapPct: card.margin_gap_90d ?? null,
+                missedEmi: card.missed_emi ?? null,
+                bufferMonths:
+                  card.net_buffer_days != null
+                    ? parseFloat(Math.max(0, card.net_buffer_days / 30).toFixed(1))
+                    : null,
+              },
+            });
           }
           if (card.reason_2 && reasonMapping[card.reason_2]) {
-            flags.push({ key: card.reason_2, ...reasonMapping[card.reason_2] });
+            flags.push({
+              key: card.reason_2,
+              ...reasonMapping[card.reason_2],
+              params: {
+                marginGapPct: card.margin_gap_90d ?? null,
+                missedEmi: card.missed_emi ?? null,
+                bufferMonths:
+                  card.net_buffer_days != null
+                    ? parseFloat(Math.max(0, card.net_buffer_days / 30).toFixed(1))
+                    : null,
+              },
+            });
           }
           if (card.reason_3 && reasonMapping[card.reason_3]) {
-            flags.push({ key: card.reason_3, ...reasonMapping[card.reason_3] });
+            flags.push({
+              key: card.reason_3,
+              ...reasonMapping[card.reason_3],
+              params: {
+                marginGapPct: card.margin_gap_90d ?? null,
+                missedEmi: card.missed_emi ?? null,
+                bufferMonths:
+                  card.net_buffer_days != null
+                    ? parseFloat(Math.max(0, card.net_buffer_days / 30).toFixed(1))
+                    : null,
+              },
+            });
           }
 
           // Default fallback warning flag

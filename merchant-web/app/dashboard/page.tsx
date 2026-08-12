@@ -56,12 +56,12 @@ export default function DashboardHome() {
       {/* ─── Profile Header ─── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
-          <span className="text-[10px] font-bold text-[#6F6B5E] tracking-widest uppercase">Verified Portfolio</span>
+          <span className="text-[10px] font-bold text-[#6F6B5E] tracking-widest uppercase">{t.verifiedPortfolio}</span>
           <h2 className="text-[#1D261F] text-xl font-bold mt-0.5">{name}</h2>
         </div>
         <div className="flex items-center gap-1.5 bg-[#E7F2E7] border border-[#E2E6D8] px-2.5 py-1 rounded-full text-[10px] font-bold text-[#2E7D32]">
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>GSTIN & Aadhaar Active</span>
+          <span>{t.gstAadhaarActive}</span>
         </div>
       </div>
 
@@ -202,7 +202,7 @@ export default function DashboardHome() {
           </div>
 
           <div className="text-[10px] font-semibold text-[#6F6B5E] leading-normal bg-[#FAFAF5] rounded-lg p-2.5 border border-[#E7E5DA]">
-            💡 Digital receipts (UPI/Wallet) provide verifiable credit tracking for bankers, boosting loan eligibility.
+            {t.digitalReceiptsTip}
           </div>
         </div>
 
@@ -215,7 +215,7 @@ export default function DashboardHome() {
         <div className="bg-white border border-[#E7E5DA] rounded-2xl p-5 shadow-xs flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#2E7D32]" />
-            <h3 className="text-[#1D261F] text-sm font-bold">Udhaar Book (Receivables Ageing)</h3>
+            <h3 className="text-[#1D261F] text-sm font-bold">{t.receivablesTitle}</h3>
           </div>
 
           <div className="flex flex-col divide-y divide-[#E7E5DA]">
@@ -224,10 +224,10 @@ export default function DashboardHome() {
                 <div key={idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-bold text-[#1D261F]">
-                      {item.counterparty_type.replace('_', ' ').toUpperCase()}
+                      {t.counterpartyTypes[item.counterparty_type] || item.counterparty_type.replace('_', ' ').toUpperCase()}
                     </span>
                     <span className="text-[10px] font-semibold text-[#6F6B5E]">
-                      {item.invoices} Invoices · Avg {item.avg_days_to_cash} Days to Cash
+                      {item.invoices} {t.invoicesLabel} · {t.avgLabel} {item.avg_days_to_cash} {t.daysToCashLabel}
                     </span>
                   </div>
                   <div className="text-right flex flex-col gap-0.5">
@@ -236,7 +236,7 @@ export default function DashboardHome() {
                     </span>
                     {item.written_off > 0 && (
                       <span className="text-[9px] font-bold text-[#C0392B]">
-                        Written-Off: ₹ {item.written_off.toLocaleString('en-IN')} ({item.write_off_pct}%)
+                        {t.writtenOffLabel}: ₹ {item.written_off.toLocaleString('en-IN')} ({item.write_off_pct}%)
                       </span>
                     )}
                   </div>
@@ -244,7 +244,7 @@ export default function DashboardHome() {
               ))
             ) : (
               <p className="text-xs font-semibold text-[#6F6B5E] py-4 italic text-center">
-                No credit (udhaar) book entries recorded.
+                {t.noReceivables}
               </p>
             )}
           </div>
@@ -296,7 +296,7 @@ export default function DashboardHome() {
           </div>
 
           <div className="text-[10px] font-semibold text-[#6F6B5E] leading-normal bg-[#FAFAF5] rounded-lg p-2.5 border border-[#E7E5DA] text-center">
-            All manual entries recorded locally are instantly synchronized on server reconnection.
+            {t.manualSyncDisclaimer}
           </div>
         </div>
 

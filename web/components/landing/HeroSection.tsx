@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAppSelector } from "@/redux/hooks";
 import { checkIsAuthenticated } from "@/utils/auth";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
-import { Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { Sparkles, ArrowRight, ShieldCheck, Store } from "lucide-react";
 
 function Badge({ text }: { text: string }) {
   return (
@@ -70,22 +70,15 @@ export default function HeroSection({ t }: HeroSectionProps) {
           <span>{t.land.cta}</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
-        {/* <Link
-          href={primaryTarget}
-          className="px-6 py-3.5 rounded-xl font-semibold text-sm text-[#1A2016] bg-white border border-[#E2E6D8] hover:bg-[#FAFBF6] transition-all cursor-pointer inline-flex items-center gap-2"
+        <a
+          href="https://dhansetu-merchant.piresearchlabs.com/login"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-7 py-3.5 rounded-xl font-bold text-sm text-[#2E7D32] bg-white border border-[#2E7D32]/35 hover:bg-[#FAFBF6] hover:border-[#2E7D32] shadow-sm transition-all cursor-pointer inline-flex items-center gap-2"
         >
-          {isLoggedIn ? (
-            <>
-              <LayoutDashboard className="w-4 h-4 text-[#2E7D32]" />
-              <span>Go to Dashboard</span>
-            </>
-          ) : (
-            <>
-              <Lock className="w-4 h-4 text-[#5F6656]" />
-              <span>{t.land.signin}</span>
-            </>
-          )}
-        </Link> */}
+          <Store className="w-4 h-4 text-[#2E7D32]" />
+          <span>{t.land.merchantCta}</span>
+        </a>
       </div>
 
       <div className="flex flex-wrap gap-2.5 mt-8">

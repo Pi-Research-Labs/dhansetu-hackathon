@@ -16,6 +16,7 @@ import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { MarketPriceChart } from '@/components/charts/MarketPriceChart';
 import { getMarketIntelligence, MarketIntelligenceDetail } from '@/utils/api-config';
+import { Translate } from '@/components/common/Translate';
 
 export default function MarketScreen() {
   const { lang, enterpriseId } = useMerchantStore();
@@ -67,7 +68,9 @@ export default function MarketScreen() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="w-8 h-8 border-4 border-[#2E7D32] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-xs text-[#6F6B5E] mt-3 font-semibold">Loading Market Intelligence...</p>
+        <p className="text-xs text-[#6F6B5E] mt-3 font-semibold">
+          <Translate>Loading Market Intelligence...</Translate>
+        </p>
       </div>
     );
   }
@@ -84,14 +87,21 @@ export default function MarketScreen() {
       {/* Scoped Info Card */}
       <div className="bg-white border border-[#E7E5DA] rounded-2xl p-4 shadow-xs flex flex-wrap gap-4 items-center justify-between">
         <div className="text-xs">
-          <span className="text-[#6F6B5E] font-medium">Industry Segment: </span>
-          <span className="font-bold text-[#2E7D32]">{intel?.sub_type}</span>
+          <span className="text-[#6F6B5E] font-medium">
+            <Translate>Industry Segment:</Translate>{' '}
+          </span>
+          <span className="font-bold text-[#2E7D32]">
+            <Translate>{intel?.sub_type || ''}</Translate>
+          </span>
         </div>
         {intel?.district && (
           <div className="flex items-center gap-1.5 text-xs text-[#6F6B5E]">
             <MapPin className="w-3.5 h-3.5 text-[#6F6B5E]" />
             <span>
-              District Centroid: <span className="font-bold text-[#1D261F]">{intel.district}</span>
+              <Translate>District Centroid:</Translate>{' '}
+              <span className="font-bold text-[#1D261F]">
+                <Translate>{intel.district}</Translate>
+              </span>
             </span>
           </div>
         )}
@@ -99,7 +109,9 @@ export default function MarketScreen() {
 
       {/* ─── FULL-WIDTH CHART SECTION ─── */}
       <div className="bg-white border border-[#E7E5DA] rounded-2xl p-5 shadow-xs">
-        <h3 className="text-sm font-bold text-[#1D261F] mb-1">{intel?.tracked_commodity} Market Analytics</h3>
+        <h3 className="text-sm font-bold text-[#1D261F] mb-1">
+          <Translate>{intel?.tracked_commodity || ''}</Translate> <Translate>Market Analytics</Translate>
+        </h3>
         <MarketPriceChart chartData={intel?.chart_data} />
       </div>
 
@@ -116,7 +128,9 @@ export default function MarketScreen() {
               <span className="text-[#6F6B5E] text-[10px] font-bold tracking-wider uppercase leading-none">
                 {t.trackedCommodity}
               </span>
-              <h3 className="text-[#1D261F] text-base font-extrabold mt-1.5">{intel?.tracked_commodity}</h3>
+              <h3 className="text-[#1D261F] text-base font-extrabold mt-1.5">
+                <Translate>{intel?.tracked_commodity || ''}</Translate>
+              </h3>
               <div className="flex items-center gap-1.5 mt-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse"></span>
                 <span className="text-[9px] font-bold text-[#2E7D32] uppercase tracking-wider">{t.liveFeed}</span>
@@ -126,7 +140,7 @@ export default function MarketScreen() {
             {/* 12-MO Price Trend */}
             <div className="bg-white border border-[#E7E5DA] rounded-2xl p-4 shadow-xs flex flex-col justify-between min-h-[96px]">
               <span className="text-[#6F6B5E] text-[10px] font-bold tracking-wider uppercase leading-none">
-                12-MO Price Trend
+                <Translate>12-MO Price Trend</Translate>
               </span>
               {intel && (
                 <h3 className={`text-base font-extrabold mt-1.5 flex items-center gap-1 ${
@@ -136,7 +150,9 @@ export default function MarketScreen() {
                   <span>{intel.price_trend_12m_pct > 0 ? `+${intel.price_trend_12m_pct}%` : `${intel.price_trend_12m_pct}%`}</span>
                 </h3>
               )}
-              <span className="text-[9px] text-[#6F6B5E] mt-2">vs regional baseline index</span>
+              <span className="text-[9px] text-[#6F6B5E] mt-2">
+                <Translate>vs regional baseline index</Translate>
+              </span>
             </div>
           </div>
 
@@ -146,7 +162,9 @@ export default function MarketScreen() {
               <TrendingUp className="w-4.5 h-4.5" />
               <h3 className="text-xs font-bold text-[#1D261F]">{t.productivityTitle}</h3>
             </div>
-            <p className="text-xs text-[#6F6B5E] leading-relaxed">{intel?.productivity_outlook}</p>
+            <p className="text-xs text-[#6F6B5E] leading-relaxed">
+              <Translate>{intel?.productivity_outlook || ''}</Translate>
+            </p>
           </div>
 
           {/* Seasonal Pattern */}
@@ -155,7 +173,9 @@ export default function MarketScreen() {
               <Calendar className="w-4.5 h-4.5" />
               <h3 className="text-xs font-bold text-[#1D261F]">{t.seasonalTitle}</h3>
             </div>
-            <p className="text-xs text-[#6F6B5E] leading-relaxed">{intel?.seasonal_pattern}</p>
+            <p className="text-xs text-[#6F6B5E] leading-relaxed">
+              <Translate>{intel?.seasonal_pattern || ''}</Translate>
+            </p>
           </div>
 
         </div>
@@ -171,7 +191,9 @@ export default function MarketScreen() {
             {intel?.risks.map((r, idx) => (
               <div key={idx} className="flex flex-col gap-1.5 pt-3 first:pt-0">
                 <div className="flex justify-between items-center gap-2">
-                  <span className="text-xs font-bold text-[#1D261F]">{r.risk_type}</span>
+                  <span className="text-xs font-bold text-[#1D261F]">
+                    <Translate>{r.risk_type}</Translate>
+                  </span>
                   <span
                     className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border`}
                     style={{
@@ -183,7 +205,9 @@ export default function MarketScreen() {
                     {t.severityLabel(r.severity)}
                   </span>
                 </div>
-                <p className="text-[11px] text-[#6F6B5E] leading-relaxed">{r.detail}</p>
+                <p className="text-[11px] text-[#6F6B5E] leading-relaxed">
+                  <Translate>{r.detail}</Translate>
+                </p>
               </div>
             ))}
           </div>
