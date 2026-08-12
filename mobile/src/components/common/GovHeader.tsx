@@ -8,7 +8,7 @@ interface GovHeaderProps {
 }
 
 export function GovHeader({
-  title = 'DHANSETU NETWORK',
+  title = 'DHANSETU',
   subtitle = 'Verified Merchant Gateway',
 }: GovHeaderProps) {
   return (

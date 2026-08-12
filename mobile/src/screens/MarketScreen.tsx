@@ -99,12 +99,18 @@ export function MarketScreen() {
             <Text style={[styles.kpiValue, intel && intel.price_trend_12m_pct < 0 ? styles.textDown : styles.textUp]}>
               {intel && intel.price_trend_12m_pct > 0 ? `+${intel.price_trend_12m_pct}%` : `${intel?.price_trend_12m_pct}%`}
             </Text>
-            <Text style={styles.trendSubLabel}>vs baseline index</Text>
+            <Text style={styles.trendSubLabel}>vs baseline</Text>
           </View>
         </View>
 
-        {/* ECharts Dynamic Dual Axis Chart */}
-        <MarketPriceChart chartData={intel?.chart_data} />
+        {/* Market Price Chart */}
+        <View style={styles.card}>
+          <View style={styles.cardHeaderRow}>
+            <TrendingUp size={16} color="#2E7D32" />
+            <Text style={styles.cardHeaderTitle}>12-Month Commodity Price & Rainfall</Text>
+          </View>
+          <MarketPriceChart chartData={intel?.chart_data} />
+        </View>
 
         {/* Productivity Outlook */}
         <View style={styles.card}>

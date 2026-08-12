@@ -1,6 +1,6 @@
 {
-  "name": "dhansetu-merchant-portal",
-  "version": "1.0.0",
+  "name": "dhansetu",
+  "version": "1.0.1",
   "main": "index.ts",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.8",

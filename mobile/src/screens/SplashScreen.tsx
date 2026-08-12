@@ -1,11 +1,60 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Image, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
+
+const DHANSETU_LANGS = [
+  'DhanSetu',
+  'धनसेतु',
+  'धनसेतू',
+  'ధనసేతు',
+  'DhanSetu',
+];
+const ITEM_HEIGHT = 48;
 import { ShieldCheck, Landmark } from 'lucide-react-native';
 import { useMerchantStore } from '@/store/useMerchantStore';
 
 export function SplashScreen() {
   const router = useRouter();
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const animateNext = (index: number) => {
+      if (!isMounted) return;
+
+      Animated.timing(scrollY, {
+        toValue: -index * ITEM_HEIGHT,
+        duration: 600,
+        useNativeDriver: true,
+      }).start(() => {
+        if (!isMounted) return;
+
+        // Wait 2 seconds before animating the next language
+        setTimeout(() => {
+          if (!isMounted) return;
+
+          if (index >= DHANSETU_LANGS.length - 1) {
+            // Instant reset to index 0 (English)
+            scrollY.setValue(0);
+            animateNext(1);
+          } else {
+            animateNext(index + 1);
+          }
+        }, 2000);
+      });
+    };
+
+    // Start the vertical scrolling sequence
+    const startTimeout = setTimeout(() => {
+      animateNext(1);
+    }, 500);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(startTimeout);
+    };
+  }, []);
 
   useEffect(() => {
     const initializeSession = async () => {
@@ -33,18 +82,29 @@ export function SplashScreen() {
         {/* Emblem Badge */}
         <View style={styles.emblemContainer}>
           <View style={styles.emblemIconCircle}>
-            <Landmark size={36} color="#1E293B" />
+            <Image
+              source={require('../../assets/icon.png')}
+              style={{ width: 44, height: 44 }}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.govTitle}>DHANSETU NETWORK</Text>
+          <Text style={styles.govTitle}>DHANSETU</Text>
           <Text style={styles.ministryTitle}>VERIFIED MERCHANT GATEWAY</Text>
         </View>
 
         {/* App Branding */}
         <View style={styles.brandingContainer}>
-          <Text style={styles.devanagariTitle}>धनसेतु</Text>
-          <Text style={styles.brandTitle}>DhanSetu</Text>
+          <View style={styles.carouselContainer}>
+            <Animated.View style={{ transform: [{ translateY: scrollY }] }}>
+              {DHANSETU_LANGS.map((lang, idx) => (
+                <View key={idx} style={styles.carouselItem}>
+                  <Text style={styles.carouselText}>{lang}</Text>
+                </View>
+              ))}
+            </Animated.View>
+          </View>
           <View style={styles.pillBadge}>
-            <Text style={styles.pillText}>OFFICIAL MERCHANT PORTAL</Text>
+            <Text style={styles.pillText}>OFFICIAL DHANSETU MERCHANT PORTAL</Text>
           </View>
         </View>
 
@@ -114,18 +174,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 36,
   },
-  devanagariTitle: {
-    color: '#1E293B',
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 1,
+  carouselContainer: {
+    height: ITEM_HEIGHT,
+    overflow: 'hidden',
+    width: '100%',
   },
-  brandTitle: {
+  carouselItem: {
+    height: ITEM_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  carouselText: {
     color: '#0F172A',
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     letterSpacing: 0.3,
-    marginTop: -2,
+    textAlign: 'center',
   },
   pillBadge: {
     backgroundColor: '#F1F5F9',

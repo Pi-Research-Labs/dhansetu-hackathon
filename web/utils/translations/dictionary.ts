@@ -182,7 +182,7 @@ export interface TranslationDictionary {
 export const translations: Record<LanguageCode, TranslationDictionary> = {
   en: {
     langName: "English",
-    govtBadge: "Government of India · Ministry of Rural Development",
+    govtBadge: " Ministry of Rural Development",
     nav: {
       home: "Home",
       dashboard: "Officer Portal",
