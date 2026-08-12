@@ -152,7 +152,7 @@ export const L: Record<SupportedLang, Translations> = {
     },
 
     marketTitle: 'Market Intelligence',
-    marketSub: 'Real-time agricultural commodity prices, MSP & climate risk',
+    marketSub: 'Real-time agricultural commodity prices, MSP & climate risk index',
     trackedCommodity: 'TRACKED COMMODITY BASKET',
     liveFeed: 'LIVE MANDI & MSP FEED',
     realtimeRates: 'Real-Time Commodity Rates',
@@ -255,7 +255,7 @@ export const L: Record<SupportedLang, Translations> = {
     },
 
     marketTitle: 'बाज़ार बुद्धिमत्ता (Market Intel)',
-    marketSub: 'कृषि वस्तु मूल्य, न्यूनतम समर्थन मूल्य (MSP) और जलवायु जोखिम',
+    marketSub: 'कृषि वस्तु मूल्य, न्यूनतम समर्थन मूल्य (MSP) और जलवायु जोखिम सूचकांक',
     trackedCommodity: 'ट्रैक की गई वस्तु बास्केट',
     liveFeed: 'लाइव मंडी एवं MSP फ़ीड',
     realtimeRates: 'वास्तविक समय मंडी भाव',
@@ -358,7 +358,7 @@ export const L: Record<SupportedLang, Translations> = {
     },
 
     marketTitle: 'बाजार माहिती (Market Intel)',
-    marketSub: 'कृषी वस्तू दर, किमान आधारभूत किंमत (MSP) व हवामान जोखीम',
+    marketSub: 'कृषी वस्तू दर, किमान आधारभूत किंमत (MSP) व हवामान जोखीम निर्देशांक',
     trackedCommodity: 'ट्रॅक केलेली वस्तू बास्केट',
     liveFeed: 'थेट मंडी व MSP फीड',
     realtimeRates: 'प्रत्यक्ष बाजार भाव',
@@ -407,7 +407,7 @@ export const L: Record<SupportedLang, Translations> = {
     cancel: 'रद्द करा',
 
     firstLoadLangTitle: 'तुमची आवडती भाषा निवडा',
-    firstLoadLangSub: 'धनसेतु मर्चंट पोर्टलसाठी भाषा निवडा',
+    firstLoadLangSub: 'धनसेतु मर्चेंट पोर्टलसाठी भाषा निवडा',
     firstLoadLangTip: '💡 तुम्ही नंतर खाते सेटिंग्ज पृष्ठावरून तुमची भाषा कधीही बदलू शकता.',
     applyLangBtn: 'होय, भाषा लागू करा',
   },
@@ -444,7 +444,7 @@ export const L: Record<SupportedLang, Translations> = {
 
     recordEntryTitle: 'లావాదేవీ ఎంట్రీని నమోదు చేయండి',
     recordEntrySub: 'ఇక్కడ నమోదు చేసే ఎంట్రీలు మీ రికార్డును బలోపేతం చేస్తాయి - డిజిటల్‌గా నమోదు చేసే నగదు అమ్మకాలు మీ క్రెడిట్ ప్రొఫైల్‌ను పెంచుతాయి.',
-    newLedgerEntry: 'కొత్త ఖాతా ఎంట్రీ',
+    newLedgerEntry: 'కొత్త खाता ఎంట్రీ',
     transTypeLabel: 'లావాదేవీ రకం *',
     amountLabel: 'మొత్తం (₹) *',
     noteLabel: 'గమనిక / వివరాలు (ఐచ్ఛికం)',
@@ -461,7 +461,7 @@ export const L: Record<SupportedLang, Translations> = {
     },
 
     marketTitle: 'మార్కెట్ సమాచారం (Market Intel)',
-    marketSub: 'వ్యవసాయ సరుకుల ధరలు, మద్దతు ధర (MSP) మరియు వాతావరణ ముప్పు',
+    marketSub: 'వ్యవసాయ సరుకుల ధరలు, మద్దతు ధర (MSP) మరియు వాతావరణ ముప్పు సూచిక',
     trackedCommodity: 'సరుకుల జాబితా',
     liveFeed: 'లైవ్ మార్కెట్ & MSP ఫీడ్',
     realtimeRates: 'నేటి మార్కెట్ ధరలు',

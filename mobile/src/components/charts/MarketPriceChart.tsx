@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Rect, Path, Circle, Line, Text as SvgText, G } from 'react-native-svg';
 import { MarketChartPoint } from '@/utils/api-config';
 
@@ -22,11 +22,13 @@ export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
     ? chartData.map((d) => d.price_index)
     : [102, 104, 107, 112, 118, 122, 120, 119, 123, 125, 128, 131];
 
-  const chartHeight = 170;
-  const paddingLeft = 32;
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const chartHeight = 190;
+  const paddingLeft = 42;
   const paddingRight = 32;
-  const paddingTop = 15;
-  const paddingBottom = 25;
+  const paddingTop = 20;
+  const paddingBottom = 30;
 
   const maxRain = chartData && chartData.length > 0
     ? Math.max(...rainfallData, 50)
@@ -40,87 +42,184 @@ export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
     ? Math.max(...priceIndexData) + 5
     : 140;
 
+  const activeItem = selectedIndex !== null
+    ? { month: months[selectedIndex], price: priceIndexData[selectedIndex], rain: rainfallData[selectedIndex] }
+    : { month: months[months.length - 1], price: priceIndexData[priceIndexData.length - 1], rain: rainfallData[rainfallData.length - 1] };
+
+  const chartWidth = 320 - paddingLeft - paddingRight;
+  const step = chartWidth / months.length;
+  const usableH = chartHeight - paddingTop - paddingBottom;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.chartTitle}>12-Month Commodity Price Index & Rainfall (ECharts Dual Axis)</Text>
       
-      {/* Legend */}
+      {/* Legend Header */}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendBox, { backgroundColor: '#1565C0' }]} />
+          <View style={[styles.legendBox, { backgroundColor: '#1565C0', opacity: 0.45 }]} />
           <Text style={styles.legendText}>Rainfall (mm)</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendLine, { borderColor: '#2E7D32' }]} />
-          <Text style={styles.legendText}>Price Index (Base 100)</Text>
+          <Text style={styles.legendText}>Price (Base 100)</Text>
         </View>
       </View>
 
-      {/* SVG Canvas */}
-      <Svg width="100%" height={chartHeight} viewBox={`0 0 320 ${chartHeight}`}>
-        {/* Gridlines */}
-        {[0, 0.5, 1].map((pct, i) => {
-          const y = paddingTop + (1 - pct) * (chartHeight - paddingTop - paddingBottom);
-          return (
-            <G key={i}>
-              <Line x1={paddingLeft} y1={y} x2={320 - paddingRight} y2={y} stroke="#E7E5DA" strokeWidth="1" />
-              <SvgText x={paddingLeft - 4} y={y + 3} fill="#6F6B5E" fontSize="8" textAnchor="end">
-                {Math.round(pct * maxRain)}
-              </SvgText>
-              <SvgText x={320 - paddingRight + 4} y={y + 3} fill="#6F6B5E" fontSize="8" textAnchor="start">
-                {Math.round(minPrice + pct * (maxPrice - minPrice))}
-              </SvgText>
-            </G>
-          );
-        })}
+      {/* SVG Combo Chart */}
+      <View style={styles.chartWrapper}>
+        <Svg width={320} height={chartHeight} viewBox={`0 0 320 ${chartHeight}`}>
+          {/* Y Axis Gridlines */}
+          {[0, 0.5, 1].map((pct, i) => {
+            const y = paddingTop + (1 - pct) * usableH;
+            return (
+              <G key={i}>
+                <Line
+                  x1={paddingLeft}
+                  y1={y}
+                  x2={320 - paddingRight}
+                  y2={y}
+                  stroke="#E7E5DA"
+                  strokeWidth="1"
+                  strokeDasharray="4 4"
+                />
+                {/* Left Y-Axis (Rainfall) */}
+                <SvgText
+                  x={paddingLeft - 6}
+                  y={y + 3}
+                  fill="#6F6B5E"
+                  fontSize="9"
+                  textAnchor="end"
+                >
+                  {Math.round(pct * maxRain)}
+                </SvgText>
+                {/* Right Y-Axis (Price) */}
+                <SvgText
+                  x={320 - paddingRight + 6}
+                  y={y + 3}
+                  fill="#6F6B5E"
+                  fontSize="9"
+                  textAnchor="start"
+                >
+                  {Math.round(minPrice + pct * (maxPrice - minPrice))}
+                </SvgText>
+              </G>
+            );
+          })}
 
-        {/* Rainfall Bars */}
-        {months.map((m, idx) => {
-          const chartWidth = 320 - paddingLeft - paddingRight;
-          const step = chartWidth / months.length;
-          const x = paddingLeft + step * idx + 2;
-          const barW = Math.max(step - 4, 4);
+          {/* Rainfall Bars & Selection Highlights */}
+          {months.map((m, idx) => {
+            const isSelected = selectedIndex === idx;
+            const xCenter = paddingLeft + step * idx + step / 2;
+            const barW = 12;
+            const barX = xCenter - barW / 2;
 
-          const usableH = chartHeight - paddingTop - paddingBottom;
-          const rainH = (rainfallData[idx] / maxRain) * usableH;
-          const rainY = paddingTop + usableH - rainH;
+            const rainH = (rainfallData[idx] / maxRain) * usableH;
+            const rainY = paddingTop + usableH - rainH;
 
-          return (
-            <G key={idx}>
-              <Rect x={x} y={rainY} width={barW} height={rainH} fill="#1565C0" fillOpacity={0.25} rx="1" />
-              <SvgText x={x + barW / 2} y={chartHeight - 6} fill="#6F6B5E" fontSize="8" textAnchor="middle">
-                {m}
-              </SvgText>
-            </G>
-          );
-        })}
+            return (
+              <G key={idx}>
+                {/* Active Selection Highlight Column */}
+                {isSelected && (
+                  <Rect
+                    x={paddingLeft + step * idx}
+                    y={paddingTop}
+                    width={step}
+                    height={usableH}
+                    fill="#E7F2E7"
+                    rx="4"
+                    opacity="0.6"
+                  />
+                )}
 
-        {/* Price Index Line */}
-        {(() => {
-          const chartWidth = 320 - paddingLeft - paddingRight;
-          const step = chartWidth / months.length;
-          const usableH = chartHeight - paddingTop - paddingBottom;
+                {/* Rainfall Bar */}
+                <Rect
+                  x={barX}
+                  y={rainY}
+                  width={barW}
+                  height={rainH}
+                  fill={isSelected ? '#0D47A1' : '#1565C0'}
+                  fillOpacity={isSelected ? 1.0 : 0.45}
+                  rx="3"
+                />
+              </G>
+            );
+          })}
 
-          const points = priceIndexData.map((val, idx) => {
-            const x = paddingLeft + step * idx + step / 2;
-            const norm = (val - minPrice) / (maxPrice - minPrice);
-            const y = paddingTop + (1 - norm) * usableH;
-            return `${x},${y}`;
-          });
+          {/* Price Line */}
+          {(() => {
+            const points = priceIndexData.map((val, idx) => {
+              const xCenter = paddingLeft + step * idx + step / 2;
+              const norm = (val - minPrice) / (maxPrice - minPrice);
+              const y = paddingTop + (1 - norm) * usableH;
+              return `${xCenter},${y}`;
+            });
 
-          return (
-            <G>
-              <Path d={`M ${points.join(' L ')}`} fill="none" stroke="#2E7D32" strokeWidth="2" />
-              {priceIndexData.map((val, idx) => {
-                const x = paddingLeft + step * idx + step / 2;
-                const norm = (val - minPrice) / (maxPrice - minPrice);
-                const y = paddingTop + (1 - norm) * usableH;
-                return <Circle key={idx} cx={x} cy={y} r="2.5" fill="#2E7D32" stroke="#FFFFFF" strokeWidth="1" />;
-              })}
-            </G>
-          );
-        })()}
-      </Svg>
+            return (
+              <G>
+                <Path d={`M ${points.join(' L ')}`} fill="none" stroke="#2E7D32" strokeWidth="2.5" />
+                {priceIndexData.map((val, idx) => {
+                  const isSelected = selectedIndex === idx;
+                  const xCenter = paddingLeft + step * idx + step / 2;
+                  const norm = (val - minPrice) / (maxPrice - minPrice);
+                  const y = paddingTop + (1 - norm) * usableH;
+                  return (
+                    <Circle
+                      key={idx}
+                      cx={xCenter}
+                      cy={y}
+                      r={isSelected ? '5' : '3.5'}
+                      fill="#2E7D32"
+                      stroke="#FFFFFF"
+                      strokeWidth={isSelected ? '2' : '1.5'}
+                    />
+                  );
+                })}
+              </G>
+            );
+          })()}
+        </Svg>
+
+        {/* Hotspots Overlay */}
+        <View style={styles.hotspotsOverlay}>
+          {months.map((item, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.hotspot,
+                {
+                  left: paddingLeft + step * idx,
+                  width: step,
+                  height: chartHeight - paddingBottom,
+                },
+              ]}
+              onPress={() => setSelectedIndex(idx)}
+              activeOpacity={0.6}
+            />
+          ))}
+        </View>
+      </View>
+
+      {/* Selected Month Callout / Active Detail Box */}
+      {activeItem && (
+        <View style={styles.detailCard}>
+          <View style={styles.detailHeader}>
+            <Text style={styles.detailTitle}>{activeItem.month} Forecast & Trends</Text>
+            <Text style={styles.detailRange}>Active Detail</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Price:</Text>
+            <Text style={[styles.detailVal, { color: '#2E7D32' }]}>
+              {activeItem.price.toFixed(1)}
+            </Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Rainfall:</Text>
+            <Text style={[styles.detailVal, { color: '#1565C0' }]}>
+              {activeItem.rain.toFixed(1)} mm
+            </Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -128,21 +227,15 @@ export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E7E5DA',
-    marginBottom: 14,
-  },
-  chartTitle: {
-    color: '#1D261F',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 6,
   },
   legendRow: {
     flexDirection: 'row',
-    gap: 16,
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 8,
   },
   legendItem: {
@@ -162,7 +255,64 @@ const styles = StyleSheet.create({
   },
   legendText: {
     color: '#6F6B5E',
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '500',
+  },
+  chartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    width: 320,
+    alignSelf: 'center',
+  },
+  hotspotsOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    flexDirection: 'row',
+  },
+  hotspot: {
+    position: 'absolute',
+    top: 20, // paddingTop
+    backgroundColor: 'transparent',
+  },
+  detailCard: {
+    backgroundColor: '#FAFAF5',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E7E5DA',
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  detailTitle: {
+    color: '#1D261F',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  detailRange: {
+    color: '#6F6B5E',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  detailLabel: {
+    color: '#6F6B5E',
+    fontSize: 11,
+  },
+  detailVal: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

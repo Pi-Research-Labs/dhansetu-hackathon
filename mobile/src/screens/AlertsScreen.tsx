@@ -70,7 +70,7 @@ export function AlertsScreen() {
           <View style={styles.predictiveCard}>
             <View style={styles.predictiveHeader}>
               <Brain size={18} color="#2E7D32" />
-              <Text style={styles.predictiveTitle}>AI Predictive Analysis (Model Snapshot)</Text>
+              <Text style={styles.predictiveTitle}>AI Predictive Analysis</Text>
             </View>
             <View style={styles.predictiveDivider} />
             <View style={styles.predictiveGrid}>
@@ -93,9 +93,7 @@ export function AlertsScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={styles.modelMetaText}>
-              Model ID: {riskPrediction.model_id} · Rules: {riskPrediction.rule_version}
-            </Text>
+
           </View>
         )}
 

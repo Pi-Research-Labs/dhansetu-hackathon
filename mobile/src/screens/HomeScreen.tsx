@@ -64,7 +64,7 @@ export function HomeScreen() {
         <View style={styles.govBadge}>
           <Landmark size={18} color="#2E7D32" />
           <View>
-            <Text style={styles.govTitle}>DHANSETU NETWORK</Text>
+            <Text style={styles.govTitle}>DHANSETU</Text>
             <Text style={styles.portalTitle}>{t.portalTitle}</Text>
           </View>
         </View>
@@ -213,7 +213,7 @@ export function HomeScreen() {
           <View style={styles.todayTotalsGrid}>
             <View style={styles.todayTotalBox}>
               <View style={styles.todayHeaderRow}>
-                <Text style={styles.todayBoxLabel}>{t.inflowLabel} (Money In)</Text>
+                <Text style={styles.todayBoxLabel}>{t.inflowLabel}</Text>
               </View>
               <Text style={[styles.todayBoxValue, styles.textGreen]}>
                 +₹ {(todaysTotals?.total_inflow ?? 0).toLocaleString('en-IN')}
@@ -228,7 +228,7 @@ export function HomeScreen() {
 
             <View style={styles.todayTotalBox}>
               <View style={styles.todayHeaderRow}>
-                <Text style={styles.todayBoxLabel}>{t.outflowLabel} (Money Out)</Text>
+                <Text style={styles.todayBoxLabel}>{t.outflowLabel}</Text>
               </View>
               <Text style={[styles.todayBoxValue, styles.textRed]}>
                 -₹ {(todaysTotals?.total_outflow ?? 0).toLocaleString('en-IN')}
