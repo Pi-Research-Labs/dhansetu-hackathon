@@ -68,15 +68,14 @@ export default function HeroSection({ t }: HeroSectionProps) {
           className="px-7 py-3.5 rounded-xl font-bold text-sm text-white bg-[#2E7D32] hover:bg-[#236327] shadow-lg shadow-[#2E7D32]/20 transition-all cursor-pointer inline-flex items-center gap-2"
         >
           <span>{t.land.cta}</span>
-          <ArrowRight className="w-4 h-4" />
         </Link>
         <a
           href="https://dhansetu-merchant.piresearchlabs.com/login"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-7 py-3.5 rounded-xl font-bold text-sm text-[#2E7D32] bg-white border border-[#2E7D32]/35 hover:bg-[#FAFBF6] hover:border-[#2E7D32] shadow-sm transition-all cursor-pointer inline-flex items-center gap-2"
+          className="px-7 py-3.5 rounded-xl font-bold text-sm text-white bg-[#2E7D32] hover:bg-[#236327] shadow-lg shadow-[#2E7D32]/20 transition-all cursor-pointer inline-flex items-center gap-2"
         >
-          <Store className="w-4 h-4 text-[#2E7D32]" />
+          <Store className="w-4 h-4 text-white" />
           <span>{t.land.merchantCta}</span>
         </a>
       </div>

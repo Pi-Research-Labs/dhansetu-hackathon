@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
-  Landmark,
   ShieldCheck,
   AlertTriangle,
   Smartphone,
@@ -62,7 +61,12 @@ export function HomeScreen() {
       {/* Top Nav */}
       <View style={styles.topNav}>
         <View style={styles.govBadge}>
-          <Landmark size={18} color="#2E7D32" />
+          <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#E7F2E7', borderWidth: 1, borderColor: '#E7E5DA', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 4 }}>
+            <Image
+              source={require('../../assets/splash-icon.png')}
+              style={{ width: 26, height: 26, borderRadius: 25, resizeMode: 'cover' }}
+            />
+          </View>
           <View>
             <Text style={styles.govTitle}>DHANSETU</Text>
             <Text style={styles.portalTitle}>{t.portalTitle}</Text>

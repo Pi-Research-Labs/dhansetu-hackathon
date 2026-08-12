@@ -83,8 +83,8 @@ export function SplashScreen() {
         <View style={styles.emblemContainer}>
           <View style={styles.emblemIconCircle}>
             <Image
-              source={require('../../assets/icon.png')}
-              style={{ width: 66, height: 66, borderRadius: 33 }}
+              source={require('../../assets/splash-icon.png')}
+              style={{ width: 68, height: 68, borderRadius: 34 }}
               resizeMode="cover"
             />
           </View>
