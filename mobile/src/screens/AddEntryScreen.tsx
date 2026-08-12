@@ -304,9 +304,9 @@ export function AddEntryScreen() {
   };
 
   const getCustomPillLabel = () => {
-    if (!customStartDate) return 'Custom range';
+    if (!customStartDate) return t.filterCustomRange;
     const startStr = customStartDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    if (!customEndDate) return `Custom: ${startStr}`;
+    if (!customEndDate) return `${t.filterCustomPrefix}${startStr}`;
     const endStr = customEndDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
     return `${startStr} - ${endStr}`;
   };
@@ -843,10 +843,10 @@ export function AddEntryScreen() {
           <View style={styles.filterContainer}>
             {(['all', 'today', '7days', 'month', 'custom'] as const).map((f) => {
               const label = f === 'custom' ? getCustomPillLabel() : {
-                all: 'All',
-                today: 'Today',
-                '7days': '7 Days',
-                month: 'Month',
+                all: t.filterAll,
+                today: t.filterToday,
+                '7days': t.filter7Days,
+                month: t.filterMonth,
               }[f];
               const isActive = dateFilter === f;
               return (
@@ -878,7 +878,7 @@ export function AddEntryScreen() {
             <ActivityIndicator size="small" color="#2E7D32" style={{ paddingVertical: 20 }} />
           ) : apiTransactions.length === 0 ? (
             <Text style={styles.emptyLedgerText}>
-              No transaction entries found for the selected range.
+              {t.noTxnsFound}
             </Text>
           ) : (
             <>

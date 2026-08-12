@@ -82,7 +82,7 @@ export function HomeScreen() {
           <View style={styles.merchantCardHeader}>
             <View style={styles.verifiedChip}>
               <ShieldCheck size={14} color="#2E7D32" />
-              <Text style={styles.verifiedText}>GST Verified</Text>
+              <Text style={styles.verifiedText}>{t.gstVerified}</Text>
             </View>
           </View>
 
@@ -173,10 +173,10 @@ export function HomeScreen() {
             <View style={styles.sectionHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <BookOpen size={16} color="#2E7D32" />
-                <Text style={styles.sectionTitle}>Udhaar Book (Receivables Ageing)</Text>
+                <Text style={styles.sectionTitle}>{t.receivablesTitle}</Text>
               </View>
             </View>
-            <Text style={styles.channelSubtitle}>Outstanding credit from business counterparties</Text>
+            <Text style={styles.channelSubtitle}>{t.receivablesSub}</Text>
 
             {receivables.map((item, idx) => (
               <View key={idx} style={styles.receivableRow}>

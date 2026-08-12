@@ -115,11 +115,91 @@ export interface Translations {
   logoutConfirmMsg: string;
   cancel: string;
 
-  // First load modal
   firstLoadLangTitle: string;
   firstLoadLangSub: string;
   firstLoadLangTip: string;
   applyLangBtn: string;
+
+  // Udhaar Book / Receivables & Accounts Screen additions
+  receivablesTitle: string;
+  receivablesSub: string;
+  gstinMerchantId: string;
+  verificationStatus: string;
+  gstAadhaarVerified: string;
+  autoDetectBankSms: string;
+  availableOnAndroidOnly: string;
+  startingListener: string;
+  listeningForBankSms: string;
+  smsPrivacyNotice: string;
+  importSmsHistory: string;
+  scanPastSmsSub: string;
+  verifiedShopLocation: string;
+  googleMapsCentroid: string;
+  gpsLockedFooter: string;
+  smsActiveLabel: (n: number) => string;
+  smsPermissionRequired: string;
+  detectTransactionsSub: string;
+  scanningPastSmsInbox: string;
+  pastTxnsImportedLabel: (n: number) => string;
+  smsEnabledWillScan: string;
+  scanningPastSmsProgress: string;
+  smsHistoryPrivacyNotice: string;
+  smsPermissionTitle: string;
+  smsPermissionMsg: string;
+  smsHistoryPermissionMsg: string;
+  selectPreferredLangSub: string;
+
+  // Additional fields for Modals, top bar and GST verified
+  verifiedMerchantGateway: string;
+  gstVerified: string;
+  securityAccessInfoTitle: string;
+  sslEncryptedGateway: string;
+  registeredGstinCreds: string;
+  aadhaarLinkedMobile: string;
+  activeSessionId: string;
+  requestAadhaarOtpReset: string;
+  close: string;
+  otpDispatchedTitle: string;
+  otpDispatchedMsg: string;
+  dhansetuSupportHelpdeskTitle: string;
+  supportDeptLabel: string;
+  financialInclusionDiv: string;
+  tollFreeHelpline: string;
+  officialEmailSupport: string;
+  operatingHours: string;
+  operatingHoursVal: string;
+  supportCoordinator: string;
+  regionalNodalCoordinator: string;
+  callHelplineBtn: string;
+  callingSupportMsg: string;
+
+  // Chart Legend & details
+  chartInflowLegend: string;
+  chartOutflowLegend: string;
+  chartNetLegend: string;
+  noCashflowRecords: string;
+  addDailyEntriesHint: string;
+  inflowColon: string;
+  outflowColon: string;
+  netCashflowColon: string;
+
+  // New fields for filter selection, alert UI, mark all as read, and status tags
+  filterAll: string;
+  filterToday: string;
+  filter7Days: string;
+  filterMonth: string;
+  filterCustom: string;
+  filterCustomRange: string;
+  filterCustomPrefix: string;
+  noTxnsFound: string;
+  aiPredictiveAnalysis: string;
+  stressProb: string;
+  defaultProb: string;
+  modelScore: string;
+  markAllAsRead: string;
+  allRead: string;
+  tagNew: string;
+  tagMonitored: string;
 }
 
 export const L: Record<SupportedLang, Translations> = {
@@ -239,6 +319,87 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'Select the language for the DhanSetu Merchant Portal',
     firstLoadLangTip: '💡 Language is changeable anytime later from the Account Settings page.',
     applyLangBtn: 'OK, APPLY LANGUAGE',
+
+    // Udhaar Book / Receivables & Accounts Screen additions
+    receivablesTitle: 'Udhaar Book (Receivables Ageing)',
+    receivablesSub: 'Outstanding credit from business counterparties',
+    gstinMerchantId: 'GSTIN / Merchant ID:',
+    verificationStatus: 'Verification Status:',
+    gstAadhaarVerified: 'GST & Aadhaar Verified',
+    autoDetectBankSms: 'Auto-Detect Bank SMS',
+    availableOnAndroidOnly: 'Available on Android only',
+    startingListener: 'Starting listener...',
+    listeningForBankSms: 'Listening for bank SMS',
+    smsPrivacyNotice: 'All SMS parsing happens on your device. No message data is uploaded.',
+    importSmsHistory: 'Import SMS History',
+    scanPastSmsSub: 'Scan past bank SMS to import older transactions',
+    verifiedShopLocation: 'Verified Shop Location',
+    googleMapsCentroid: 'Google Maps Centered GPS Centroid',
+    gpsLockedFooter: 'Your GPS coordinates are securely locked and verified by your regional nodal coordinator.',
+    smsActiveLabel: (n) => `Active · ${n} entries auto-detected`,
+    smsPermissionRequired: 'SMS permission required',
+    detectTransactionsSub: 'Detect transactions from bank SMS',
+    scanningPastSmsInbox: 'Scanning past SMS inbox...',
+    pastTxnsImportedLabel: (n) => `${n} past transactions imported`,
+    smsEnabledWillScan: 'Enabled · Will scan on next listener start',
+    scanningPastSmsProgress: 'Scanning past SMS for transactions...',
+    smsHistoryPrivacyNotice: 'Scans your SMS inbox on-device only. No message data is uploaded.',
+    smsPermissionTitle: 'Permission Required',
+    smsPermissionMsg: 'SMS permission is needed to auto-detect bank transactions. Please grant the permission in your device settings.',
+    smsHistoryPermissionMsg: 'SMS permission is needed to scan your inbox for past bank transactions. Please grant the permission in your device settings.',
+    selectPreferredLangSub: 'Select your preferred app language',
+
+    // Additional fields for Modals, top bar and GST verified
+    verifiedMerchantGateway: 'Verified Merchant Gateway',
+    gstVerified: 'GST Verified',
+    securityAccessInfoTitle: 'Security & Access Info',
+    sslEncryptedGateway: '256-Bit SSL AES Encrypted Secure Gateway',
+    registeredGstinCreds: 'Registered GSTIN Credentials:',
+    aadhaarLinkedMobile: 'Aadhaar Linked Mobile:',
+    activeSessionId: 'Active Session ID:',
+    requestAadhaarOtpReset: 'REQUEST AADHAAR OTP RESET',
+    close: 'Close',
+    otpDispatchedTitle: 'OTP Dispatched',
+    otpDispatchedMsg: 'Password reset code has been dispatched to your registered Aadhaar mobile number via SMS.',
+    dhansetuSupportHelpdeskTitle: 'DhanSetu Support Helpdesk',
+    supportDeptLabel: 'Support Department:',
+    financialInclusionDiv: 'Financial Inclusion Support Division',
+    tollFreeHelpline: 'Toll-Free Helpline:',
+    officialEmailSupport: 'Official Email Support:',
+    operatingHours: 'Operating Hours:',
+    operatingHoursVal: 'Mon - Sat: 9:00 AM to 6:00 PM IST',
+    supportCoordinator: 'Support Coordinator:',
+    regionalNodalCoordinator: 'Regional Nodal Coordinator',
+    callHelplineBtn: 'CALL HELPLINE (1800-11-2244)',
+    callingSupportMsg: 'Dialing Toll Free: 1800-11-2244...',
+
+    // Chart Legend & details
+    chartInflowLegend: 'Inflow (₹)',
+    chartOutflowLegend: 'Outflow (₹)',
+    chartNetLegend: 'Net Line',
+    noCashflowRecords: 'No cashflow records available yet',
+    addDailyEntriesHint: 'Add daily entries to generate weekly cashflow analytics.',
+    inflowColon: 'Inflow:',
+    outflowColon: 'Outflow:',
+    netCashflowColon: 'Net Cashflow:',
+
+    // Filter, Alert UI, status tags, and mark read
+    filterAll: 'All',
+    filterToday: 'Today',
+    filter7Days: '7 Days',
+    filterMonth: 'Month',
+    filterCustom: 'Custom',
+    filterCustomRange: 'Custom range',
+    filterCustomPrefix: 'Custom: ',
+    noTxnsFound: 'No transaction entries found for the selected range.',
+    aiPredictiveAnalysis: 'AI Predictive Analysis',
+    stressProb: 'Stress Prob',
+    defaultProb: 'Default Prob',
+    modelScore: 'Model Score',
+    markAllAsRead: 'Mark all as read',
+    allRead: 'All Read',
+    tagNew: 'NEW',
+    tagMonitored: 'Monitored',
   },
 
   hi: {
@@ -357,6 +518,87 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'धनसेतु मर्चेंट पोर्टल के लिए भाषा का चयन करें',
     firstLoadLangTip: '💡 आप बाद में अकाउंट सेटिंग्स पेज से कभी भी अपनी भाषा बदल सकते हैं।',
     applyLangBtn: 'ठीक है, भाषा लागू करें',
+
+    // Udhaar Book / Receivables & Accounts Screen additions
+    receivablesTitle: 'उधार खाता (प्राप्य राशियां)',
+    receivablesSub: 'व्यावसायिक समकक्षों से बकाया ऋण',
+    gstinMerchantId: 'GSTIN / व्यापारी ID:',
+    verificationStatus: 'सत्यापन स्थिति:',
+    gstAadhaarVerified: 'GST और आधार सत्यापित',
+    autoDetectBankSms: 'बैंक SMS ऑटो-डिटेक्ट',
+    availableOnAndroidOnly: 'केवल Android पर उपलब्ध',
+    startingListener: 'सुनना शुरू किया जा रहा है...',
+    listeningForBankSms: 'बैंक SMS की निगरानी सक्रिय है',
+    smsPrivacyNotice: 'सभी SMS प्रोसेसिंग आपके डिवाइस पर ही होती है। कोई भी मैसेज डेटा अपलोड नहीं किया जाता है।',
+    importSmsHistory: 'SMS इतिहास आयात करें',
+    scanPastSmsSub: 'पुराने लेन-देन आयात करने के लिए पिछले बैंक SMS स्कैन करें',
+    verifiedShopLocation: 'सत्यापित दुकान का स्थान',
+    googleMapsCentroid: 'Google Maps सत्यापित GPS सेंट्रॉइड',
+    gpsLockedFooter: 'आपके GPS निर्देशांक सुरक्षित रूप से लॉक हैं और आपके क्षेत्रीय नोडल समन्वयक द्वारा सत्यापित हैं।',
+    smsActiveLabel: (n) => `सक्रिय · ${n} लेनदेन ऑटो-डिटेक्ट किए गए`,
+    smsPermissionRequired: 'SMS अनुमति आवश्यक है',
+    detectTransactionsSub: 'बैंक SMS से लेनदेन का पता लगाएं',
+    scanningPastSmsInbox: 'पिछले SMS इनबॉक्स को स्कैन किया जा रहा है...',
+    pastTxnsImportedLabel: (n) => `${n} पिछले लेनदेन आयात किए गए`,
+    smsEnabledWillScan: 'सक्रिय · अगली बार लिसनर शुरू होने पर स्कैन किया जाएगा',
+    scanningPastSmsProgress: 'लेनदेन के लिए पिछले SMS को स्कैन किया जा रहा है...',
+    smsHistoryPrivacyNotice: 'आपके SMS इनबॉक्स को केवल डिवाइस पर स्कैन करता है। कोई मैसेज डेटा अपलोड नहीं किया जाता है।',
+    smsPermissionTitle: 'अनुमति की आवश्यकता है',
+    smsPermissionMsg: 'बैंक लेनदेन को ऑटो-डिटेक्ट करने के लिए SMS अनुमति की आवश्यकता है। कृपया अपनी डिवाइस सेटिंग्स में अनुमति प्रदान करें।',
+    smsHistoryPermissionMsg: 'पिछले बैंक लेनदेन के लिए आपके इनबॉक्स को स्कैन करने के लिए SMS अनुमति की आवश्यकता है। कृपया अपनी डिवाइस सेटिंग्स में अनुमति प्रदान करें।',
+    selectPreferredLangSub: 'अपनी पसंदीदा ऐप भाषा चुनें',
+
+    // Additional fields for Modals, top bar and GST verified
+    verifiedMerchantGateway: 'सत्यापित मर्चेंट गेटवे',
+    gstVerified: 'GST सत्यापित',
+    securityAccessInfoTitle: 'सुरक्षा और पहुँच जानकारी',
+    sslEncryptedGateway: '256-बिट SSL AES एन्क्रिप्टेड सुरक्षित गेटवे',
+    registeredGstinCreds: 'पंजीकृत GSTIN क्रेडेंशियल:',
+    aadhaarLinkedMobile: 'आधार लिंक मोबाइल:',
+    activeSessionId: 'सक्रिय सत्र ID:',
+    requestAadhaarOtpReset: 'आधार OTP रीसेट का अनुरोध करें',
+    close: 'बंद करें',
+    otpDispatchedTitle: 'OTP भेजा गया',
+    otpDispatchedMsg: 'पासवर्ड रीसेट कोड SMS के माध्यम से आपके पंजीकृत आधार मोबाइल नंबर पर भेज दिया गया है।',
+    dhansetuSupportHelpdeskTitle: 'धनसेतु सहायता डेस्क',
+    supportDeptLabel: 'सहायता विभाग:',
+    financialInclusionDiv: 'वित्तीय समावेशन सहायता प्रभाग',
+    tollFreeHelpline: 'टोल-फ्री हेल्पलाइन:',
+    officialEmailSupport: 'आधिकारिक ईमेल सहायता:',
+    operatingHours: 'कार्य समय:',
+    operatingHoursVal: 'सोम - शनि: सुबह 9:00 बजे से शाम 6:00 बजे IST',
+    supportCoordinator: 'सहायता समन्वयक:',
+    regionalNodalCoordinator: 'क्षेत्रीय नोडल समन्वयक',
+    callHelplineBtn: 'हेल्पलाइन पर कॉल करें (1800-11-2244)',
+    callingSupportMsg: 'टोल फ्री डायल किया जा रहा है: 1800-11-2244...',
+
+    // Chart Legend & details
+    chartInflowLegend: 'जमा (₹)',
+    chartOutflowLegend: 'नामे (₹)',
+    chartNetLegend: 'शुद्ध रेखा',
+    noCashflowRecords: 'अभी कोई नकदी प्रवाह रिकॉर्ड उपलब्ध नहीं है',
+    addDailyEntriesHint: 'साप्ताहिक नकदी प्रवाह विश्लेषण उत्पन्न करने के लिए दैनिक प्रविष्टियां जोड़ें।',
+    inflowColon: 'जमा:',
+    outflowColon: 'नामे:',
+    netCashflowColon: 'शुद्ध नकदी प्रवाह:',
+
+    // Filter, Alert UI, status tags, and mark read
+    filterAll: 'सभी',
+    filterToday: 'आज',
+    filter7Days: '7 दिन',
+    filterMonth: 'महीना',
+    filterCustom: 'कस्टम',
+    filterCustomRange: 'कस्टम दायरा',
+    filterCustomPrefix: 'कस्टम: ',
+    noTxnsFound: 'चयनित सीमा के लिए कोई लेनदेन प्रविष्टियां नहीं मिलीं।',
+    aiPredictiveAnalysis: 'एआई भविष्य कहनेवाला विश्लेषण',
+    stressProb: 'तनाव की संभावना',
+    defaultProb: 'चूक की संभावना',
+    modelScore: 'मॉडल स्कोर',
+    markAllAsRead: 'सभी को पढ़ा हुआ चिह्नित करें',
+    allRead: 'सभी पढ़े गए',
+    tagNew: 'नया',
+    tagMonitored: 'निगरानी की गई',
   },
 
   mr: {
@@ -475,6 +717,87 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'धनसेतु मर्चंट पोर्टलसाठी भाषा निवडा',
     firstLoadLangTip: '💡 तुम्ही नंतर खाते सेटिंग्ज पृष्ठावरून तुमची भाषा कधीही बदलू शकता.',
     applyLangBtn: 'होय, भाषा लागू करा',
+
+    // Udhaar Book / Receivables & Accounts Screen additions
+    receivablesTitle: 'उधारी खाते (येणे रकमा)',
+    receivablesSub: 'व्यावसायिक भागीदारांकडून थकीत येणी',
+    gstinMerchantId: 'GSTIN / व्यापारी ID:',
+    verificationStatus: 'सत्यापन स्थिती:',
+    gstAadhaarVerified: 'GST आणि आधार सत्यापित',
+    autoDetectBankSms: 'बँक SMS ऑटो-डिटेक्ट',
+    availableOnAndroidOnly: 'फक्त Android वर उपलब्ध',
+    startingListener: 'प्रक्रिया सुरू होत आहे...',
+    listeningForBankSms: 'बँक SMS ऐकत आहे',
+    smsPrivacyNotice: 'सर्व SMS प्रोसेसिंग तुमच्या डिव्हाइसवरच होते. कोणताही संदेश डेटा अपलोड केला जात नाही.',
+    importSmsHistory: 'SMS इतिहास आयात करा',
+    scanPastSmsSub: 'जुने व्यवहार आयात करण्यासाठी मागील बँक SMS स्कॅन करा',
+    verifiedShopLocation: 'सत्यापित दुकान स्थान',
+    googleMapsCentroid: 'Google Maps सत्यापित GPS सेंट्रॉइड',
+    gpsLockedFooter: 'तुमचे GPS निर्देशांक सुरक्षितपणे लॉक केले आहेत आणि तुमच्या प्रादेशिक नोडल समन्वयकाद्वारे सत्यापित केले आहेत.',
+    smsActiveLabel: (n) => `सक्रिय · ${n} व्यवहार ऑटो-डिटेक्ट केले`,
+    smsPermissionRequired: 'SMS परवानगी आवश्यक आहे',
+    detectTransactionsSub: 'बँक SMS वरून व्यवहार शोधा',
+    scanningPastSmsInbox: 'मागील SMS इनबॉक्स स्कॅन करत आहे...',
+    pastTxnsImportedLabel: (n) => `${n} मागील व्यवहार आयात केले`,
+    smsEnabledWillScan: 'सक्रिय · पुढील वेळी लिसनर सुरू झाल्यावर स्कॅन केले जाईल',
+    scanningPastSmsProgress: 'व्यवहारांसाठी मागील SMS स्कॅन करत आहे...',
+    smsHistoryPrivacyNotice: 'तुमचा SMS इनबॉक्स फक्त डिव्हाइसवर स्कॅन करतो. कोणताही संदेश डेटा अपलोड केला जात नाही.',
+    smsPermissionTitle: 'परवानगी आवश्यक आहे',
+    smsPermissionMsg: 'बँक व्यवहार ऑटो-डिटेक्ट करण्यासाठी SMS परवानगी आवश्यक आहे. कृपया तुमच्या डिव्हाइस सेटिंग्जमध्ये परवानगी द्या.',
+    smsHistoryPermissionMsg: 'मागील बँक व्यवहारांसाठी तुमचा इनबॉक्स स्कॅन करण्यासाठी SMS परवानगी आवश्यक आहे. कृपया तुमच्या डिव्हाइस सेटिंग्जमध्ये परवानगी द्या.',
+    selectPreferredLangSub: 'तुमची आवडती अ‍ॅप भाषा निवडा',
+
+    // Additional fields for Modals, top bar and GST verified
+    verifiedMerchantGateway: 'सत्यापित मर्चंट गेटवे',
+    gstVerified: 'GST सत्यापित',
+    securityAccessInfoTitle: 'सुरक्षा आणि प्रवेश माहिती',
+    sslEncryptedGateway: '२५६-बिट SSL AES एन्क्रिप्टेड सुरक्षित गेटवे',
+    registeredGstinCreds: 'नोंदणीकृत GSTIN क्रेडेंशियल्स:',
+    aadhaarLinkedMobile: 'आधार लिंक केलेला मोबाईल:',
+    activeSessionId: 'सक्रिय सत्र ID:',
+    requestAadhaarOtpReset: 'आधार OTP रीसेटची विनंती करा',
+    close: 'बंद करा',
+    otpDispatchedTitle: 'OTP पाठवला',
+    otpDispatchedMsg: 'पासवर्ड रीसेट कोड SMS द्वारे तुमच्या नोंदणीकृत आधार मोबाईल नंबरवर पाठवला गेला आहे।',
+    dhansetuSupportHelpdeskTitle: 'धनसेतु मदत केंद्र',
+    supportDeptLabel: 'मदत विभाग:',
+    financialInclusionDiv: 'वित्तीय समावेशन मदत विभाग',
+    tollFreeHelpline: 'टोल-फ्री हेल्पलाइन:',
+    officialEmailSupport: 'अधिकृत ईमेल मदत:',
+    operatingHours: 'कामाचे तास:',
+    operatingHoursVal: 'सोम - शनि: सकाळी ९:०० ते संध्याकाळी ६:०० IST',
+    supportCoordinator: 'मदत समन्वयक:',
+    regionalNodalCoordinator: 'प्रादेशिक नोडल समन्वयक',
+    callHelplineBtn: 'हेल्पलाइनवर कॉल करा (1800-11-2244)',
+    callingSupportMsg: 'टोल फ्री डायल केला जात आहे: 1800-11-2244...',
+
+    // Chart Legend & details
+    chartInflowLegend: 'जमा (₹)',
+    chartOutflowLegend: 'नामे (₹)',
+    chartNetLegend: 'निव्वळ रेषा',
+    noCashflowRecords: 'अद्याप कोणताही रोख प्रवाह उपलब्ध नाही',
+    addDailyEntriesHint: 'साप्ताहिक रोख प्रवाह विश्लेषण व्युत्पन्न करण्यासाठी दैनिक नोंदी जोडा.',
+    inflowColon: 'जमा:',
+    outflowColon: 'नामे:',
+    netCashflowColon: 'निव्वळ रोख प्रवाह:',
+
+    // Filter, Alert UI, status tags, and mark read
+    filterAll: 'सर्व',
+    filterToday: 'आज',
+    filter7Days: '७ दिवस',
+    filterMonth: 'महिना',
+    filterCustom: 'कस्टम',
+    filterCustomRange: 'कस्टम श्रेणी',
+    filterCustomPrefix: 'कस्टम: ',
+    noTxnsFound: 'निवडलेल्या कालावधीसाठी कोणतेही व्यवहार सापडले नाहीत.',
+    aiPredictiveAnalysis: 'एआई भविष्यसूचक विश्लेषण',
+    stressProb: 'ताण शक्यता',
+    defaultProb: 'चुकवण्याची शक्यता',
+    modelScore: 'मॉडेल धावसंख्या',
+    markAllAsRead: 'सर्व वाचलेले म्हणून चिन्हांकित करा',
+    allRead: 'सर्व वाचले',
+    tagNew: 'नवीन',
+    tagMonitored: 'निरीक्षण केलेले',
   },
 
   te: {
@@ -593,5 +916,86 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'ధనసేతు మర్చంట్ పోర్టల్ కోసం భాషను ఎంచుకోండి',
     firstLoadLangTip: '💡 మీరు అకౌంట్ సెట్టింగ్స్ పేజీ నుండి తర్వాత ఎప్పుడైనా మీ భాషను మార్చుకోవచ్చు.',
     applyLangBtn: 'సరే, భాషను వర్తింపజేయి',
+
+    // Udhaar Book / Receivables & Accounts Screen additions
+    receivablesTitle: 'ఉధార్ బుక్ (రావాల్సిన సొమ్ము)',
+    receivablesSub: 'వ్యాపార భాగస్వాముల నుండి రావలసిన బాకీలు',
+    gstinMerchantId: 'GSTIN / మర్చంట్ ID:',
+    verificationStatus: 'ధృవీకరణ స్థితి:',
+    gstAadhaarVerified: 'GST & ఆధార్ ధృవీకరించబడింది',
+    autoDetectBankSms: 'బ్యాంక్ SMS ఆటో-డిటెక్ట్',
+    availableOnAndroidOnly: 'ఆండ్రాయిడ్‌లో మాత్రమే అందుబాటులో ఉంది',
+    startingListener: 'ప్రారంభమౌతోంది...',
+    listeningForBankSms: 'బ్యాంక్ SMS మానిటర్ చేస్తోంది',
+    smsPrivacyNotice: 'అన్ని SMS విశ్లేషణ మీ పరికరంలోనే జరుగుతుంది. ఏ సమాచారము అప్‌లోడ్ చేయబడదు.',
+    importSmsHistory: 'SMS చరిత్రను దిగుమతి చేయి',
+    scanPastSmsSub: 'పాత లావాదేవీలను దిగుమతి చేయడానికి పాత బ్యాంక్ SMSలను స్కాన్ చేయండి',
+    verifiedShopLocation: 'ధృవీకరించబడిన దుకాణం ప్రాంతం',
+    googleMapsCentroid: 'Google Maps ధృవీకరించిన GPS కేంద్రీయం',
+    gpsLockedFooter: 'మీ GPS కోఆర్డినేట్లు సురక్షితంగా లాక్ చేయబడ్డాయి మరియు మీ ప్రాంతీయ నోడల్ కోఆర్డినేటర్ ద్వారా ధృవీకరించబడ్డాయి.',
+    smsActiveLabel: (n) => `సక్రియం · ${n} లావాదేవీలు ఆటో-డిటెక్ట్ చేయబడ్డాయి`,
+    smsPermissionRequired: 'SMS अनुमति అవసరం',
+    detectTransactionsSub: 'బ్యాంక్ SMS నుండి లావాదేవీలను గుర్తించండి',
+    scanningPastSmsInbox: 'పాత SMS ఇన్‌బాక్స్ స్కాన్ చేస్తోంది...',
+    pastTxnsImportedLabel: (n) => `${n} పాత లావాదేవీలు దిగుమతి చేయబడ్డాయి`,
+    smsEnabledWillScan: 'సక్రియం · తదుపరిసారి లీజనర్ ప్రారంభమైనప్పుడు స్కాన్ చేయబడుతుంది',
+    scanningPastSmsProgress: 'లావాదేవీల కోసం పాత SMSలను స్కాన్ చేస్తోంది...',
+    smsHistoryPrivacyNotice: 'మీ పరికరంలో మాత్రమే SMS ఇన్‌బాక్స్‌ను స్కాన్ చేస్తుంది. ఏ మెసేజ్ డేటా అప్‌లోడ్ చేయబడదు.',
+    smsPermissionTitle: 'అనుమతి అవసరం',
+    smsPermissionMsg: 'బ్యాంక్ లావాదేవీలను ఆటో-డిటెక్ట్ చేయడానికి SMS అనుమతి అవసరం. దయచేసి మీ పరికర సెట్టింగ్‌లలో అనుమతిని మంజూరు చేయండి.',
+    smsHistoryPermissionMsg: 'పాత బ్యాంక్ లావాదేవీల కోసం మీ ఇన్‌బాక్స్‌ను స్కాన్ చేయడానికి SMS అనుమతి అవసరం. దయచేసి మీ పరికర సెట్టింగ్‌లలో అనుమతిని మంజూరు చేయండి.',
+    selectPreferredLangSub: 'మీకు నచ్చిన యాప్ భాషను ఎంచుకోండి',
+
+    // Additional fields for Modals, top bar and GST verified
+    verifiedMerchantGateway: 'ధృవీకరించబడిన మర్చంట్ గేట్‌వే',
+    gstVerified: 'GST ధృవీకరించబడింది',
+    securityAccessInfoTitle: 'భద్రత & యాక్సెస్ సమాచారం',
+    sslEncryptedGateway: '256-బిట్ SSL AES ఎన్‌క్రిప్ట్ చేయబడిన సురక్షిత గేట్‌వే',
+    registeredGstinCreds: 'నమోదిత GSTIN ఆధారాలు:',
+    aadhaarLinkedMobile: 'ఆధార్ లింక్ చేయబడిన మొబైల్:',
+    activeSessionId: 'సక్రియ సెషన్ ID:',
+    requestAadhaarOtpReset: 'ఆధార్ OTP రీసెట్ కోసం అభ్యర్థించండి',
+    close: 'మూసివేయి',
+    otpDispatchedTitle: 'OTP పంపబడింది',
+    otpDispatchedMsg: 'పాసవర్డ్ రీసెట్ కోడ్ SMS ద్వారా మీ నమోదిత ఆధార్ మొబైల్ నంబర్‌కు పంపబడింది.',
+    dhansetuSupportHelpdeskTitle: 'ధనసేతు సహాయ డెస్క్',
+    supportDeptLabel: 'సపోర్ట్ విభాగం:',
+    financialInclusionDiv: 'ఆర్థిక చేరిక సపోర్ట్ విభాగం',
+    tollFreeHelpline: 'టోల్-ఫ్రీ హెల్ప్‌లైన్:',
+    officialEmailSupport: 'అధికారిక ఇమెయిల్ సపోర్ట్:',
+    operatingHours: 'పని వేళలు:',
+    operatingHoursVal: 'సోమ - శని: ఉదయం 9:00 నుండి సాయంత్రం 6:00 IST',
+    supportCoordinator: 'సపోర్ట్ కోఆర్డినేటర్:',
+    regionalNodalCoordinator: 'ప్రాంతీయ నోడల్ కోఆర్డినేటర్',
+    callHelplineBtn: 'హెల్ప్‌లైన్‌కు కాల్ చేయి (1800-11-2244)',
+    callingSupportMsg: 'టోల్ ఫ్రీ కాల్ చేయబడుతోంది: 1800-11-2244...',
+
+    // Chart Legend & details
+    chartInflowLegend: 'జమ (₹)',
+    chartOutflowLegend: 'డెబిట్ (₹)',
+    chartNetLegend: 'నికర రేఖ',
+    noCashflowRecords: 'నగదు ప్రవాహ రికార్డులు ఇంకా అందుబాటులో లేవు',
+    addDailyEntriesHint: 'వారాంతపు నగదు ప్రవాహ విశ్లేషణను రూపొందించడానికి రోజువారీ నమోదులను జోడించండి.',
+    inflowColon: 'జమ:',
+    outflowColon: 'డెబిట్:',
+    netCashflowColon: 'నికర నగదు ప్రవాహం:',
+
+    // Filter, Alert UI, status tags, and mark read
+    filterAll: 'అన్నీ',
+    filterToday: 'నేడు',
+    filter7Days: '7 రోజులు',
+    filterMonth: 'నెల',
+    filterCustom: 'కస్టమ్',
+    filterCustomRange: 'కస్టమ్ పరిధి',
+    filterCustomPrefix: 'కస్టమ్: ',
+    noTxnsFound: 'ఎంచుకున్న పరిధి కోసం లావాదేవీల నమోదులు ఏవీ కనుగొనబడలేదు.',
+    aiPredictiveAnalysis: 'AI ప్రిడిక్టివ్ అనాలిసిస్',
+    stressProb: 'ఒత్తిడి సంభావ్యత',
+    defaultProb: 'డిఫాల్ట్ సంభావ్యత',
+    modelScore: 'మోడల్ స్కోర్',
+    markAllAsRead: 'అన్నీ చదివినట్లుగా గుర్తు పెట్టు',
+    allRead: 'అన్నీ చదివినవి',
+    tagNew: 'కొత్త',
+    tagMonitored: 'పర్యవేక్షించబడింది',
   },
 };
