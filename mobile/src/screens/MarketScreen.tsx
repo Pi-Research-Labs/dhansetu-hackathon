@@ -140,7 +140,7 @@ export function MarketScreen() {
           {intel?.risks.map((r, idx) => (
             <View key={idx} style={styles.riskItem}>
               <View style={styles.riskHeader}>
-                <Text style={styles.riskTag}>{r.risk_type}</Text>
+                <Text style={styles.riskTag}>{t.riskTypes[r.risk_type] || r.risk_type}</Text>
                 <View style={[
                   styles.sevBadge,
                   r.severity === 'high' ? styles.sevHigh : r.severity === 'medium' ? styles.sevMed : styles.sevLow
