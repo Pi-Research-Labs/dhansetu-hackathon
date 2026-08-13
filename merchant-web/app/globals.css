@@ -12,17 +12,23 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* No prefers-color-scheme block on purpose. This portal is light-only -- every
+ * page hard-codes its own light background (#FAFAF5 / #F4F5F0 / white cards).
+ * The create-next-app default flipped --background to #0a0a0a and --foreground
+ * to #ededed on a dark-preference device, which the pages then painted over
+ * everywhere except the places they do not cover: overscroll gutters, and any
+ * text that inherits colour rather than setting it -- near-white on a white
+ * card. Light-only and consistent beats a half-supported dark mode. */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* layout.tsx loads Geist and exposes it as --font-geist-sans; without naming
+   * it here the body inherits the browser default, which is a serif. The
+   * create-next-app default said Arial, so the portal has been rendering in
+   * Arial while paying to download Geist. */
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+    sans-serif;
 }
 
 /* Landing-page network illustration.
