@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import {
   Lock,
   Eye,
@@ -102,6 +103,21 @@ export function LoginScreen() {
       // Update merchant store state
       const { login: storeLogin } = useMerchantStore.getState();
       await storeLogin(trimmedPhone, data.access_token, data.enterprise_id, data.proprietor_name);
+
+      // Ask for the microphone here rather than on the first tap of the voice
+      // agent. Requested at that point, Android's permission dialog lands on top
+      // of the recording screen and eats the first thing the merchant says --
+      // she has to notice, grant, and start again. Asking once at login means
+      // Tap to Speak records immediately from then on.
+      //
+      // Deliberately not awaited into the redirect path and never surfaced as an
+      // error: declining is a legitimate choice, and the voice agent asks again
+      // itself when it is actually used. Login must not depend on it.
+      try {
+        await requestRecordingPermissionsAsync();
+      } catch (permErr) {
+        console.warn('Microphone permission request failed at login:', permErr);
+      }
 
       // Redirect to main screens
       router.replace('/(tabs)');
