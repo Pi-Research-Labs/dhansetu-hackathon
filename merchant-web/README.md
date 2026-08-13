@@ -59,6 +59,33 @@ note with AI…" → a review modal pre-filled with the extracted **amount**,
 /enterprise/{id}/transactions` carrying the `voice_id`. That split is deliberate —
 a speech model's guess should never silently become a financial record.
 
+## The app-download QR
+
+`public/qrcode.png` encodes the Android APK's download URL directly — not a
+shortener, so there is no third-party redirect in the path and nothing to expire:
+
+```
+https://drive.google.com/file/d/1QJ-JyrA3kNKUEzAeR49Tp6komJDZZtOB/view?usp=sharing
+```
+
+It is **scan-only by design** — the image is not a link. Recorded here because a
+PNG cannot document itself: if the APK moves, regenerate the image or the two
+silently disagree.
+
+```python
+import qrcode
+from qrcode.constants import ERROR_CORRECT_Q
+
+# ERROR_CORRECT_Q = 25% recoverable, above the 15% default, because this gets
+# scanned off a lit screen at an angle where glare eats modules.
+q = qrcode.QRCode(error_correction=ERROR_CORRECT_Q, box_size=10, border=4)
+q.add_data("<new url>")
+q.make(fit=True)
+q.make_image(fill_color="black", back_color="white").save("public/qrcode.png")
+```
+
+Then decode the result and assert it round-trips before committing.
+
 ## SMS parsing
 
 `utils/sms-parser.ts` and `utils/bank-sms-registry.ts` are **byte-identical** to

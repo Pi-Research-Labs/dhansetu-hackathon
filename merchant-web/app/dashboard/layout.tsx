@@ -14,7 +14,6 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useMerchantStore } from '@/store/useMerchantStore';
-import { APP_DOWNLOAD_URL } from '@/utils/api-config';
 import { L } from '@/i18n/translations';
 import { GovHeader } from '@/components/common/GovHeader';
 import { FirstLoadLangModal } from '@/components/common/FirstLoadLangModal';
@@ -152,20 +151,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* QR Code Phone App Download Card */}
         <div className="bg-[#FAFBF6] border border-[#E7E5DA] rounded-xl p-3 flex flex-col items-center text-center gap-2 mt-auto mb-2 select-none w-full">
-          {/* Both the image and the caption link to the APK, so this works
-              whether the reader scans it with a phone or clicks it on a laptop.
-              The QR encodes the same APP_DOWNLOAD_URL. */}
-          <a href={APP_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer" title={t.scanQrToDownload}>
-            <img src="/qrcode.png" alt="DhanSetu App QR" className="w-28 h-28 bg-white p-1.5 rounded-lg border border-[#E7E5DA] object-contain shadow-xs hover:border-[#2E7D32]/40 transition-colors" />
-          </a>
-          <a
-            href={APP_DOWNLOAD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[9.5px] font-bold text-[#1D261F] leading-tight hover:text-[#2E7D32] hover:underline transition-colors"
-          >
-            {t.scanQrToDownload}
-          </a>
+          {/* Scan-only, deliberately not a link. The QR encodes the APK
+              download URL -- see merchant-web/README.md if it needs
+              regenerating. */}
+          <img src="/qrcode.png" alt="DhanSetu App QR" className="w-28 h-28 bg-white p-1.5 rounded-lg border border-[#E7E5DA] object-contain shadow-xs" />
+          <span className="text-[9.5px] font-bold text-[#1D261F] leading-tight">{t.scanQrToDownload}</span>
 
           <button
             type="button"

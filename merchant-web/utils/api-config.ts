@@ -3,12 +3,6 @@ import axios from 'axios';
 // Base URL for DhanSetu Backend API
 export const API_BASE_URL = 'https://dhansetu-api.piresearchlabs.com/api/v1';
 
-// Where the Android APK lives. public/qrcode.png encodes exactly this string, so
-// scanning the QR and clicking the card reach the same place -- if this changes,
-// regenerate the PNG too or the two silently diverge.
-export const APP_DOWNLOAD_URL =
-  'https://drive.google.com/file/d/1QJ-JyrA3kNKUEzAeR49Tp6komJDZZtOB/view?usp=sharing';
-
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
