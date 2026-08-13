@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  NativeModules,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { requestRecordingPermissionsAsync } from 'expo-audio';
@@ -117,6 +118,22 @@ export function LoginScreen() {
         await requestRecordingPermissionsAsync();
       } catch (permErr) {
         console.warn('Microphone permission request failed at login:', permErr);
+      }
+
+      // Same reasoning for SMS: the auto-detect setting defaults to on, so
+      // without asking here the listener starts, silently fails for want of a
+      // permission, and the merchant sees nothing until she happens to open
+      // Account. Asking once at login means bank messages are captured from
+      // the first one that arrives.
+      //
+      // Android only -- the native module does not exist on iOS or web, hence
+      // the guard rather than a try/catch alone.
+      if (Platform.OS === 'android') {
+        try {
+          await NativeModules.SmsListenerModule?.requestPermission();
+        } catch (smsErr) {
+          console.warn('SMS permission request failed at login:', smsErr);
+        }
       }
 
       // Redirect to main screens
