@@ -19,3 +19,23 @@ venv/
 
 # Raw/scratch DB download staging — superseded by database/
 dhansetu_postgres_details/
+
+# Agent scaffolding. mobile/ and merchant-web/ regenerate AGENTS.md and
+# CLAUDE.md on `expo start` / `next dev`, so ignoring them keeps a dev's tree
+# clean instead of re-committing tooling files on every branch.
+AGENTS.md
+CLAUDE.md
+skills-lock.json
+.agents/
+
+# Node
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Expo / React Native
+.expo/
+*.apk
+*.aab
