@@ -22,8 +22,8 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { NativeModules, NativeEventEmitter, Platform, AppState } from 'react-native';
-import { useMerchantStore } from '@/store/useMerchantStore';
+import { NativeModules, DeviceEventEmitter, Platform, AppState } from 'react-native';
+import { useMerchantStore, type MerchantStore } from '@/store/useMerchantStore';
 import { postTransaction } from '@/utils/api-config';
 import { parseBankSms, parseBatchSms, type ParsedTransaction, type RawSmsMessage } from '@/utils/sms-parser';
 
@@ -91,6 +91,13 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
 
   const listenerRef = useRef<any>(null);
   const processingRef = useRef(false);
+
+  // Subscribed, not read via getState(): these two drive the effects below, so
+  // they have to re-render the hook when they change. Reading them from
+  // getState() inside an effect meant toggling the setting did nothing until
+  // something else happened to re-render.
+  const smsAutoDetectEnabled = useMerchantStore((state: MerchantStore) => state.smsAutoDetectEnabled);
+  const smsHistoryImportEnabled = useMerchantStore((state: MerchantStore) => state.smsHistoryImportEnabled);
 
   // Get store state directly to avoid stale closures
   const store = useMerchantStore;
@@ -337,12 +344,12 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
     const module = getNativeModule();
     if (!module) return;
 
-    const smsAutoDetectEnabled = store.getState().smsAutoDetectEnabled;
-    if (!smsAutoDetectEnabled) return;
+    if (!smsAutoDetectEnabled) {
+      setIsListening(false);
+      return;
+    }
 
-    const eventEmitter = new NativeEventEmitter(module as any);
-
-    const subscription = eventEmitter.addListener('onBankSmsReceived', (event: {
+    const subscription = DeviceEventEmitter.addListener('onBankSmsReceived', (event: {
       sender: string;
       body: string;
       timestamp: number;
@@ -380,7 +387,7 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
         module.startListening()
           .then(() => {
             setIsListening(true);
-            console.log('[SMS] Auto-started listener on mount');
+            console.log('[SMS] Auto-started listener on mount/enable');
 
             // Run historical scan only if the user has opted in AND it hasn't been done yet
             const state = store.getState();
@@ -398,7 +405,18 @@ export function useSmsAutoDetect(): SmsAutoDetectState {
       }
       listenerRef.current = null;
     };
-  }, [store.getState().smsAutoDetectEnabled]);
+  }, [smsAutoDetectEnabled, checkPermissions, getNativeModule, runHistoricalScan]);
+
+  // Trigger historical scan if opted-in and listener is running, but scan wasn't done yet
+  useEffect(() => {
+    if (!IS_ANDROID) return;
+    if (smsAutoDetectEnabled && smsHistoryImportEnabled && isListening) {
+      const state = store.getState();
+      if (!state.smsHistoricalScanDone) {
+        runHistoricalScan();
+      }
+    }
+  }, [smsHistoryImportEnabled, smsAutoDetectEnabled, isListening, runHistoricalScan]);
 
   /* ─── AppState: Resume/Pause listening ──────────────────────── */
 
