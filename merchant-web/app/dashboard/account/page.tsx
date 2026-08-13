@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L, SupportedLang } from '@/i18n/translations';
-import { apiClient } from '@/utils/api-config';
+import { apiClient, APP_DOWNLOAD_URL } from '@/utils/api-config';
 import { SecurityBadge } from '@/components/common/SecurityBadge';
 import { CustomAlert } from '@/components/common/CustomAlert';
 import { Translate } from '@/components/common/Translate';
@@ -345,14 +345,30 @@ export default function AccountScreen() {
           <div className="bg-[#FAFBF6] border border-[#E7E5DA] rounded-2xl p-5 shadow-xs flex md:hidden flex-col items-center gap-4 select-none">
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
               <div className="shrink-0">
-                <img
-                  src="/qrcode.png"
-                  alt="DhanSetu App QR"
-                  className="w-28 h-28 bg-white p-2 rounded-xl border border-[#E7E5DA] shadow-2xs object-contain"
-                />
+                {/* Clickable as well as scannable: on this page the reader is
+                    already holding the device, so there is nothing to scan with. */}
+                <a
+                  href={APP_DOWNLOAD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t.scanQrToDownload}
+                >
+                  <img
+                    src="/qrcode.png"
+                    alt="DhanSetu App QR"
+                    className="w-28 h-28 bg-white p-2 rounded-xl border border-[#E7E5DA] shadow-2xs object-contain hover:border-[#2E7D32]/40 transition-colors"
+                  />
+                </a>
               </div>
               <div className="flex-1 text-center sm:text-left flex flex-col gap-1.5">
-                <h4 className="text-[#1D261F] text-xs font-bold">{t.scanQrToDownload}</h4>
+                <a
+                  href={APP_DOWNLOAD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#1D261F] text-xs font-bold hover:text-[#2E7D32] hover:underline transition-colors"
+                >
+                  {t.scanQrToDownload}
+                </a>
                 <button
                   type="button"
                   onClick={() => setShowInstallInstructions(!showInstallInstructions)}
