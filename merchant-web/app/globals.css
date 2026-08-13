@@ -24,3 +24,74 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Landing-page network illustration.
+ *
+ * NetworkIllustration.tsx has always referenced .flowline, .floaty, .pulse and
+ * .pulse2, but nothing defined them here -- so the diagram rendered correctly
+ * and sat completely still. Ported verbatim from web/app/globals.css, where the
+ * officer dashboard's copy of the same illustration does animate, so both
+ * landing pages now move identically rather than diverging.
+ *
+ * transform-box: fill-box is what makes transform-origin: center mean "the
+ * centre of this circle" inside an SVG. Without it the origin is the SVG root
+ * and the pulse rings slide off across the canvas instead of expanding in
+ * place.
+ */
+.flowline {
+  stroke-dasharray: 6 8;
+  animation: dashmove 2.6s linear infinite;
+}
+
+@keyframes dashmove {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.floaty {
+  animation: floaty 5.5s ease-in-out infinite;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulsea 2.6s ease-out infinite;
+}
+
+/* Second ring, offset half a cycle so the hub emits a steady stream rather
+   than two rings in lockstep. */
+.pulse2 {
+  animation-delay: 1.3s;
+}
+
+@keyframes pulsea {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* Respect a reduced-motion preference -- this is decoration, and the diagram
+   reads fine static. */
+@media (prefers-reduced-motion: reduce) {
+  .flowline,
+  .floaty,
+  .pulse {
+    animation: none;
+  }
+}
