@@ -1,7 +1,11 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
+import { useAppSelector } from "@/redux/hooks";
+import { translateText } from "@/utils/translator";
+import { LanguageCode } from "@/redux/slices/languageSlice";
 
 interface SearchAndFiltersProps {
   search: string;
@@ -32,6 +36,39 @@ export default function SearchAndFilters({
   tierCounts = {},
   t,
 }: SearchAndFiltersProps) {
+  const currentLanguage = useAppSelector(
+    (state) => state.language.currentLanguage || "en"
+  ) as LanguageCode;
+
+  const [translatedDistricts, setTranslatedDistricts] = useState<Record<string, string>>({});
+  const [translatedSegments, setTranslatedSegments] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let isMounted = true;
+    async function translateLists() {
+      const dTr: Record<string, string> = {};
+      await Promise.all(
+        districts.map(async (d) => {
+          dTr[d] = await translateText(d, currentLanguage);
+        })
+      );
+      const sTr: Record<string, string> = {};
+      await Promise.all(
+        segments.map(async (s) => {
+          sTr[s] = await translateText(s, currentLanguage);
+        })
+      );
+      if (isMounted) {
+        setTranslatedDistricts(dTr);
+        setTranslatedSegments(sTr);
+      }
+    }
+    translateLists();
+    return () => {
+      isMounted = false;
+    };
+  }, [districts, segments, currentLanguage]);
+
   const tierPills = [
     { key: "RED", label: t.tiers?.RED || "Act now", color: "#C62828", bg: "#FFEBEE" },
     { key: "AMBER", label: t.tiers?.AMBER || "Watch", color: "#E65100", bg: "#FFF3E0" },
@@ -62,7 +99,7 @@ export default function SearchAndFilters({
           <option value="ALL">{t.dash.allDistricts || "All Blocks"}</option>
           {districts.map((d) => (
             <option key={d} value={d}>
-              {d}
+              {translatedDistricts[d] || d}
             </option>
           ))}
         </select>
@@ -75,7 +112,7 @@ export default function SearchAndFilters({
           <option value="ALL">{t.dash.allSegments || "All Segments"}</option>
           {segments.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {translatedSegments[s] || s}
             </option>
           ))}
         </select>

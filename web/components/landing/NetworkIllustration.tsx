@@ -24,6 +24,9 @@ export default function NetworkIllustration({ t }: NetworkIllustrationProps) {
           <stop offset="0%" stopColor="#2E7D32" />
           <stop offset="100%" stopColor="#1565C0" />
         </linearGradient>
+        <clipPath id="hubCircleClip">
+          <circle cx={hub.x} cy={hub.y} r="65" />
+        </clipPath>
       </defs>
       {nodes.map((n, i) => (
         <path
@@ -36,17 +39,22 @@ export default function NetworkIllustration({ t }: NetworkIllustrationProps) {
           opacity="0.55"
         />
       ))}
-      <circle className="pulse" cx={hub.x} cy={hub.y} r="45" fill="url(#hubg)" opacity="0.35" />
-      <circle className="pulse pulse2" cx={hub.x} cy={hub.y} r="45" fill="url(#hubg)" opacity="0.25" />
+      <circle className="pulse" cx={hub.x} cy={hub.y} r="65" fill="url(#hubg)" opacity="0.35" />
+      <circle className="pulse pulse2" cx={hub.x} cy={hub.y} r="65" fill="url(#hubg)" opacity="0.25" />
+      
+      {/* Background circle and border for logo */}
+      <circle cx={hub.x} cy={hub.y} r="65" fill="#ffffff" stroke="#2E7D32" strokeWidth="4" />
+
       <image
-        href="/logo.png"
-        x={hub.x - 50}
-        y={hub.y - 50}
-        width="100"
-        height="100"
+        href="/favicon.png"
+        x={hub.x - 65}
+        y={hub.y - 65}
+        width="130"
+        height="130"
+        clipPath="url(#hubCircleClip)"
       />
-      <circle cx={hub.x + 26} cy={hub.y - 26} r="4" fill="#D84315" />
-      <circle cx={hub.x - 30} cy={hub.y + 24} r="3" fill="#D84315" opacity="0.8" />
+      <circle cx={hub.x + 52} cy={hub.y - 52} r="4.5" fill="#D84315" />
+      <circle cx={hub.x - 55} cy={hub.y + 45} r="3.5" fill="#D84315" opacity="0.8" />
       {nodes.map((n, i) => {
         const IconComponent = n.icon;
         return (

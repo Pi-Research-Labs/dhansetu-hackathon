@@ -171,6 +171,12 @@ export interface TranslationDictionary {
     heatmapZero: string;
     heatmapNetCashflow: string;
     allMechanisms: string;
+    filters: string;
+    resetFilters: string;
+    allDirections: string;
+    inflowIncome: string;
+    outflowExpense: string;
+    allTenderModes: string;
   };
   tiers: {
     GREEN: string;
@@ -183,6 +189,34 @@ export interface TranslationDictionary {
   actionKeys: Record<string, string>;
   sectors: Record<string, string>;
   counterpartyTypes: Record<string, string>;
+  marketIntel: {
+    selectSubType: string;
+    sector: string;
+    id: string;
+    district: string;
+    trackedCommodity: string;
+    trackedCommodityDesc: string;
+    priceTrend12m: string;
+    priceTrendDesc: string;
+    growing: string;
+    declining: string;
+    typicalDailyTurnover: string;
+    typicalDailyTurnoverDesc: string;
+    chartTitle: string;
+    dualAxisIndex: string;
+    priceIndexLabel: string;
+    rainfallLabel: string;
+    productivityOutlook: string;
+    productivityOutlookDesc: string;
+    seasonalPattern: string;
+    seasonalPatternDesc: string;
+    riskAssessment: string;
+    riskAssessmentDesc: string;
+    activeRisks: (count: number) => string;
+    severityLabel: string;
+    noActiveRisksTitle: string;
+    noActiveRisksDesc: string;
+  };
 }
 
 export const translations: Record<LanguageCode, TranslationDictionary> = {
@@ -364,6 +398,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapZero: "No activity",
       heatmapNetCashflow: "Net Cashflow",
       allMechanisms: "All Mechanisms",
+      filters: "Filters",
+      resetFilters: "Reset Filters",
+      allDirections: "All Directions",
+      inflowIncome: "Inflow (Income)",
+      outflowExpense: "Outflow (Expense)",
+      allTenderModes: "All Tender Modes",
     },
     tiers: {
       GREEN: "Stable",
@@ -423,6 +463,34 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       cost_escalation: "Cost escalation",
       erratic: "Erratic revenue",
       anomaly: "Behavioural anomaly",
+    },
+    marketIntel: {
+      selectSubType: "Select Category Sub-Type",
+      sector: "Sector",
+      id: "ID",
+      district: "District",
+      trackedCommodity: "Tracked Commodity",
+      trackedCommodityDesc: "Primary product or index monitored for pricing volatility",
+      priceTrend12m: "12-Mo Price Trend",
+      priceTrendDesc: "Percentage shift in baseline price index over last 12 months",
+      growing: "GROWING",
+      declining: "DECLINING",
+      typicalDailyTurnover: "Typical Daily Turnover",
+      typicalDailyTurnoverDesc: "Average daily transactions for enterprise type in local area",
+      chartTitle: "12-Month Price Index & Rainfall Chart",
+      dualAxisIndex: "Dual-Axis Index",
+      priceIndexLabel: "Price Index",
+      rainfallLabel: "Rainfall (mm)",
+      productivityOutlook: "Productivity Outlook",
+      productivityOutlookDesc: "Analysis based on regional production data and climate models",
+      seasonalPattern: "Seasonal Pattern & Demand",
+      seasonalPatternDesc: "Analysis based on historical seasonal demand cycles",
+      riskAssessment: "Climate & Market Risk Assessment",
+      riskAssessmentDesc: "Identified threats and vulnerability indicators",
+      activeRisks: (count: number) => `${count} Active Risks`,
+      severityLabel: "Severity",
+      noActiveRisksTitle: "No Active Risks",
+      noActiveRisksDesc: "No climate or market risks have been identified for this enterprise type at this time.",
     },
   },
 
@@ -604,6 +672,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapZero: "कोई गतिविधि नहीं",
       heatmapNetCashflow: "शुद्ध नकदी प्रवाह",
       allMechanisms: "सभी कारण",
+      filters: "फिल्टर",
+      resetFilters: "फिल्टर रीसेट करें",
+      allDirections: "सभी दिशाएं",
+      inflowIncome: "आवक (आय)",
+      outflowExpense: "जावक (व्यय)",
+      allTenderModes: "सभी भुगतान साधन",
     },
     tiers: {
       GREEN: "स्थिर",
@@ -663,6 +737,34 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       cost_escalation: "लागत वृद्धि",
       erratic: "अस्थिर आय",
       anomaly: "असामान्य पैटर्न",
+    },
+    marketIntel: {
+      selectSubType: "श्रेणी उप-प्रकार चुनें",
+      sector: "क्षेत्र",
+      id: "आईडी",
+      district: "ज़िला",
+      trackedCommodity: "ट्रैक की गई वस्तु",
+      trackedCommodityDesc: "मूल्य अस्थिरता के लिए निगरानी किया जाने वाला प्राथमिक उत्पाद या सूचकांक",
+      priceTrend12m: "12-महीने का मूल्य रुझान",
+      priceTrendDesc: "पिछले 12 महीनों में आधारभूत मूल्य सूचकांक में प्रतिशत बदलाव",
+      growing: "बढ़ रहा है",
+      declining: "घट रहा है",
+      typicalDailyTurnover: "सामान्य दैनिक टर्नओवर",
+      typicalDailyTurnoverDesc: "स्थानीय क्षेत्र में उद्यम के प्रकार के लिए औसत दैनिक लेनदेन",
+      chartTitle: "12-महीने का मूल्य सूचकांक और वर्षा चार्ट",
+      dualAxisIndex: "दोहरा-अक्ष सूचकांक",
+      priceIndexLabel: "मूल्य सूचकांक",
+      rainfallLabel: "वर्षा (मिमी)",
+      productivityOutlook: "उत्पादकता आउटलुक",
+      productivityOutlookDesc: "क्षेत्रीय उत्पादन डेटा और जलवायु मॉडल पर आधारित विश्लेषण",
+      seasonalPattern: "मौसमी पैटर्न और मांग",
+      seasonalPatternDesc: "ऐतिहासिक मौसमी मांग चक्रों पर आधारित विश्लेषण",
+      riskAssessment: "जलवायु और बाजार जोखिम मूल्यांकन",
+      riskAssessmentDesc: "पहचाने गए खतरे और भेद्यता संकेतक",
+      activeRisks: (count: number) => `${count} सक्रिय जोखिम`,
+      severityLabel: "तीव्रता",
+      noActiveRisksTitle: "कोई सक्रिय जोखिम नहीं",
+      noActiveRisksDesc: "इस समय इस उद्यम प्रकार के लिए कोई जलवायु या बाजार जोखिम नहीं पाया गया है।",
     },
   },
 
@@ -844,6 +946,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapZero: "కార్యకలాపం లేదు",
       heatmapNetCashflow: "నికర నగదు ప్రవాహం",
       allMechanisms: "అన్ని కారణాలు",
+      filters: "ఫిల్టర్లు",
+      resetFilters: "ఫిల్టర్లు రీసెట్ చేయండి",
+      allDirections: "అన్ని దిశలు",
+      inflowIncome: "రాబడి (ఆదాయం)",
+      outflowExpense: "ఖర్చులు (వ్యయం)",
+      allTenderModes: "అన్ని చెల్లింపు పద్ధతులు",
     },
     tiers: {
       GREEN: "స్థిరం",
@@ -903,6 +1011,34 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       cost_escalation: "వ్యయ పెరుగుదల",
       erratic: "అస్థిర రాబడి",
       anomaly: "అసాధారణ సరళి",
+    },
+    marketIntel: {
+      selectSubType: "వర్గం ఉప-రకాన్ని ఎంచుకోండి",
+      sector: "రంగం",
+      id: "ఐడీ",
+      district: "జిల్లా",
+      trackedCommodity: "ట్రాక్ చేయబడిన వస్తువు",
+      trackedCommodityDesc: "ధరల అస్థిరత కోసం పర్యవేక్షించబడే ప్రాథమిక ఉత్పత్తి లేదా సూచిక",
+      priceTrend12m: "12-నెలల ధరల ధోరణి",
+      priceTrendDesc: "గత 12 నెలల్లో బేస్ ధరల సూచికలో శాతం మార్పు",
+      growing: "పెరుగుతోంది",
+      declining: "తగ్గుతోంది",
+      typicalDailyTurnover: "సాధారణ రోజువారీ టర్నోవర్",
+      typicalDailyTurnoverDesc: "స్థానిక ప్రాంతంలో సంస్థ రకం కోసం సగటు రోజువారీ లావాదేవీలు",
+      chartTitle: "12-నెలల ధరల సూచిక & వర్షపాతం చార్ట్",
+      dualAxisIndex: "ద్వి-అక్ష సూచిక",
+      priceIndexLabel: "ధరల సూచిక",
+      rainfallLabel: "వర్షపాతం (మిమీ)",
+      productivityOutlook: "ఉత్పాదకత అవుట్‌లుక్",
+      productivityOutlookDesc: "ప్రాంతీయ ఉత్పత్తి డేటా మరియు వాతావరణ నమూనాల ఆధారంగా విశ్లేషణ",
+      seasonalPattern: "ఋతువుల సరళి & డిమాండ్",
+      seasonalPatternDesc: "చారిత్రక ఋతువుల డిమాండ్ చక్రాల ఆధారంగా విశ్లేషణ",
+      riskAssessment: "వాతావరణ & మార్కెట్ రిస్క్ అంచనా",
+      riskAssessmentDesc: "గుర్తించబడిన ముప్పులు మరియు దుర్బలత్వ సూచికలు",
+      activeRisks: (count: number) => `${count} క్రియాశీల ప్రమాదాలు`,
+      severityLabel: "తీవ్రత",
+      noActiveRisksTitle: "క్రియాశీల ప్రమాదాలు లేవు",
+      noActiveRisksDesc: "ఈ సమయంలో ఈ సంస్థ రకానికి ఎటువంటి వాతావరణ లేదా మార్కెట్ ప్రమాదాలు గుర్తించబడలేదు.",
     },
   },
 
@@ -1084,6 +1220,12 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       heatmapZero: "कोणतीही हालचाल नाही",
       heatmapNetCashflow: "निव्वळ रोख प्रवाह",
       allMechanisms: "सर्व कारणे",
+      filters: "फिल्टर्स",
+      resetFilters: "फिल्टर्स रीसेट करा",
+      allDirections: "सर्व दिशा",
+      inflowIncome: "आवक (उत्पन्न)",
+      outflowExpense: "जावक (खर्च)",
+      allTenderModes: "सर्व पेमेंट मोड",
     },
     tiers: {
       GREEN: "स्थिर",
@@ -1143,6 +1285,34 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       cost_escalation: "खर्चवाढ",
       erratic: "अस्थिर उत्पन्न",
       anomaly: "असामान्‍य नमुना",
+    },
+    marketIntel: {
+      selectSubType: "श्रेणी उप-प्रकार निवडा",
+      sector: "क्षेत्र",
+      id: "आयडी",
+      district: "जिल्हा",
+      trackedCommodity: "ट्रॅक केलेली वस्तू",
+      trackedCommodityDesc: "किमतीच्या चढ-उतारांवर देखरेख ठेवणारे प्राथमिक उत्पादन किंवा निर्देशांक",
+      priceTrend12m: "१२-महिन्यांचा किमतीचा कल",
+      priceTrendDesc: "गेल्या १२ महिन्यांत आधारभूत किमतीच्या निर्देशांकात झालेला टक्केवारी बदल",
+      growing: "वाढत आहे",
+      declining: "घटत आहे",
+      typicalDailyTurnover: "सामान्य दैनिक टर्नओव्हर",
+      typicalDailyTurnoverDesc: "स्थानिक भागात व्यवसायाच्या प्रकारासाठी सरासरी दैनिक व्यवहार",
+      chartTitle: "१२-महिन्यांचा किमतीचा निर्देशांक आणि पावसाचा तक्ता",
+      dualAxisIndex: "दुहेरी-अक्ष निर्देशांक",
+      priceIndexLabel: "किंमत निर्देशांक",
+      rainfallLabel: "पाऊस (मिमी)",
+      productivityOutlook: "उत्पादकता आउटलुक",
+      productivityOutlookDesc: "प्रादेशिक उत्पादन डेटा आणि हवामान मॉडेलवर आधारित विश्लेषण",
+      seasonalPattern: "हंगामी नमुना आणि मागणी",
+      seasonalPatternDesc: "ऐतिहासिक हंगामी मागणी चक्रांवर आधारित विश्लेषण",
+      riskAssessment: "हवामान आणि बाजार जोखीम मूल्यांकन",
+      riskAssessmentDesc: "ओळखलेले धोके आणि असुरक्षितता निर्देशक",
+      activeRisks: (count: number) => `${count} सक्रिय जोखीम`,
+      severityLabel: "तीव्रता",
+      noActiveRisksTitle: "कोणतीही सक्रिय जोखीम नाही",
+      noActiveRisksDesc: "या वेळी या व्यवसाय प्रकारासाठी हवामान किंवा बाजारातील जोखीम आढळलेली नाही.",
     },
   },
 };

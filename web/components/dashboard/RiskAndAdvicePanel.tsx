@@ -6,6 +6,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Enterprise } from "@/types/enterprise";
 import { ActionParams, TranslationDictionary } from "@/utils/translations/dictionary";
 import { ShieldAlert, CheckCircle2, AlertTriangle, Sparkles, Info, TrendingUp, BookOpen, Loader2 } from "lucide-react";
+import { Translate } from "@/components/common/Translate";
 
 interface RiskAndAdvicePanelProps {
   enterprise: Enterprise;
@@ -112,11 +113,11 @@ export default function RiskAndAdvicePanel({
         {latestAlert && (
           <div className="bg-[#FFEBEE] border border-[#FFCDD2] p-3 rounded-xl space-y-1">
             <div className="flex items-center justify-between text-xs font-bold text-[#C62828]">
-              <span>Projected Shortfall</span>
+              <span><Translate>Projected Shortfall</Translate></span>
               <span className="font-mono">{formatCurrency(latestAlert.projected_shortfall)}</span>
             </div>
             <p className="text-[11px] text-[#5F6656] font-mono">
-              Raised on {latestAlert.raised_at} · Expected week of {latestAlert.shortfall_week_of}
+              <Translate>Raised on</Translate> {latestAlert.raised_at} · <Translate>Expected week of</Translate> {latestAlert.shortfall_week_of}
             </p>
           </div>
         )}
@@ -133,8 +134,8 @@ export default function RiskAndAdvicePanel({
               <div key={idx} className="bg-[#FFEBEE]/70 border border-[#FFCDD2] p-2.5 rounded-xl flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-[#C62828] shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-xs font-bold text-[#C62828]">{r.tag}</div>
-                  <div className="text-[11px] text-[#5F6656] mt-0.5">{r.detail}</div>
+                  <div className="text-xs font-bold text-[#C62828]"><Translate>{r.tag}</Translate></div>
+                  <div className="text-[11px] text-[#5F6656] mt-0.5"><Translate>{r.detail}</Translate></div>
                 </div>
               </div>
             ))}

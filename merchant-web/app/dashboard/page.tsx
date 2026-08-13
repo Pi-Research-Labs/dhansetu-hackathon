@@ -33,6 +33,8 @@ export default function DashboardHome() {
     weeklyHistory,
     receivables,
     todaysTotals,
+    creditHeadroom,
+    bridgeHeadroom,
     fetchMerchantData,
   } = useMerchantStore();
 
@@ -76,8 +78,8 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {/* ─── 4 Core Financial KPI Grid ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ─── Core Financial KPI Grid ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         
         {/* Metric 1: 90D Net Cashflow */}
         <div className="bg-white border border-[#E7E5DA] rounded-xl p-4 shadow-2xs flex flex-col justify-between min-h-[96px]">
@@ -133,6 +135,32 @@ export default function DashboardHome() {
                 All installments current
               </span>
             )}
+          </div>
+        </div>
+
+        {/* Metric 5: Credit Headroom */}
+        <div className="bg-white border border-[#E7E5DA] rounded-xl p-4 shadow-2xs flex flex-col justify-between min-h-[96px]">
+          <span className="text-[#6F6B5E] text-[10px] font-bold tracking-wide uppercase leading-none">{t.creditHeadroom}</span>
+          <div className="mt-2.5">
+            <h3 className="text-[#2E7D32] text-lg font-bold">
+              {formatCurrency(creditHeadroom)}
+            </h3>
+            <span className="text-[9px] font-semibold text-[#6F6B5E] mt-1 inline-block">
+              Term credit capacity
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 6: Bridge Headroom */}
+        <div className="bg-white border border-[#E7E5DA] rounded-xl p-4 shadow-2xs flex flex-col justify-between min-h-[96px]">
+          <span className="text-[#6F6B5E] text-[10px] font-bold tracking-wide uppercase leading-none">{t.bridgeHeadroom}</span>
+          <div className="mt-2.5">
+            <h3 className="text-[#2E7D32] text-lg font-bold">
+              {formatCurrency(bridgeHeadroom)}
+            </h3>
+            <span className="text-[9px] font-semibold text-[#6F6B5E] mt-1 inline-block">
+              Bridge credit capacity
+            </span>
           </div>
         </div>
 

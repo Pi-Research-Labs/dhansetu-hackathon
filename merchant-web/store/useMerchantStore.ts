@@ -104,6 +104,8 @@ export interface MerchantStore {
   upiShare: number;
   appShare: number;
   cashShare: number;
+  creditHeadroom: number;
+  bridgeHeadroom: number;
 
   // Weekly historical data
   weeklyHistory: { week: string; weekLabel: string; dateRange: string; inflow: number; outflow: number; net: number }[];
@@ -189,6 +191,8 @@ export const useMerchantStore = create<MerchantStore>()(
       upiShare: 0.33,
       appShare: 0.33,
       cashShare: 0.34,
+      creditHeadroom: 0,
+      bridgeHeadroom: 0,
 
       // Lists
       weeklyHistory: [],
@@ -547,6 +551,8 @@ export const useMerchantStore = create<MerchantStore>()(
             missedEmi: card.missed_emis_90d ?? card.missed_emi ?? (parseFloat(card.net_buffer_days) < -10 ? 2 : 0),
             loan: parseFloat(card.informal_debt ?? card.loan) || (parseFloat(card.bridge_headroom) > 0 ? 350000 : 0),
             emi: parseFloat(card.emi ?? card.monthly_emi ?? card.suggested_max_emi) || 0,
+            creditHeadroom: parseFloat(card.credit_headroom) || 0,
+            bridgeHeadroom: parseFloat(card.bridge_headroom) || 0,
 
             // Payment Shares
             upiShare: paymentMix.avg_digital_share ?? 0.5,

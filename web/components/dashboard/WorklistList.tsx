@@ -4,6 +4,7 @@ import React from "react";
 import { WorklistItem } from "@/utils/api-config";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { Translate } from "@/components/common/Translate";
 
 interface WorklistListProps {
   items: WorklistItem[];
@@ -146,7 +147,7 @@ export default function WorklistList({
                 {item.proprietor_name || `Enterprise ${item.enterprise_id}`}
               </div>
               <div className="text-[11px] text-[#5F6656] truncate mt-0.5">
-                {item.sub_type} · {item.block} · ID: {item.enterprise_id}
+                <Translate>{item.sub_type}</Translate> · <Translate>{item.block}</Translate> · ID: {item.enterprise_id}
               </div>
             </div>
 
