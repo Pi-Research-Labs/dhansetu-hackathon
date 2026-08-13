@@ -153,11 +153,30 @@ refreshes rows instead of duplicating them. Every run writes an
 23–24 cover `INSERT, UPDATE` on `weather_live` and `ingestion_runs`, and
 sequence usage) — no extra grant step.
 
-To keep it current on the VM, a daily cron inside the 9AM–9PM window:
+**Already installed on the VM** as a daily cron for `tarunmenon`:
 
 ```cron
-30 9 * * *  cd ~/dhansetu-backend && .venv/bin/python scripts/ingest_open_meteo.py >> ~/open-meteo.log 2>&1
+# Open-Meteo weather pull. Times are UTC (this VM is Etc/UTC); 03:40 UTC = 09:10 IST,
+# ten minutes after the dhansetu-daily-schedule policy starts the VM at 09:00 IST.
+40 3 * * *  cd ~/dhansetu-backend && .venv/bin/python scripts/ingest_open_meteo.py >> ~/open-meteo.log 2>&1
 ```
+
+**The VM's clock is `Etc/UTC`, but the start/stop resource policy
+(`dhansetu-daily-schedule`) is expressed in `Asia/Kolkata`** — so a cron
+schedule and the VM's uptime window are written in different timezones. `30 9`
+looks like "half past nine, just after boot" and actually fires at 15:00 IST,
+six hours into the window. Convert to UTC and check the result lands inside
+03:30–15:30 UTC, which is what 09:00–21:00 IST is.
+
+Verified to run under cron's environment rather than just an interactive shell:
+
+```bash
+env -i HOME=/home/tarunmenon SHELL=/bin/sh PATH=/usr/bin:/bin /bin/sh -c \
+  "cd ~/dhansetu-backend && .venv/bin/python scripts/ingest_open_meteo.py"
+```
+
+Output goes to `~/open-meteo.log`, and every run also leaves an
+`ingestion_runs` row, so a silent failure is still visible in the database.
 
 Read it back via `GET /weather/{district_id}` (see [`API.md`](../API.md)) or
 `v_weather_series`, which unions these rows with the synthetic panel behind a
