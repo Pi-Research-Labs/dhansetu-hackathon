@@ -383,7 +383,7 @@ export const useMerchantStore = create<MerchantStore>()(
             },
           };
 
-          const flags: { key: string; tag: string; detail: string }[] = [];
+          const flags: MerchantStore['flags'] = [];
           if (card.reason_1 && reasonMapping[card.reason_1]) {
             flags.push({
               key: card.reason_1,

@@ -1,5 +1,11 @@
 export type SupportedLang = 'en' | 'hi' | 'mr' | 'te';
 
+export interface FlagParams {
+  marginGapPct?: number | null;
+  missedEmi?: number | null;
+  bufferMonths?: number | null;
+}
+
 export interface Translations {
   langName: string;
   portalTitle: string;
@@ -80,6 +86,59 @@ export interface Translations {
   loginBtn: string;
   needHelp: string;
   disclaimer: string;
+  quickDemoHeader: string;
+  autoFillBtn: string;
+  scanQrToDownload: string;
+  howToInstall: string;
+  installStep1Title: string;
+  installStep1Desc: string;
+  installStep2Title: string;
+  installStep2Desc: string;
+  installWarningTitle: string;
+  installWarningDesc: string;
+  mechanisms: Record<string, string>;
+  flagDetails: Record<string, (p: FlagParams) => string>;
+
+  // New unified fields for dashboard home, filters, market & account
+  verifiedPortfolio: string;
+  gstAadhaarActive: string;
+  manualSyncDisclaimer: string;
+  invoicesLabel: string;
+  avgLabel: string;
+  daysToCashLabel: string;
+  writtenOffLabel: string;
+  noReceivables: string;
+  digitalReceiptsTip: string;
+  receivablesTitle: string;
+  counterpartyTypes: Record<string, string>;
+  alertsTab: string;
+  gstinMerchantId: string;
+  verificationStatus: string;
+  gstAadhaarVerified: string;
+  verifiedShopLocation: string;
+  googleMapsCentroid: string;
+  gpsLockedFooter: string;
+  autoDetectBankSms: string;
+  detectTransactionsSub: string;
+  onlyOnPhoneApp: string;
+  importSmsHistory: string;
+  importSmsHistorySub: string;
+  filterAll: string;
+  filterToday: string;
+  filter7Days: string;
+  filterMonth: string;
+  filterCustom: string;
+  filterCustomRange: string;
+  filterCustomPrefix: string;
+  noTxnsFound: string;
+  noCashflowRecords: string;
+  addDailyEntriesHint: string;
+  chartInflowLegend: string;
+  chartOutflowLegend: string;
+  chartNetLegend: string;
+  inflowColon: string;
+  outflowColon: string;
+  netCashflowColon: string;
 
   // Account Screen
   accountTitle: string;
@@ -186,6 +245,28 @@ export const L: Record<SupportedLang, Translations> = {
     loginBtn: 'SECURE MERCHANT LOGIN',
     needHelp: 'Need Help logging in? Contact Nodal Support',
     disclaimer: 'Unauthorized access to this system is strictly prohibited under the IT Act 2000.',
+    quickDemoHeader: 'Quick Demo Credentials',
+    autoFillBtn: 'Auto Fill Credentials',
+    scanQrToDownload: 'Scan the QR to download the Android application',
+    howToInstall: 'How to install?',
+    installStep1Title: '1. Enable Unknown Sources',
+    installStep1Desc: 'Go to Settings > Apps > Special App Access > Install Unknown Apps. Toggle permission ON for your browser.',
+    installStep2Title: '2. Disable Play Protect',
+    installStep2Desc: 'Open Google Play Store > Profile Icon > Play Protect > Settings (gear icon). Turn OFF \'Scan apps with Play Protect\'.',
+    installWarningTitle: '⚠️ Why Play Protect blocks installation?',
+    installWarningDesc: 'DhanSetu uses automated SMS scraping to analyze transaction history and forecast cashflow. Because it processes local financial SMS messages, Google Play Protect flags it as high-permission and blocks it unless disabled.',
+    mechanisms: { margin_squeeze: 'Margin squeeze', working_capital_erosion: 'Working capital erosion', debt_overhang: 'Debt overhang', climate_shock: 'Climate shock', demand_trough: 'Demand trough', receivable_stretch: 'Receivable stretch' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `Input costs are squeezing margins (gap of ${p.marginGapPct}%).` : 'Input costs are squeezing operating margins.',
+      working_capital_erosion: () => 'Everyday working money is draining away against ongoing expenses.',
+      debt_overhang: (p) => p.missedEmi ? `Repayments are heavy against expected cash, with ${p.missedEmi} instalment(s) missed in 90 days.` : 'Loan repayments are heavy relative to expected cash coming in.',
+      receivable_stretch: () => 'Buyers are taking a long time to pay, so earned money has not arrived.',
+      demand_trough: () => 'Demand has dropped off, so sales are below the usual level.',
+      climate_shock: () => 'Weather has hit output or costs in this area.',
+      repayment_stress: (p) => p.missedEmi ? `${p.missedEmi} missed instalment(s) in the last 90 days.` : 'Repayment schedules are being missed.',
+      thin_buffer: (p) => p.bufferMonths != null ? `Cash runway covers only ${p.bufferMonths} month(s) of usual outflows.` : 'Savings cover less than a month of usual outflows.',
+      spend_exceeds: () => 'Money going out has exceeded money coming in recently.',
+    },
 
     accountTitle: 'Account & Settings',
     accountSub: 'Manage your merchant profile, language preferences, and portal security',
@@ -204,6 +285,46 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'Select the language for the DhanSetu Merchant Portal',
     firstLoadLangTip: '💡 Language is changeable anytime later from the Account Settings page.',
     applyLangBtn: 'OK, APPLY LANGUAGE',
+
+    verifiedPortfolio: 'Verified Portfolio',
+    gstAadhaarActive: 'GSTIN & Aadhaar Active',
+    manualSyncDisclaimer: 'All manual entries recorded locally are instantly synchronized on server reconnection.',
+    invoicesLabel: 'Invoices',
+    avgLabel: 'Avg',
+    daysToCashLabel: 'Days to Cash',
+    writtenOffLabel: 'Written-Off',
+    noReceivables: 'No credit (udhaar) book entries recorded.',
+    digitalReceiptsTip: '💡 Digital receipts (UPI/Wallet) provide verifiable credit tracking for bankers, boosting loan eligibility.',
+    receivablesTitle: 'Udhaar Book (Receivables Ageing)',
+    counterpartyTypes: { cooperative: 'Cooperative', trader: 'Trader', exporter: 'Exporter', retailer: 'Retailer', village_credit: 'Village credit' },
+    alertsTab: 'Alerts',
+    gstinMerchantId: 'GSTIN / Merchant ID:',
+    verificationStatus: 'Verification Status:',
+    gstAadhaarVerified: 'GST & Aadhaar Verified',
+    verifiedShopLocation: 'Verified Shop Location',
+    googleMapsCentroid: 'Google Maps Centered GPS Centroid',
+    gpsLockedFooter: 'Your GPS coordinates are securely locked and verified by your regional nodal coordinator.',
+    autoDetectBankSms: 'Auto-Detect Bank SMS',
+    detectTransactionsSub: 'Detect transactions from bank SMS',
+    onlyOnPhoneApp: 'only available on phone app',
+    importSmsHistory: 'Import SMS History',
+    importSmsHistorySub: 'Import past bank transactions on start',
+    filterAll: 'All',
+    filterToday: 'Today',
+    filter7Days: '7 Days',
+    filterMonth: 'Month',
+    filterCustom: 'Custom',
+    filterCustomRange: 'Custom range',
+    filterCustomPrefix: 'Custom: ',
+    noTxnsFound: 'No transaction entries recorded yet.',
+    noCashflowRecords: 'No cashflow records available yet',
+    addDailyEntriesHint: 'Add daily entries to generate weekly cashflow analytics.',
+    chartInflowLegend: 'Inflow (₹)',
+    chartOutflowLegend: 'Outflow (₹)',
+    chartNetLegend: 'Net Line',
+    inflowColon: 'Inflow:',
+    outflowColon: 'Outflow:',
+    netCashflowColon: 'Net Cashflow:',
   },
 
   hi: {
@@ -289,6 +410,28 @@ export const L: Record<SupportedLang, Translations> = {
     loginBtn: 'सुरक्षित व्यापारी लॉगिन',
     needHelp: 'लॉगिन में सहायता चाहिए? सहायता केंद्र से संपर्क करें',
     disclaimer: 'आईटी अधिनियम 2000 के तहत इस प्रणाली तक अनधिकृत पहुँच सख्त वर्जित है।',
+    quickDemoHeader: 'त्वरित डेमो क्रेडेंशियल',
+    autoFillBtn: 'क्रेडेंशियल स्वतः भरें',
+    scanQrToDownload: 'एंड्रॉइड एप्लिकेशन डाउनलोड करने के लिए क्यूआर कोड स्कैन करें',
+    howToInstall: 'कैसे इंस्टॉल करें?',
+    installStep1Title: '1. अज्ञात स्रोत (Unknown Sources) सक्षम करें',
+    installStep1Desc: 'सेटिंग्स > ऐप्स > विशेष ऐप एक्सेस > अज्ञात ऐप्स इंस्टॉल करें पर जाएं। अपने ब्राउज़र के लिए अनुमति चालू करें।',
+    installStep2Title: '2. प्ले प्रोटेक्ट (Play Protect) अक्षम करें',
+    installStep2Desc: 'गूगल प्ले स्टोर > प्रोफाइल आइकन > प्ले प्रोटेक्ट > सेटिंग्स (गियर आइकन) खोलें। \'प्ले प्रोटेक्ट के साथ ऐप्स स्कैन करें\' को बंद करें।',
+    installWarningTitle: '⚠️ प्ले प्रोटेक्ट इंस्टॉलेशन क्यों रोकता है?',
+    installWarningDesc: 'नकदी प्रवाह का पूर्वानुमान लगाने के लिए धनसेतु स्वचालित एसएमएस स्क्रैपिंग (SMS Scraping) का उपयोग करता है। चूंकि यह स्थानीय वित्तीय एसएमएस संदेशों को पढ़ता है, इसलिए प्ले प्रोटेक्ट इसे ब्लॉक करता है जब तक कि इसे बंद न किया जाए।',
+    mechanisms: { margin_squeeze: 'मार्जिन संकुचन', working_capital_erosion: 'कार्यशील पूंजी क्षरण', debt_overhang: 'ऋण भार', climate_shock: 'मौसम झटका', demand_trough: 'मांग में गिरावट', receivable_stretch: 'प्राप्य राशियों में देरी' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `लागत बढ़ने से मार्जिन दब रहा है (अंतर ${p.marginGapPct}%)।` : 'लागत बढ़ने से मार्जिन दब रहा है।',
+      working_capital_erosion: () => 'रोज़मर्रा के खर्च के मुकाबले कामकाजी पैसा घट रहा है।',
+      debt_overhang: (p) => p.missedEmi ? `आमदनी के मुकाबले किस्तें भारी हैं; 90 दिनों में ${p.missedEmi} किस्त चूकी।` : 'अपेक्षित आमदनी के मुकाबले किस्तें भारी हैं।',
+      receivable_stretch: () => 'खरीदार भुगतान में देर कर रहे हैं, कमाया पैसा अभी आया नहीं।',
+      demand_trough: () => 'मांग घट गई है, बिक्री सामान्य से कम है।',
+      climate_shock: () => 'मौसम ने इस इलाके में उत्पादन या लागत पर असर डाला है।',
+      repayment_stress: (p) => p.missedEmi ? `पिछले 90 दिनों में ${p.missedEmi} किस्त चूकी।` : 'किस्तें समय पर नहीं भर पा रहे।',
+      thin_buffer: (p) => p.bufferMonths != null ? `नकदी सिर्फ ${p.bufferMonths} महीने के खर्च के लिए बची है।` : 'बचत एक महीने के खर्च से भी कम है।',
+      spend_exceeds: () => 'हाल में खर्च आमदनी से ज़्यादा रहा है।',
+    },
 
     accountTitle: 'खाता एवं सेटिंग्स',
     accountSub: 'अपनी प्रोफ़ाइल, भाषा प्राथमिकताओं और पोर्टल सुरक्षा को प्रबंधित करें',
@@ -307,6 +450,46 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'धनसेतु मर्चेंट पोर्टल के लिए भाषा का चयन करें',
     firstLoadLangTip: '💡 आप बाद में अकाउंट सेटिंग्स पेज से कभी भी अपनी भाषा बदल सकते हैं।',
     applyLangBtn: 'ठीक है, भाषा लागू करें',
+
+    verifiedPortfolio: 'सत्यापित पोर्टफोलियो',
+    gstAadhaarActive: 'GSTIN और आधार सक्रिय',
+    manualSyncDisclaimer: 'स्थानीय रूप से दर्ज की गई सभी मैन्युअल प्रविष्टियां सर्वर पुन: कनेक्शन पर तुरंत सिंक हो जाती हैं।',
+    invoicesLabel: 'इनवॉइस',
+    avgLabel: 'औसत',
+    daysToCashLabel: 'नकद प्राप्त करने के दिन',
+    writtenOffLabel: 'बट्टे खाते में डाला गया (खराब ऋण)',
+    noReceivables: 'कोई क्रेडिट (उधार) बही प्रविष्टियां दर्ज नहीं हैं।',
+    digitalReceiptsTip: '💡 डिजिटल रसीदें (UPI/वॉलेट) बैंकरों के लिए सत्यापन योग्य क्रेडिट ट्रैकिंग प्रदान करती हैं, जिससे ऋण पात्रता बढ़ती है।',
+    receivablesTitle: 'उधार खाता (प्राप्य राशियां)',
+    counterpartyTypes: { cooperative: 'सहकारी समिति', trader: 'व्यापारी', exporter: 'निर्यातक', retailer: 'खुदरा विक्रेता', village_credit: 'गांव उधार' },
+    alertsTab: 'अलर्ट',
+    gstinMerchantId: 'GSTIN / मर्चेंट आईडी:',
+    verificationStatus: 'सत्यापन स्थिति:',
+    gstAadhaarVerified: 'GST और आधार सत्यापित',
+    verifiedShopLocation: 'सत्यापित दुकान का स्थान',
+    googleMapsCentroid: 'गूगल मैप्स केंद्रित जीपीएस सेंट्रॉइड',
+    gpsLockedFooter: 'आपके जीपीएस निर्देशांक सुरक्षित रूप से लॉक हैं और आपके क्षेत्रीय नोडल समन्वयक द्वारा सत्यापित हैं।',
+    autoDetectBankSms: 'बैंक एसएमएस स्वतः पहचानें',
+    detectTransactionsSub: 'बैंक एसएमएस से लेनदेन का पता लगाएं',
+    onlyOnPhoneApp: 'केवल फोन ऐप पर उपलब्ध है',
+    importSmsHistory: 'एसएमएस इतिहास आयात करें',
+    importSmsHistorySub: 'शुरुआत में पिछले बैंक लेनदेन आयात करें',
+    filterAll: 'सभी',
+    filterToday: 'आज',
+    filter7Days: '7 दिन',
+    filterMonth: 'महीना',
+    filterCustom: 'कस्टम',
+    filterCustomRange: 'कस्टम दायरा',
+    filterCustomPrefix: 'कस्टम: ',
+    noTxnsFound: 'अभी तक कोई लेनदेन प्रविष्टि दर्ज नहीं की गई है।',
+    noCashflowRecords: 'अभी कोई नकदी प्रवाह रिकॉर्ड उपलब्ध नहीं है',
+    addDailyEntriesHint: 'साप्ताहिक नकदी प्रवाह विश्लेषण उत्पन्न करने के लिए दैनिक प्रविष्टियां जोड़ें।',
+    chartInflowLegend: 'जमा (₹)',
+    chartOutflowLegend: 'नामे (₹)',
+    chartNetLegend: 'शुद्ध रेखा',
+    inflowColon: 'जमा:',
+    outflowColon: 'नामे:',
+    netCashflowColon: 'शुद्ध नकदी प्रवाह:',
   },
 
   mr: {
@@ -392,6 +575,28 @@ export const L: Record<SupportedLang, Translations> = {
     loginBtn: 'सुरक्षित व्यापारी लॉगिन',
     needHelp: 'लॉगिन करण्यात मदत हवी आहे? मदत केंद्राशी संपर्क साधा',
     disclaimer: 'धनसेतु पोर्टलवर अनधिकृत प्रवेशास सक्त मनाई आहे।',
+    quickDemoHeader: 'जलद डेमो माहिती',
+    autoFillBtn: 'माहिती स्वयंचलितपणे भरा',
+    scanQrToDownload: 'अँड्रॉइड ॲप्लिकेशन डाउनलोड करण्यासाठी क्यूआर स्कॅन करा',
+    howToInstall: 'इन्स्टॉल कसे करावे?',
+    installStep1Title: '1. अनोळखी स्त्रोत (Unknown Sources) सक्षम करा',
+    installStep1Desc: 'सेटिंग्ज > ॲप्स > स्पेशल ॲप ॲक्सेस > इन्स्टॉल अननोन ॲप्स वर जा आणि तुमच्या ब्राउझरसाठी परवानगी चालू करा.',
+    installStep2Title: '2. प्ले प्रोटेक्ट (Play Protect) बंद करा',
+    installStep2Desc: 'गुगल प्ले स्टोअर > प्रोफाइल आयकॉन > प्ले प्रोटेक्ट > सेटिंग्ज (गियर आयकॉन) उघडा. \'स्कॅन ॲप्स विथ प्ले प्रोटेक्ट\' बंद करा.',
+    installWarningTitle: '⚠️ प्ले प्रोटेक्ट इन्स्टॉलेशन का थांबवते?',
+    installWarningDesc: 'धनसेतू रोख प्रवाहाचा अंदाज घेण्यासाठी स्वयंचलित एसएमएस स्क्रॅपिंग (SMS Scraping) वापरते. हे स्थानिक आर्थिक एसएमएस संदेश वाचत असल्याने, प्ले प्रोटेक्ट याला ब्लॉक करते.',
+    mechanisms: { margin_squeeze: 'मार्जिन दबाव', working_capital_erosion: 'खेळते भांडवल क्षरण', debt_overhang: 'कर्जाचा भार', climate_shock: 'हवामान धोका', demand_trough: 'मागणीतील घट', receivable_stretch: 'येणे रकमेत विलंब' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `खर्च वाढल्याने मार्जिनवर दबाव आहे (फरक ${p.marginGapPct}%).` : 'खर्च वाढल्याने मार्जिनवर दबाव आहे.',
+      working_capital_erosion: () => 'दैनंदिन खर्चाच्या तुलनेत खेळते भांडवल घटत आहे.',
+      debt_overhang: (p) => p.missedEmi ? `उत्पन्नाच्या तुलनेत हप्ते जड आहेत; 90 दिवसांत ${p.missedEmi} हप्ता चुकला.` : 'अपेक्षित उत्पन्नाच्या तुलनेत हप्ते जड आहेत.',
+      receivable_stretch: () => 'खरेदीदार पैसे द्यायला उशीर करत आहेत, कमावलेले पैसे आलेले नाहीत.',
+      demand_trough: () => 'मागणी घटली आहे, विक्री नेहमीपेक्षा कमी आहे.',
+      climate_shock: () => 'हवामानाचा या भागातील उत्पादन किंवा खर्चावर परिणाम झाला आहे.',
+      repayment_stress: (p) => p.missedEmi ? `गेल्या 90 दिवसांत ${p.missedEmi} हप्ता चुकला.` : 'हप्ते वेळेवर भरले जात नाहीत.',
+      thin_buffer: (p) => p.bufferMonths != null ? `रोख रक्कम फक्त ${p.bufferMonths} महिन्यांच्या खर्चापुरती आहे.` : 'बचत एक महिन्याच्या खर्चापेक्षा कमी आहे.',
+      spend_exceeds: () => 'अलीकडे खर्च उत्पन्नापेक्षा जास्त झाला आहे.',
+    },
 
     accountTitle: 'खाते व सेटिंग्ज',
     accountSub: 'तुमचे प्रोफाइल, भाषा प्राधान्ये आणि सुरक्षा व्यवस्थापित करा',
@@ -410,6 +615,46 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'धनसेतु मर्चेंट पोर्टलसाठी भाषा निवडा',
     firstLoadLangTip: '💡 तुम्ही नंतर खाते सेटिंग्ज पृष्ठावरून तुमची भाषा कधीही बदलू शकता.',
     applyLangBtn: 'होय, भाषा लागू करा',
+
+    verifiedPortfolio: 'सत्यापित पोर्टफोलिओ',
+    gstAadhaarActive: 'GSTIN आणि आधार सक्रिय',
+    manualSyncDisclaimer: 'स्थानिक पातळीवर नोंदवलेल्या सर्व मॅन्युअल नोंदी सर्व्हर पुन्हा कनेक्ट झाल्यावर लगेच समक्रमित केल्या जातात.',
+    invoicesLabel: 'इनव्हॉइस',
+    avgLabel: 'सरासरी',
+    daysToCashLabel: 'रोख मिळण्याचे दिवस',
+    writtenOffLabel: 'बट्ट्यात जमा (बुडीत कर्ज)',
+    noReceivables: 'कोणत्याही उधारी खाते नोंदी नाहीत.',
+    digitalReceiptsTip: '💡 डिजिटल पावत्या (UPI/वॉलेट) बँकांसाठी पडताळणीयोग्य क्रेडिट ट्रॅकिंग प्रदान करतात, ज्यामुळे कर्ज पात्रता वाढते.',
+    receivablesTitle: 'उधारी खाते (येणे रकमा)',
+    counterpartyTypes: { cooperative: 'सहकारी संस्था', trader: 'व्यापारी', exporter: 'निर्यातदार', retailer: 'किरकोळ विक्रेता', village_credit: 'गाव उधारी' },
+    alertsTab: 'अलर्ट',
+    gstinMerchantId: 'GSTIN / मर्चेंट आयडी:',
+    verificationStatus: 'पडताळणी स्थिती:',
+    gstAadhaarVerified: 'GST आणि आधार सत्यापित',
+    verifiedShopLocation: 'सत्यापित दुकान ठिकाण',
+    googleMapsCentroid: 'गुगल नकाशे केंद्रित जीपीएस सेंट्रॉइड',
+    gpsLockedFooter: 'तुमचे जीपीएस निर्देशांक सुरक्षितपणे लॉक केलेले आहेत आणि तुमच्या प्रादेशिक नोडल समन्वयकाद्वारे सत्यापित आहेत.',
+    autoDetectBankSms: 'बँक एसएमएस स्वयंचलितपणे शोधा',
+    detectTransactionsSub: 'बँक एसएमएस द्वारे व्यवहार शोधा',
+    onlyOnPhoneApp: 'फक्त फोन ॲपवर उपलब्ध',
+    importSmsHistory: 'एसएमएस इतिहास आयात करा',
+    importSmsHistorySub: 'प्रारंभी मागील बँक व्यवहार आयात करा',
+    filterAll: 'सर्व',
+    filterToday: 'आज',
+    filter7Days: '7 दिवस',
+    filterMonth: 'महिना',
+    filterCustom: 'कस्टम',
+    filterCustomRange: 'कस्टम श्रेणी',
+    filterCustomPrefix: 'कस्टम: ',
+    noTxnsFound: 'अद्याप कोणतेही व्यवहार नोंदवले गेले नाहीत.',
+    noCashflowRecords: 'अद्याप कोणतेही व्यवहार उपलब्ध नाहीत',
+    addDailyEntriesHint: 'साप्ताहिक रोख प्रवाह विश्लेषण व्युत्पन्न करण्यासाठी दैनिक नोंदी जोडा.',
+    chartInflowLegend: 'जमा (₹)',
+    chartOutflowLegend: 'नामे (₹)',
+    chartNetLegend: 'निव्वळ रेषा',
+    inflowColon: 'जमा:',
+    outflowColon: 'नामे:',
+    netCashflowColon: 'निव्वळ रोख प्रवाह:',
   },
 
   te: {
@@ -495,6 +740,28 @@ export const L: Record<SupportedLang, Translations> = {
     loginBtn: 'సురక్షిత మర్చంట్ లాగిన్',
     needHelp: 'లాగిన్ సహాయం కావాలా? సపోర్ట్‌ని సంప్రదించండి',
     disclaimer: 'IT చట్టం 2000 ప్రకారం ఈ వ్యవస్థలోకి అనధికారిక ప్రవేశం తీవ్ర నేరం.',
+    quickDemoHeader: 'త్వరిత డెమో వివరాలు',
+    autoFillBtn: 'వివరాలు ఆటో ఫిల్ చేయి',
+    scanQrToDownload: 'ఆండ్రాయిడ్ అప్లికేషన్‌ను డౌన్‌లోడ్ చేయడానికి క్యూఆర్ కోడ్‌ని స్కాన్ చేయండి',
+    howToInstall: 'ఇన్‌స్టాల్ చేయడం ఎలా?',
+    installStep1Title: '1. అన్‌నోన్ సోర్సెస్ అనుమతించండి',
+    installStep1Desc: 'సెట్టింగులు > యాప్స్ > స్పెషల్ యాప్ యాక్సెస్ > ఇన్‌స్టాల్ అన్‌నోన్ యాప్స్ కి వెళ్లి, మీ బ్రౌజర్‌కు అనుమతిని ఆన్ చేయండి.',
+    installStep2Title: '2. ప్లే ప్రొటెక్ట్ ఆఫ్ చేయండి',
+    installStep2Desc: 'గూగుల్ ప్లే స్టోర్ > ప్రొఫైల్ ఐకాన్ > ప్లే ప్రొటెక్ట్ > సెట్టింగ్స్ (గేర్ ఐకాన్) లో \'స్కాన్ యాప్స్ విత్ ప్లే ప్రొటెక్ట్\' ఆఫ్ చేయండి.',
+    installWarningTitle: '⚠️ ప్లే ప్రొటెక్ట్ ఎందుకు బ్లాక్ చేస్తుంది?',
+    installWarningDesc: 'నగదు ప్రవాహాన్ని అంచనా వేయడానికి ధనసేతు ఆటోమేటెడ్ SMS స్క్రాపింగ్ ఉపయోగిస్తుంది. ఇది మీ మొబైల్ లోని ఆర్థిక SMS సమాచారాన్ని విశ్లేషిస్తుంది కాబట్టి, ప్లే ప్రొటెక్ట్ దీనిని బ్లాక్ చేస్తుంది.',
+    mechanisms: { margin_squeeze: 'మార్జిన్ ఒత్తిడి', working_capital_erosion: 'వర్కింగ్ కేపిటల్ క్షీణత', debt_overhang: 'అప్పుల భారం', climate_shock: 'వాతావరణ షాక్', demand_trough: 'డిమాండ్ పతనం', receivable_stretch: 'వసూళ్ల ఆలస్యం' },
+    flagDetails: {
+      margin_squeeze: (p) => p.marginGapPct != null ? `ఖర్చులు పెరిగి మార్జిన్‌పై ఒత్తిడి ఉంది (తేడా ${p.marginGapPct}%).` : 'ఖర్చులు పెరిగి మార్జిన్‌పై ఒత్తిడి ఉంది.',
+      working_capital_erosion: () => 'రోజువారీ ఖర్చులతో పోలిస్తే వర్కింగ్ కేపిటల్ తగ్గిపోతోంది.',
+      debt_overhang: (p) => p.missedEmi ? `ఆదాయంతో పోలిస్తే వాయిదాలు భారంగా ఉన్నాయి; 90 రోజుల్లో ${p.missedEmi} వాయిదా చెల్లించలేదు.` : 'ఆశించిన ఆదాయంతో పోలిస్తే వాయిదాలు భారంగా ఉన్నాయి.',
+      receivable_stretch: () => 'కొనుగోలుదారులు చెల్లించడంలో ఆలస్యం చేస్తున్నారు, సంపాదించిన సొమ్ము రాలేదు.',
+      demand_trough: () => 'డిమాండ్ తగ్గింది, అమ్మకాలు సాధారణం కంటే తక్కువగా ఉన్నాయి.',
+      climate_shock: () => 'వాతావరణం ఈ ప్రాంతంలో ఉత్పత్తి లేదా ఖర్చులపై ప్రభావం చూపింది.',
+      repayment_stress: (p) => p.missedEmi ? `గత 90 రోజుల్లో ${p.missedEmi} వాయిదా చెల్లించలేదు.` : 'వాయిదాలు సమయానికి చెల్లించలేకపోతున్నారు.',
+      thin_buffer: (p) => p.bufferMonths != null ? `నగదు ${p.bufferMonths} నెలల ఖర్చులకే సరిపోతుంది.` : 'పొదుపు ఒక నెల ఖర్చులకూ సరిపోదు.',
+      spend_exceeds: () => 'ఇటీవల ఖర్చు ఆదాయాన్ని మించింది.',
+    },
 
     accountTitle: 'అకౌంట్ & సెట్టింగ్స్',
     accountSub: 'మీ మర్చంట్ ప్రొఫైల్, భాష మరియు భద్రతను నిర్వహించండి',
@@ -513,5 +780,45 @@ export const L: Record<SupportedLang, Translations> = {
     firstLoadLangSub: 'ధనసేతు మర్చంట్ పోర్టల్ కోసం భాషను ఎంచుకోండి',
     firstLoadLangTip: '💡 మీరు అకౌంట్ సెట్టింగ్స్ పేజీ నుండి తర్వాత ఎప్పుడైనా మీ భాషను మార్చుకోవచ్చు.',
     applyLangBtn: 'సరే, భాషను వర్తింపజేయి',
+
+    verifiedPortfolio: 'ధృవీకరించబడిన పోర్ట్‌ఫోలియో',
+    gstAadhaarActive: 'GSTIN & ఆధార్ యాక్టివ్',
+    manualSyncDisclaimer: 'ప్రాంతీయంగా రికార్డ్ చేయబడిన అన్ని మాన్యువల్ ఎంట్రీలు సర్వర్ తిరిగి కనెక్ట్ అయినప్పుడు తక్షణమే సింక్ చేయబడతాయి.',
+    invoicesLabel: 'ఇన్‌వాయిస్‌లు',
+    avgLabel: 'సగటు',
+    daysToCashLabel: 'నగదు రావడానికి రోజులు',
+    writtenOffLabel: 'రద్దు చేయబడింది',
+    noReceivables: 'క్రెడిట్ (ఉధార్) బుక్ ఎంట్రీలు ఏవీ లేవు.',
+    digitalReceiptsTip: '💡 డిజిటల్ రశీదులు (UPI/వాలెట్) బ్యాంకర్లకు ధృవీకరించదగిన క్రెడిట్ ట్రాకింగ్‌ను అందిస్తాయి, ఇది రుణ అర్హతను పెంచుతుంది.',
+    receivablesTitle: 'ఉధార్ బుక్ (రావాల్సిన సొమ్ము)',
+    counterpartyTypes: { cooperative: 'సహకార సంఘం', trader: 'వ్యాపారి', exporter: 'ఎగుమతిదారు', retailer: 'రిటైలర్', village_credit: 'గ్రామ అప్పు' },
+    alertsTab: 'అలర్ట్‌లు',
+    gstinMerchantId: 'GSTIN / మర్చంట్ ID:',
+    verificationStatus: 'ధృవీకరణ స్థితి:',
+    gstAadhaarVerified: 'GST & ఆధార్ ధృవీకరించబడింది',
+    verifiedShopLocation: 'ధృవీకరించబడిన షాప్ స్థానం',
+    googleMapsCentroid: 'గూగుల్ మ్యాప్స్ కేంద్రీకృత GPS సెంట్రాయిడ్',
+    gpsLockedFooter: 'మీ GPS కోఆర్డినేట్లు సురక్షితంగా లాక్ చేయబడ్డాయి మరియు మీ ప్రాంతీయ నోడల్ కోఆర్డినేటర్ ద్వారా ధృవీకరించబడ్డాయి.',
+    autoDetectBankSms: 'బ్యాంక్ SMS ఆటోమేటిక్ గుర్తింపు',
+    detectTransactionsSub: 'బ్యాంక్ SMS నుండి లావాదేవీలను గుర్తించండి',
+    onlyOnPhoneApp: 'ఫోన్ యాప్‌లో మాత్రమే అందుబాటులో ఉంటుంది',
+    importSmsHistory: 'SMS చరిత్రను ఇంపోర్ట్ చేయి',
+    importSmsHistorySub: 'ప్రారంభంలో గత బ్యాంక్ లావాదేవీలను ఇంపోర్ట్ చేయండి',
+    filterAll: 'అన్నీ',
+    filterToday: 'నేడు',
+    filter7Days: '7 రోజులు',
+    filterMonth: 'నెల',
+    filterCustom: 'కస్టమ్',
+    filterCustomRange: 'కస్టమ్ పరిధి',
+    filterCustomPrefix: 'కస్టమ్: ',
+    noTxnsFound: 'ఇంకా ఎలాంటి లావాదేవీల నమోదులు లేవు.',
+    noCashflowRecords: 'నగదు ప్రవాహ రికార్డులు ఇంకా అందుబాటులో లేవు',
+    addDailyEntriesHint: 'వారాంతపు నగదు ప్రవాహ విశ్లేషణను రూపొందించడానికి రోజువారీ నమోదులను జోడించండి.',
+    chartInflowLegend: 'జమ (₹)',
+    chartOutflowLegend: 'డెబిట్ (₹)',
+    chartNetLegend: 'నికర రేఖ',
+    inflowColon: 'జమ:',
+    outflowColon: 'డెబిట్:',
+    netCashflowColon: 'నికర నగదు ప్రవాహం:',
   },
 };

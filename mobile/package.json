@@ -1,6 +1,6 @@
 {
-  "name": "dhansetu",
-  "version": "1.0.1",
+  "name": "Dhansetu",
+  "version": "1.0.2",
   "main": "index.ts",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.8",

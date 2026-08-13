@@ -71,7 +71,7 @@ export default function TransactionsTab({
           setWorklist(data || []);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       isMounted = false;
     };
@@ -226,8 +226,8 @@ export default function TransactionsTab({
       backgroundColor: state.isSelected
         ? "#2E7D32"
         : state.isFocused
-        ? "#FAFBF6"
-        : "#FFFFFF",
+          ? "#FAFBF6"
+          : "#FFFFFF",
       color: state.isSelected ? "#FFFFFF" : "#1A2016",
       cursor: "pointer",
       ":active": {
@@ -394,8 +394,8 @@ export default function TransactionsTab({
                   const dateStr = item.event_date
                     ? item.event_date.split("T")[0]
                     : item.recorded_at
-                    ? item.recorded_at.split("T")[0]
-                    : "";
+                      ? item.recorded_at.split("T")[0]
+                      : "";
                   const tenderVal = String(item.tender || item.channel || "Unknown");
                   const confidencePct = getConfidencePct(item.confidence);
 
@@ -414,7 +414,7 @@ export default function TransactionsTab({
                       {/* Transcript */}
                       <td className="px-4 py-3.5 max-w-[280px]">
                         <div className="text-[11.5px] font-serif italic text-[#1A2016] leading-relaxed break-words">
-                          {item.transcript ? `"${item.transcript}"` : "No transcript available"}
+                          {item.transcript ? `"${item.transcript}"` : "-"}
                         </div>
                       </td>
 

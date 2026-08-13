@@ -23,6 +23,7 @@ export interface TranslationDictionary {
     subtitle: string;
     chip: string;
     cta: string;
+    merchantCta: string;
     whoFor: string;
     poweredBy: string;
     signin: string;
@@ -195,6 +196,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       subtitle: "AI-powered Cashflow Forecasting & Early Warning Platform for Rural Enterprises",
       chip: "Bridging Financial Inclusion with AI Intelligence",
       cta: "Access Officer Portal",
+      merchantCta: "Access Merchant Portal",
       whoFor: "For Banks, SHGs, FPOs, MFIs and Rural Enterprises",
       poweredBy: "Initiative under NABARD & MoRD Framework",
       signin: "Sign In as Officer",
@@ -429,6 +431,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       subtitle: "ग्रामीण उद्यमों के लिए AI-संचालित नकदी प्रवाह पूर्वानुमान एवं पूर्व चेतावनी प्लेटफ़ॉर्म",
       chip: "वित्तीय समावेशन को AI बुद्धिमत्ता से जोड़ता सेतु",
       cta: "अधिकारी पोर्टल में प्रवेश करें",
+      merchantCta: "मर्चेंट पोर्टल में प्रवेश करें",
       whoFor: "बैंकों, SHG, FPO, MFI और ग्रामीण उद्यमियों के लिए",
       poweredBy: "नाबार्ड एवं ग्रामीण विकास मंत्रालय की पहल",
       signin: "अधिकारी के रूप में लॉगिन करें",
@@ -663,6 +666,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       subtitle: "గ్రామీణ సంస్థల కోసం AI-ఆధారిత నగదు ప్రవాహ అంచనా & ముందస్తు హెచ్చరిక వేదిక",
       chip: "ఆర్థిక చేరికను AI మేధస్సుతో కలిపే వంతెన",
       cta: "అధికారి పోర్టల్ యాక్సెస్ చేయండి",
+      merchantCta: "మర్చంట్ పోర్టల్ యాక్సెస్ చేయండి",
       whoFor: "బ్యాంకులు, SHGలు, FPOలు, MFIలు మరియు గ్రామీణ వ్యవస్థాపకుల కోసం",
       poweredBy: "నాబార్డ్ & గ్రామీణాభివృద్ధి మంత్రిత్వ శాఖ చొరవ",
       signin: "అధికారిగా సైన్ ఇన్ చేయండి",
@@ -897,6 +901,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       subtitle: "ग्रामीण उद्योगांसाठी AI-आधारित रोख प्रवाह अंदाज व पूर्वसूचना प्लॅटफॉर्म",
       chip: "बुद्धिमत्ता आणि आर्थिक समावेशन जोडणारा सेतू",
       cta: "अधिकारी पोर्टल पहा",
+      merchantCta: "मर्चेंट पोर्टल पहा",
       whoFor: "बँका, SHG, FPO, MFI आणि ग्रामीण उद्योजकांसाठी",
       poweredBy: "नाबार्ड व ग्रामीण विकास मंत्रालयाचा उपक्रम",
       signin: "अधिकारी म्हणून साइन इन करा",

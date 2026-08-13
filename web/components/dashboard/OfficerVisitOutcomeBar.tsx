@@ -112,20 +112,19 @@ export default function OfficerVisitOutcomeBar({
       {/* Top Banner / Checkbox Header */}
       <div
         onClick={toggleDropdown}
-        className={`p-4 flex items-center justify-between border-b border-[#E2E6D8] select-none transition-all duration-200 ${
-          hasOpenTasks
+        className={`p-4 flex items-center justify-between border-b border-[#E2E6D8] select-none transition-all duration-200 ${hasOpenTasks
             ? "bg-[#FAFBF6] cursor-pointer hover:bg-[#F2F4EC] active:bg-[#E8EBE0] active:scale-[0.99]"
             : "bg-[#F5F5F5] cursor-not-allowed opacity-60"
-        }`}
+          }`}
       >
         <div className="flex items-center gap-3 select-none pointer-events-none">
-          <input
+          {/* <input
             type="checkbox"
             checked={isExpanded}
             disabled={!hasOpenTasks}
             readOnly
             className="w-4 h-4 text-[#2E7D32] bg-white border-[#E2E6D8] rounded focus:ring-[#2E7D32] accent-[#2E7D32] disabled:opacity-50"
-          />
+          /> */}
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-4.5 h-4.5 text-[#2E7D32]" />
             <span className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">

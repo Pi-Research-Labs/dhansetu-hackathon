@@ -9,7 +9,7 @@ import StakeholdersBar from "@/components/landing/StakeholdersBar";
 import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
 
   return (
     <div className="bg-[#F4F5F0] text-[#1A2016] min-h-screen">
@@ -28,7 +28,7 @@ export default function LandingPage() {
       <FeaturesGrid t={t} />
 
       {/* Stakeholders Overview */}
-      <StakeholdersBar t={t} />
+      <StakeholdersBar t={t} lang={currentLanguage} />
 
       {/* Footer */}
       <Footer />

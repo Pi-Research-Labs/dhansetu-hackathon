@@ -1,16 +1,50 @@
-"use client";
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MarketChartPoint } from '@/utils/api-config';
+import { useMerchantStore } from '@/store/useMerchantStore';
+import { L } from '@/i18n/translations';
+import { translateText } from '@/utils/translator';
+import { Translate } from '@/components/common/Translate';
 
 interface MarketPriceChartProps {
   chartData?: MarketChartPoint[];
 }
 
 export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
-  const months = chartData && chartData.length > 0
+  const { lang } = useMerchantStore();
+  const t = L[lang] || L.en;
+
+  const rawMonths = chartData && chartData.length > 0
     ? chartData.map((d) => d.month)
     : ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
+  const [translatedMonths, setTranslatedMonths] = useState<string[]>(rawMonths);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function translateMonths() {
+      if (lang === 'en') {
+        setTranslatedMonths(rawMonths);
+        return;
+      }
+      try {
+        const translated = await Promise.all(rawMonths.map((m) => translateText(m, lang)));
+        if (isMounted) {
+          setTranslatedMonths(translated);
+        }
+      } catch (err) {
+        console.error('Error translating months:', err);
+        if (isMounted) {
+          setTranslatedMonths(rawMonths);
+        }
+      }
+    }
+    translateMonths();
+    return () => {
+      isMounted = false;
+    };
+  }, [lang, chartData]);
+
+  const months = translatedMonths;
 
   // Rainfall in mm
   const rainfallData = chartData && chartData.length > 0
@@ -52,17 +86,23 @@ export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
 
   return (
     <div className="bg-white rounded-xl border border-[#E7E5DA] p-3.5 mt-3 flex flex-col gap-2">
-      <h4 className="text-[#1D261F] text-xs font-bold">12-Month Commodity Price Index & Rainfall</h4>
+      <h4 className="text-[#1D261F] text-xs font-bold">
+        <Translate>12-Month Commodity Price Index & Rainfall</Translate>
+      </h4>
       
       {/* Legend */}
       <div className="flex gap-4 text-[10px] font-semibold">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded bg-[#1565C0] opacity-35" />
-          <span className="text-[#6F6B5E]">Rainfall (mm)</span>
+          <span className="text-[#6F6B5E]">
+            <Translate>Rainfall (mm)</Translate>
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3.5 h-0.5 border-t-2 border-[#2E7D32]" />
-          <span className="text-[#6F6B5E]">Price Index (Base 100)</span>
+          <span className="text-[#6F6B5E]">
+            <Translate>Price Index (Base 100)</Translate>
+          </span>
         </div>
       </div>
 
@@ -187,15 +227,23 @@ export function MarketPriceChart({ chartData }: MarketPriceChartProps) {
       {activeItem && (
         <div className="bg-[#FAFAF5] rounded-lg border border-[#E7E5DA] p-3 text-xs flex flex-col gap-1 mt-2.5 animate-in fade-in duration-200">
           <div className="flex justify-between items-center mb-1 border-b border-[#E7E5DA] pb-1">
-            <span className="text-[#1D261F] font-bold">{activeItem.month} Forecast & Trends</span>
-            <span className="text-[10px] font-bold text-[#2E7D32] bg-[#E7F2E7] px-2 py-0.5 rounded">Active Detail</span>
+            <span className="text-[#1D261F] font-bold">
+              {activeItem.month} <Translate>Forecast & Trends</Translate>
+            </span>
+            <span className="text-[10px] font-bold text-[#2E7D32] bg-[#E7F2E7] px-2 py-0.5 rounded">
+              <Translate>Active Detail</Translate>
+            </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[#6F6B5E]">Price Index:</span>
+            <span className="text-[#6F6B5E]">
+              <Translate>Price Index:</Translate>
+            </span>
             <span className="text-[#2E7D32] font-semibold">{activeItem.price.toFixed(1)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[#6F6B5E]">Rainfall:</span>
+            <span className="text-[#6F6B5E]">
+              <Translate>Rainfall:</Translate>
+            </span>
             <span className="text-[#1565C0] font-semibold">{activeItem.rain.toFixed(1)} mm</span>
           </div>
         </div>

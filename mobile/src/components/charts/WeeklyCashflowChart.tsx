@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Rect, Path, Circle, Line, Text as SvgText, G } from 'react-native-svg';
+import { useMerchantStore } from '@/store/useMerchantStore';
+import { L } from '@/i18n/translations';
+import { Translate } from '@/components/common/Translate';
 
 interface WeeklyData {
   week: string;
@@ -16,14 +19,17 @@ interface Props {
 }
 
 export function WeeklyCashflowChart({ data }: Props) {
+  const { lang } = useMerchantStore();
+  const t = L[lang];
+
   if (!data || data.length === 0) {
     return (
       <View style={[styles.container, { paddingVertical: 40, alignItems: 'center', justifyContent: 'center' }]}>
         <Text style={{ color: '#6F6B5E', fontSize: 13, fontWeight: '700' }}>
-          No cashflow records available yet
+          {t.noCashflowRecords}
         </Text>
         <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 4, textAlign: 'center', paddingHorizontal: 20 }}>
-          Add daily entries to generate weekly cashflow analytics.
+          {t.addDailyEntriesHint}
         </Text>
       </View>
     );
@@ -80,15 +86,15 @@ export function WeeklyCashflowChart({ data }: Props) {
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendBox, { backgroundColor: '#2E7D32' }]} />
-          <Text style={styles.legendText}>Inflow (₹)</Text>
+          <Text style={styles.legendText}>{t.chartInflowLegend}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendBox, { backgroundColor: '#C0392B' }]} />
-          <Text style={styles.legendText}>Outflow (₹)</Text>
+          <Text style={styles.legendText}>{t.chartOutflowLegend}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendLine, { borderColor: '#1D261F' }]} />
-          <Text style={styles.legendText}>Net Line</Text>
+          <Text style={styles.legendText}>{t.chartNetLegend}</Text>
         </View>
       </View>
 
@@ -255,23 +261,23 @@ export function WeeklyCashflowChart({ data }: Props) {
       {activeItem && (
         <View style={styles.detailCard}>
           <View style={styles.detailHeader}>
-            <Text style={styles.detailTitle}>{activeItem.weekLabel}</Text>
-            <Text style={styles.detailRange}>{activeItem.dateRange}</Text>
+            <Translate style={styles.detailTitle}>{activeItem.weekLabel}</Translate>
+            <Translate style={styles.detailRange}>{activeItem.dateRange}</Translate>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Inflow:</Text>
+            <Text style={styles.detailLabel}>{t.inflowColon}</Text>
             <Text style={[styles.detailVal, { color: '#2E7D32' }]}>
               +₹ {activeItem.inflow.toLocaleString('en-IN')}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Outflow:</Text>
+            <Text style={styles.detailLabel}>{t.outflowColon}</Text>
             <Text style={[styles.detailVal, { color: '#C0392B' }]}>
               -₹ {activeItem.outflow.toLocaleString('en-IN')}
             </Text>
           </View>
           <View style={[styles.detailRow, styles.borderTop]}>
-            <Text style={styles.detailLabelBold}>Net Cashflow:</Text>
+            <Text style={styles.detailLabelBold}>{t.netCashflowColon}</Text>
             <Text style={[styles.detailValBold, { color: activeItem.net >= 0 ? '#2E7D32' : '#C0392B' }]}>
               {activeItem.net >= 0 ? '+' : ''}₹ {activeItem.net.toLocaleString('en-IN')}
             </Text>

@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Landmark } from 'lucide-react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 
 interface GovHeaderProps {
   title?: string;
@@ -14,7 +13,10 @@ export function GovHeader({
   return (
     <View style={styles.container}>
       <View style={styles.iconBox}>
-        <Landmark size={20} color="#2E7D32" />
+        <Image
+          source={require('../../../assets/splash-icon.png')}
+          style={{ width: 36, height: 36, borderRadius: 18, resizeMode: 'cover' }}
+        />
       </View>
       <View>
         <Text style={styles.govTitle}>{title}</Text>
@@ -33,12 +35,13 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 18,
     backgroundColor: '#E7F2E7',
     borderWidth: 1,
     borderColor: '#E7E5DA',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   govTitle: {
     color: '#1D261F',

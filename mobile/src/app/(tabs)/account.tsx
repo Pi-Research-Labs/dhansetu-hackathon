@@ -158,7 +158,7 @@ export default function AccountScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Top Nav (Clean Header without top-bar language select) */}
       <View style={styles.topNav}>
-        <GovHeader />
+        <GovHeader subtitle={t.verifiedMerchantGateway} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -185,7 +185,7 @@ export default function AccountScreen() {
 
           <View style={styles.infoRow}>
             <Building2 size={15} color="#6F6B5E" />
-            <Text style={styles.infoLabel}>GSTIN / Merchant ID:</Text>
+            <Text style={styles.infoLabel}>{t.gstinMerchantId}</Text>
             <Text style={styles.infoVal}>{gstin}</Text>
           </View>
 
@@ -193,10 +193,10 @@ export default function AccountScreen() {
 
           <View style={styles.infoRow}>
             <Award size={15} color="#2E7D32" />
-            <Text style={styles.infoLabel}>Verification Status:</Text>
+            <Text style={styles.infoLabel}>{t.verificationStatus}</Text>
             <View style={styles.verifiedChip}>
               <ShieldCheck size={12} color="#2E7D32" />
-              <Text style={styles.verifiedText}>GST & Aadhaar Verified</Text>
+              <Text style={styles.verifiedText}>{t.gstAadhaarVerified}</Text>
             </View>
           </View>
         </View>
@@ -212,7 +212,7 @@ export default function AccountScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingTitle}>{t.changeLanguage}</Text>
-              <Text style={styles.settingSub}>Select your preferred app language</Text>
+              <Text style={styles.settingSub}>{t.selectPreferredLangSub}</Text>
             </View>
           </View>
 
@@ -280,15 +280,15 @@ export default function AccountScreen() {
               <MessageSquare size={18} color="#1565C0" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingTitle}>Auto-Detect Bank SMS</Text>
+              <Text style={styles.settingTitle}>{t.autoDetectBankSms}</Text>
               <Text style={styles.settingSub}>
                 {smsAutoDetect.isListening
-                  ? `Active · ${smsDetectedCount} entries auto-detected`
+                  ? t.smsActiveLabel(smsDetectedCount)
                   : smsAutoDetect.permissionStatus === 'unavailable'
-                    ? 'Available on Android only'
+                    ? t.availableOnAndroidOnly
                     : smsAutoDetect.permissionStatus === 'denied'
-                      ? 'SMS permission required'
-                      : 'Detect transactions from bank SMS'}
+                      ? t.smsPermissionRequired
+                      : t.detectTransactionsSub}
               </Text>
             </View>
             <Switch
@@ -300,8 +300,8 @@ export default function AccountScreen() {
                     const granted = await smsAutoDetect.requestPermission();
                     if (!granted) {
                       showAlert(
-                        'Permission Required',
-                        'SMS permission is needed to auto-detect bank transactions. Please grant the permission in your device settings.',
+                        t.smsPermissionTitle,
+                        t.smsPermissionMsg,
                         'warning'
                       );
                       return;
@@ -328,7 +328,7 @@ export default function AccountScreen() {
                   styles.smsStatusText,
                   { color: smsAutoDetect.isListening ? '#2E7D32' : '#C77700' }
                 ]}>
-                  {smsAutoDetect.isListening ? 'Listening for bank SMS' : 'Starting listener...'}
+                  {smsAutoDetect.isListening ? t.listeningForBankSms : t.startingListener}
                 </Text>
                 <View style={[
                   styles.smsStatusDot,
@@ -339,7 +339,7 @@ export default function AccountScreen() {
               <View style={styles.smsPrivacyNoteContainer}>
                 <Lock size={10} color="#9E9E9E" />
                 <Text style={styles.smsPrivacyNote}>
-                  All SMS parsing happens on your device. No message data is uploaded.
+                  {t.smsPrivacyNotice}
                 </Text>
               </View>
             </View>
@@ -353,15 +353,15 @@ export default function AccountScreen() {
               <History size={18} color="#E65100" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingTitle}>Import SMS History</Text>
+              <Text style={styles.settingTitle}>{t.importSmsHistory}</Text>
               <Text style={styles.settingSub}>
                 {smsHistoryImportEnabled
                   ? smsAutoDetect.isScanning
-                    ? 'Scanning past SMS inbox...'
+                    ? t.scanningPastSmsInbox
                     : smsAutoDetect.historicalScanCount > 0
-                      ? `${smsAutoDetect.historicalScanCount} past transactions imported`
-                      : 'Enabled · Will scan on next listener start'
-                  : 'Scan past bank SMS to import older transactions'}
+                      ? t.pastTxnsImportedLabel(smsAutoDetect.historicalScanCount)
+                      : t.smsEnabledWillScan
+                  : t.scanPastSmsSub}
               </Text>
             </View>
             <Switch
@@ -373,8 +373,8 @@ export default function AccountScreen() {
                     const granted = await smsAutoDetect.requestPermission();
                     if (!granted) {
                       showAlert(
-                        'Permission Required',
-                        'SMS permission is needed to scan your inbox for past bank transactions. Please grant the permission in your device settings.',
+                        t.smsPermissionTitle,
+                        t.smsHistoryPermissionMsg,
                         'warning'
                       );
                       return;
@@ -401,7 +401,7 @@ export default function AccountScreen() {
                 <View style={styles.smsStatusRow}>
                   <ActivityIndicator size={10} color="#E65100" />
                   <Text style={[styles.smsStatusText, { color: '#E65100' }]}>
-                    Scanning past SMS for transactions...
+                    {t.scanningPastSmsProgress}
                   </Text>
                 </View>
               )}
@@ -410,7 +410,7 @@ export default function AccountScreen() {
                 <View style={styles.smsStatusRow}>
                   <CheckCircle2 size={12} color="#2E7D32" />
                   <Text style={[styles.smsStatusText, { color: '#2E7D32' }]}>
-                    {smsAutoDetect.historicalScanCount} past transactions imported
+                    {t.pastTxnsImportedLabel(smsAutoDetect.historicalScanCount)}
                   </Text>
                 </View>
               )}
@@ -418,7 +418,7 @@ export default function AccountScreen() {
               <View style={styles.smsPrivacyNoteContainer}>
                 <Lock size={10} color="#9E9E9E" />
                 <Text style={styles.smsPrivacyNote}>
-                  Scans your SMS inbox on-device only. No message data is uploaded.
+                  {t.smsHistoryPrivacyNotice}
                 </Text>
               </View>
             </View>
@@ -433,8 +433,8 @@ export default function AccountScreen() {
                 <MapPin size={24} color="#2E7D32" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.merchantName}>Verified Shop Location</Text>
-                <Text style={styles.merchantMeta}>Google Maps Centered GPS Centroid</Text>
+                <Text style={styles.merchantName}>{t.verifiedShopLocation}</Text>
+                <Text style={styles.merchantMeta}>{t.googleMapsCentroid}</Text>
               </View>
             </View>
             <View style={styles.divider} />
@@ -490,7 +490,7 @@ export default function AccountScreen() {
               )}
             </View>
             <Text style={styles.mapFooterText}>
-              Your GPS coordinates are securely locked and verified by your regional nodal coordinator.
+              {t.gpsLockedFooter}
             </Text>
           </View>
         )}
@@ -517,7 +517,7 @@ export default function AccountScreen() {
               <View style={[styles.modalIconBox, { backgroundColor: '#FBF0D9' }]}>
                 <Lock size={20} color="#C77700" />
               </View>
-              <Text style={styles.modalTitle}>Security & Access Info</Text>
+              <Text style={styles.modalTitle}>{t.securityAccessInfoTitle}</Text>
               <TouchableOpacity onPress={() => setSecurityModalVisible(false)} style={styles.closeBtn}>
                 <X size={18} color="#6F6B5E" />
               </TouchableOpacity>
@@ -527,17 +527,17 @@ export default function AccountScreen() {
               <View style={styles.modalInfoBox}>
                 <ShieldCheck size={16} color="#2E7D32" />
                 <Text style={styles.modalInfoBoxText}>
-                  256-Bit SSL AES Encrypted Secure Gateway
+                  {t.sslEncryptedGateway}
                 </Text>
               </View>
 
-              <Text style={styles.modalDetailLabel}>Registered GSTIN Credentials:</Text>
+              <Text style={styles.modalDetailLabel}>{t.registeredGstinCreds}</Text>
               <Text style={styles.modalDetailVal}>{gstin}</Text>
 
-              <Text style={styles.modalDetailLabel}>Aadhaar Linked Mobile:</Text>
+              <Text style={styles.modalDetailLabel}>{t.aadhaarLinkedMobile}</Text>
               <Text style={styles.modalDetailVal}>{phone}</Text>
 
-              <Text style={styles.modalDetailLabel}>Active Session ID:</Text>
+              <Text style={styles.modalDetailLabel}>{t.activeSessionId}</Text>
               <Text style={styles.modalDetailVal}>DS-SEC-SESSION-889231</Text>
             </View>
 
@@ -545,15 +545,15 @@ export default function AccountScreen() {
               style={styles.modalPrimaryBtn}
               onPress={() => {
                 setSecurityModalVisible(false);
-                showAlert('OTP Dispatched', 'Password reset code has been dispatched to your registered Aadhaar mobile number via SMS.', 'success');
+                showAlert(t.otpDispatchedTitle, t.otpDispatchedMsg, 'success');
               }}
             >
               <KeyRound size={16} color="#FFFFFF" />
-              <Text style={styles.modalPrimaryBtnText}>REQUEST AADHAAR OTP RESET</Text>
+              <Text style={styles.modalPrimaryBtnText}>{t.requestAadhaarOtpReset}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => setSecurityModalVisible(false)}>
-              <Text style={styles.modalSecondaryBtnText}>Close</Text>
+              <Text style={styles.modalSecondaryBtnText}>{t.close}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -567,42 +567,42 @@ export default function AccountScreen() {
               <View style={[styles.modalIconBox, { backgroundColor: '#E7F2E7' }]}>
                 <HelpCircle size={20} color="#2E7D32" />
               </View>
-              <Text style={styles.modalTitle}>DhanSetu Support Helpdesk</Text>
+              <Text style={styles.modalTitle}>{t.dhansetuSupportHelpdeskTitle}</Text>
               <TouchableOpacity onPress={() => setSupportModalVisible(false)} style={styles.closeBtn}>
                 <X size={18} color="#6F6B5E" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalBody}>
-              <Text style={styles.modalDetailLabel}>Support Department:</Text>
-              <Text style={styles.modalDetailVal}>Financial Inclusion Support Division</Text>
+              <Text style={styles.modalDetailLabel}>{t.supportDeptLabel}</Text>
+              <Text style={styles.modalDetailVal}>{t.financialInclusionDiv}</Text>
 
-              <Text style={styles.modalDetailLabel}>Toll-Free Helpline:</Text>
+              <Text style={styles.modalDetailLabel}>{t.tollFreeHelpline}</Text>
               <Text style={[styles.modalDetailVal, { color: '#1565C0' }]}>1800-11-2244</Text>
 
-              <Text style={styles.modalDetailLabel}>Official Email Support:</Text>
+              <Text style={styles.modalDetailLabel}>{t.officialEmailSupport}</Text>
               <Text style={styles.modalDetailVal}>support@dhansetu.example</Text>
 
-              <Text style={styles.modalDetailLabel}>Operating Hours:</Text>
-              <Text style={styles.modalDetailVal}>Mon - Sat: 9:00 AM to 6:00 PM IST</Text>
+              <Text style={styles.modalDetailLabel}>{t.operatingHours}</Text>
+              <Text style={styles.modalDetailVal}>{t.operatingHoursVal}</Text>
 
-              <Text style={styles.modalDetailLabel}>Support Coordinator:</Text>
-              <Text style={styles.modalDetailVal}>Regional Nodal Coordinator</Text>
+              <Text style={styles.modalDetailLabel}>{t.supportCoordinator}</Text>
+              <Text style={styles.modalDetailVal}>{t.regionalNodalCoordinator}</Text>
             </View>
 
             <TouchableOpacity
               style={[styles.modalPrimaryBtn, { backgroundColor: '#2E7D32' }]}
               onPress={() => {
                 setSupportModalVisible(false);
-                showAlert('Calling Support', 'Dialing Toll Free: 1800-11-2244...', 'info');
+                showAlert(t.dhansetuSupportHelpdeskTitle, t.callingSupportMsg, 'info');
               }}
             >
               <PhoneCall size={16} color="#FFFFFF" />
-              <Text style={styles.modalPrimaryBtnText}>CALL HELPLINE (1800-11-2244)</Text>
+              <Text style={styles.modalPrimaryBtnText}>{t.callHelplineBtn}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.modalSecondaryBtn} onPress={() => setSupportModalVisible(false)}>
-              <Text style={styles.modalSecondaryBtnText}>Close</Text>
+              <Text style={styles.modalSecondaryBtnText}>{t.close}</Text>
             </TouchableOpacity>
           </View>
         </View>

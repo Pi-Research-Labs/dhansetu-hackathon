@@ -128,7 +128,7 @@ export function LoginScreen() {
       >
         {/* Header Section */}
         <View style={styles.headerSection}>
-          <GovHeader />
+          <GovHeader subtitle={t.verifiedMerchantGateway} />
           <Text style={styles.mainTitle}>{t.merchantAccessPortal}</Text>
           <Text style={styles.subtitle}>
             {t.officialPortalSub}

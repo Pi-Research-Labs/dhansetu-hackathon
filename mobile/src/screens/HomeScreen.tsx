@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
-  Landmark,
   ShieldCheck,
   AlertTriangle,
   Smartphone,
@@ -62,7 +61,12 @@ export function HomeScreen() {
       {/* Top Nav */}
       <View style={styles.topNav}>
         <View style={styles.govBadge}>
-          <Landmark size={18} color="#2E7D32" />
+          <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#E7F2E7', borderWidth: 1, borderColor: '#E7E5DA', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 4 }}>
+            <Image
+              source={require('../../assets/splash-icon.png')}
+              style={{ width: 26, height: 26, borderRadius: 25, resizeMode: 'cover' }}
+            />
+          </View>
           <View>
             <Text style={styles.govTitle}>DHANSETU</Text>
             <Text style={styles.portalTitle}>{t.portalTitle}</Text>
@@ -82,7 +86,7 @@ export function HomeScreen() {
           <View style={styles.merchantCardHeader}>
             <View style={styles.verifiedChip}>
               <ShieldCheck size={14} color="#2E7D32" />
-              <Text style={styles.verifiedText}>GST Verified</Text>
+              <Text style={styles.verifiedText}>{t.gstVerified}</Text>
             </View>
           </View>
 
@@ -173,10 +177,10 @@ export function HomeScreen() {
             <View style={styles.sectionHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <BookOpen size={16} color="#2E7D32" />
-                <Text style={styles.sectionTitle}>Udhaar Book (Receivables Ageing)</Text>
+                <Text style={styles.sectionTitle}>{t.receivablesTitle}</Text>
               </View>
             </View>
-            <Text style={styles.channelSubtitle}>Outstanding credit from business counterparties</Text>
+            <Text style={styles.channelSubtitle}>{t.receivablesSub}</Text>
 
             {receivables.map((item, idx) => (
               <View key={idx} style={styles.receivableRow}>

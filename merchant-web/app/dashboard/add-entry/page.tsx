@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useMerchantStore, Entry } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
+import { Translate } from '@/components/common/Translate';
 import { postVoiceEntry, getTransactions, Transaction, postTransaction } from '@/utils/api-config';
 import { CustomAlert } from '@/components/common/CustomAlert';
 import { parseBankSms } from '@/utils/sms-parser';
@@ -536,9 +537,9 @@ export default function AddEntryScreen() {
   };
 
   const getCustomPillLabel = () => {
-    if (!customStartDate) return 'Custom range';
+    if (!customStartDate) return t.filterCustomRange || 'Custom range';
     const startStr = customStartDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    if (!customEndDate) return `Custom: ${startStr}`;
+    if (!customEndDate) return `${t.filterCustomPrefix || 'Custom: '}${startStr}`;
     const endStr = customEndDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
     return `${startStr} - ${endStr}`;
   };
@@ -699,7 +700,13 @@ export default function AddEntryScreen() {
             {/* Date Filters Row */}
             <div className="flex items-center gap-1.5 flex-wrap">
               {(['all', 'today', '7days', 'month', 'custom'] as const).map((f) => {
-                const labelMap = { all: 'All', today: 'Today', '7days': '7 Days', month: 'Month', custom: getCustomPillLabel() };
+                const labelMap = {
+                  all: t.filterAll || 'All',
+                  today: t.filterToday || 'Today',
+                  '7days': t.filter7Days || '7 Days',
+                  month: t.filterMonth || 'Month',
+                  custom: getCustomPillLabel(),
+                };
                 const isSelected = dateFilter === f;
                 return (
                   <button
@@ -731,21 +738,27 @@ export default function AddEntryScreen() {
             {isLoadingLedger && apiTransactions.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20">
                 <div className="w-8 h-8 border-4 border-[#2E7D32] border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-xs text-[#6F6B5E] mt-3 font-semibold">Reading transactions...</p>
+                <p className="text-xs text-[#6F6B5E] mt-3 font-semibold">
+                  <Translate>Reading transactions...</Translate>
+                </p>
               </div>
             ) : apiTransactions.length > 0 ? (
               <>
                 {apiTransactions.map((item) => {
                   const isCredit = item.direction === 'inflow';
-                  const categoryName = item.category
-                    ? item.category.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-                    : 'Uncategorized';
                   const dateFormatted = new Date(item.event_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                  const categoryName = item.category && t.entryTypes[item.category]
+                    ? t.entryTypes[item.category]
+                    : (item.category
+                        ? item.category.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                        : 'Uncategorized');
                   
                   return (
                     <div key={item.entry_id} className="flex justify-between items-center py-3">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-bold text-[#1D261F]">{categoryName}</span>
+                        <span className="text-xs font-bold text-[#1D261F]">
+                          <Translate>{categoryName}</Translate>
+                        </span>
                         {item.transcript ? (
                           <span className="text-[10px] text-[#6F6B5E] italic max-w-xs truncate flex items-center gap-1">
                             <Mic className="w-3 h-3 text-[#2E7D32] shrink-0" />
@@ -800,7 +813,9 @@ export default function AddEntryScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm border border-[#E7E5DA] shadow-2xl flex flex-col gap-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#1D261F]">Select Custom Date Range</span>
+              <span className="text-xs font-bold text-[#1D261F]">
+                <Translate>Select Custom Date Range</Translate>
+              </span>
               <button
                 onClick={() => setCustomDatePickerVisible(false)}
                 className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
@@ -809,10 +824,9 @@ export default function AddEntryScreen() {
               </button>
             </div>
 
-            {/* Month Switcher Header */}
             <div className="flex justify-between items-center border-b border-[#E7E5DA] pb-2">
               <span className="text-xs font-extrabold text-[#2E7D32]">
-                {monthNames[calendarMonth]} {calendarYear}
+                <Translate>{monthNames[calendarMonth]}</Translate> {calendarYear}
               </span>
               <div className="flex items-center gap-1">
                 <button onClick={handlePrevMonth} className="p-1 text-[#6F6B5E] hover:text-[#1D261F]">
@@ -868,7 +882,7 @@ export default function AddEntryScreen() {
               disabled={!customStartDate}
               className="bg-[#2E7D32] hover:bg-[#225F26] text-white font-bold py-2 rounded-lg text-xs cursor-pointer text-center disabled:opacity-50"
             >
-              APPLY FILTER RANGE
+              <Translate>APPLY FILTER RANGE</Translate>
             </button>
           </div>
         </div>

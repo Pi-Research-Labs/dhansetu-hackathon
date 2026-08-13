@@ -10,6 +10,7 @@ import {
   ArrowRight,
   HelpCircle,
   Globe,
+  Sparkles,
 } from 'lucide-react';
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
@@ -29,6 +30,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  const fillDemoCredentials = () => {
+    setPhone('9000000031');
+    setPassword('Lakshmi@0031');
+  };
 
   // Custom Alert State
   const [alertVisible, setAlertVisible] = useState(false);
@@ -121,7 +127,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#FAFAF5] flex items-center justify-center p-4 md:p-6 font-sans">
       <div className="w-full max-w-md flex flex-col gap-6">
-        
+
         {/* Top Header Row with Logo & Language Toggle */}
         <div className="flex items-center justify-between">
           <GovHeader />
@@ -150,7 +156,7 @@ export default function LoginPage() {
         {/* Login Form Card */}
         <div className="bg-white border border-[#E7E5DA] rounded-2xl p-6 shadow-sm flex flex-col gap-5">
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            
+
             {/* Phone Group */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="phone" className="text-[#6F6B5E] text-[10px] font-bold tracking-wider uppercase">
@@ -221,11 +227,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitDisabled}
-              className={`w-full py-3 rounded-lg text-white text-xs font-bold tracking-wider uppercase transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer shadow-sm ${
-                isSubmitDisabled
+              className={`w-full py-3 rounded-lg text-white text-xs font-bold tracking-wider uppercase transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer shadow-sm ${isSubmitDisabled
                   ? 'bg-[#BDC5BD] cursor-not-allowed opacity-75'
                   : 'bg-[#2E7D32] hover:bg-[#225F26] active:scale-[0.99]'
-              }`}
+                }`}
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -238,6 +243,27 @@ export default function LoginPage() {
             </button>
 
           </form>
+
+          {/* Quick Demo Helper Box */}
+          <div className="mt-1 pt-4 border-t border-[#E7E5DA]">
+            <div className="flex items-center justify-between mb-1.5">
+              {/* <span className="text-[11px] font-bold text-[#1565C0] flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#1565C0]" />
+                {t.quickDemoHeader}
+              </span> */}
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="text-[10.5px] text-[#2E7D32] font-bold hover:underline cursor-pointer"
+              >
+                {t.autoFillBtn}
+              </button>
+            </div>
+            {/* <div className="bg-[#FAFAF5] p-2.5 rounded-lg border border-[#E7E5DA] text-[11px] font-mono text-[#1D261F] space-y-0.5">
+              <div>Phone: <span className="font-bold">9000000031</span></div>
+              <div>Password: <span className="font-bold">Lakshmi@0031</span></div>
+            </div> */}
+          </div>
 
           <div className="border-t border-[#E7E5DA] pt-3">
             <SecurityBadge />
@@ -253,7 +279,7 @@ export default function LoginPage() {
             <HelpCircle className="w-4 h-4" />
             <span className="underline">{t.needHelp}</span>
           </button>
-          
+
           <p className="text-[#6F6B5E] text-[10px] leading-relaxed max-w-sm">
             {t.disclaimer}
           </p>

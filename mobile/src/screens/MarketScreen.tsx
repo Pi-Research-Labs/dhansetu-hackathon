@@ -17,6 +17,7 @@ import {
 import { useMerchantStore } from '@/store/useMerchantStore';
 import { L } from '@/i18n/translations';
 import { MarketPriceChart } from '@/components/charts/MarketPriceChart';
+import { Translate } from '@/components/common/Translate';
 import {
   getMarketIntelligence,
   MarketIntelligenceDetail,
@@ -50,7 +51,7 @@ export function MarketScreen() {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color="#2E7D32" />
-        <Text style={styles.loadingText}>Loading Market Intelligence...</Text>
+        <Translate style={styles.loadingText}>Loading Market Intelligence...</Translate>
       </View>
     );
   }
@@ -70,7 +71,8 @@ export function MarketScreen() {
         {/* Industry / Sub Type Title */}
         <View style={styles.industryHeader}>
           <Text style={styles.industryText}>
-            Industry: <Text style={styles.industryBold}>{intel?.sub_type}</Text>
+            <Translate>Industry: </Translate>
+            <Translate style={styles.industryBold}>{intel?.sub_type || ''}</Translate>
           </Text>
         </View>
 
@@ -79,7 +81,8 @@ export function MarketScreen() {
           <View style={styles.districtBadge}>
             <MapPin size={12} color="#6F6B5E" style={{ marginRight: 4 }} />
             <Text style={styles.districtText}>
-              District: <Text style={styles.districtBold}>{intel.district}</Text>
+              <Translate>District: </Translate>
+              <Translate style={styles.districtBold}>{intel.district}</Translate>
             </Text>
           </View>
         )}
@@ -88,18 +91,18 @@ export function MarketScreen() {
         <View style={styles.kpiContainer}>
           <View style={[styles.kpiCard, { marginRight: 6 }]}>
             <Text style={styles.cardLabel}>{t.trackedCommodity}</Text>
-            <Text style={styles.kpiTitle}>{intel?.tracked_commodity}</Text>
+            <Translate style={styles.kpiTitle}>{intel?.tracked_commodity || ''}</Translate>
             <View style={styles.liveTagRow}>
               <View style={styles.liveDot} />
               <Text style={styles.liveTagText}>{t.liveFeed}</Text>
             </View>
           </View>
           <View style={[styles.kpiCard, { marginLeft: 6 }]}>
-            <Text style={styles.cardLabel}>12-MO PRICE TREND</Text>
+            <Translate style={styles.cardLabel}>12-MO PRICE TREND</Translate>
             <Text style={[styles.kpiValue, intel && intel.price_trend_12m_pct < 0 ? styles.textDown : styles.textUp]}>
               {intel && intel.price_trend_12m_pct > 0 ? `+${intel.price_trend_12m_pct}%` : `${intel?.price_trend_12m_pct}%`}
             </Text>
-            <Text style={styles.trendSubLabel}>vs baseline</Text>
+            <Translate style={styles.trendSubLabel}>vs baseline</Translate>
           </View>
         </View>
 
@@ -107,7 +110,7 @@ export function MarketScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <TrendingUp size={16} color="#2E7D32" />
-            <Text style={styles.cardHeaderTitle}>12-Month Commodity Price & Rainfall</Text>
+            <Translate style={styles.cardHeaderTitle}>12-Month Commodity Price & Rainfall</Translate>
           </View>
           <MarketPriceChart chartData={intel?.chart_data} />
         </View>
@@ -118,7 +121,7 @@ export function MarketScreen() {
             <TrendingUp size={16} color="#2E7D32" />
             <Text style={styles.cardHeaderTitle}>{t.productivityTitle}</Text>
           </View>
-          <Text style={styles.cardDescText}>{intel?.productivity_outlook}</Text>
+          <Translate style={styles.cardDescText}>{intel?.productivity_outlook || ''}</Translate>
         </View>
 
         {/* Seasonal Pattern */}
@@ -127,7 +130,7 @@ export function MarketScreen() {
             <Calendar size={16} color="#1565C0" />
             <Text style={styles.cardHeaderTitle}>{t.seasonalTitle}</Text>
           </View>
-          <Text style={styles.cardDescText}>{intel?.seasonal_pattern}</Text>
+          <Translate style={styles.cardDescText}>{intel?.seasonal_pattern || ''}</Translate>
         </View>
 
         {/* Climate & Market Risks */}
@@ -148,7 +151,7 @@ export function MarketScreen() {
                   <Text style={styles.sevText}>{t.severityLabel(r.severity)}</Text>
                 </View>
               </View>
-              <Text style={styles.riskDesc}>{r.detail}</Text>
+              <Translate style={styles.riskDesc}>{r.detail}</Translate>
             </View>
           ))}
         </View>
