@@ -129,6 +129,42 @@ panel rather than replace it:
   (both carry a `provenance` column).
 - **`ingestion_runs`** — log every API pull.
 
+## Pulling real weather (`ingest_open_meteo.py`)
+
+`04_live_data.sql` creates the tables; this script fills them.
+
+```bash
+backend/.venv/bin/python database/ingest_open_meteo.py                    # 30d back + 7d forecast
+backend/.venv/bin/python database/ingest_open_meteo.py --dry-run          # fetch, write nothing
+backend/.venv/bin/python database/ingest_open_meteo.py --past-days 90
+```
+
+Needs `DATABASE_URL` (environment, or read from `backend/.env`). Uses `asyncpg`
+and `httpx`, both already backend dependencies — hence the backend venv rather
+than a bare `python3`. Open-Meteo needs no API key.
+
+Idempotent: upserts on `(district_id, obs_date, is_forecast)`, so re-running
+refreshes rows instead of duplicating them. Every run writes an
+`ingestion_runs` row with the HTTP status and counts, including failed runs.
+
+`dhansetu_user` already has the grants it needs (`09_app_grants.sql` lines
+23–24 cover `INSERT, UPDATE` on `weather_live` and `ingestion_runs`, and
+sequence usage) — no extra grant step.
+
+To keep it current on the VM, a daily cron inside the 9AM–9PM window:
+
+```cron
+30 9 * * *  cd /opt/dhansetu && backend/.venv/bin/python database/ingest_open_meteo.py >> /var/log/dhansetu-open-meteo.log 2>&1
+```
+
+Read it back via `GET /weather/{district_id}` (see [`API.md`](../API.md)) or
+`v_weather_series`, which unions these rows with the synthetic panel behind a
+`provenance` column. **Aggregating `v_weather_series` directly needs care** — it
+is a plain `UNION ALL`, so a date can carry a real observation, a synthetic row
+and an earlier forecast at once. The endpoint resolves that to one row per day
+(observation over forecast, real over synthetic); a hand-written query has to do
+the same or it double-counts rainfall.
+
 See `data/dhansetu_v1_2/README.md` for the full commodity-mapping notes
 (`commodity_map` — which of the ten commodities aren't on Agmarknet, and why
 that gap is itself part of the pitch).
