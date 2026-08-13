@@ -277,6 +277,46 @@ flowchart LR
    of headroom variance, and the distributions overlap — AMBER's p75 exceeds
    GREEN's p25.
 
+### The six mechanisms
+
+This is the closed vocabulary. Nothing outside this list can be a reason code,
+a rule's mechanism, or a ground-truth episode label — which is exactly what
+makes an explanation checkable rather than merely plausible.
+
+Each row shows the sentence the apps actually put in front of a merchant or
+officer (they never see the snake_case key), the three rules that can fire it,
+and how often the system gets it right when this mechanism is the *true* cause.
+
+| Mechanism | What it means, as shown to the user | Rules that fire it | Top-1 | Top-3 | n |
+|---|---|---|---|---|---|
+| **`margin_squeeze`** | *"Input costs are squeezing margins (gap of 21.7%)."* | `input_cost_squeeze`, `severe_cost_squeeze`, `spend_exceeds_earnings` | 49.3% | 81.7% | 71 |
+| **`working_capital_erosion`** | *"Everyday working money is draining away against ongoing expenses."* | `thin_buffer`, `critical_buffer`, `buffer_eroding` | 52.8% | 91.7% | 36 |
+| **`receivable_stretch`** | *"Buyers are taking a long time to pay, so earned money has not arrived."* | `receivable_stretch`, `overdue_book`, `aged_receivables` | 33.3% | 66.7% | 21 |
+| **`debt_overhang`** | *"Repayments are heavy against expected cash, with 2 instalment(s) missed in 90 days."* | `repayment_stress`, `heavy_emi_burden`, `informal_borrowing` | 25.0% | 100.0% | 8 |
+| **`demand_trough`** | *"Demand has dropped off, so sales are below the usual level."* | `seasonal_trough_ahead`, `deep_trough_ahead`, `revenue_declining_yoy` | 11.1% | 48.1% | 27 |
+| **`climate_shock`** | *"Weather has hit output or costs in this area."* | `heat_anomaly`, `severe_heat_anomaly`, `rainfall_anomaly` | 10.3% | 48.3% | 29 |
+
+**Three per mechanism, by design.** An earlier version gave climate and demand
+one rule each, so those two could never rank first no matter what the data said.
+Eighteen rules, evenly distributed, means no mechanism is *structurally* unable
+to win.
+
+**Why `climate_shock` and `demand_trough` score worst on top-1.** For dairy,
+heat and margin are physically the same event — heat cuts yield at the moment
+fodder cost peaks, which is this product's founding insight. So the model
+routinely calls a climate episode `margin_squeeze`, and it is not exactly wrong.
+That is why **top-3 is the fairer metric to quote**, and why we publish the
+per-mechanism split rather than only the 72.9% aggregate.
+
+**Why `debt_overhang` shows 100% top-3 on n = 8.** Because eight episodes is too
+few to mean anything. Quoted here with its `n` attached rather than dropped for
+looking good.
+
+Each mechanism also has its own matched actions, so the recommendation follows
+from the cause: `margin_squeeze` points at pre-booking inputs and a bridge
+facility, `receivable_stretch` at collecting the udhaar book, `debt_overhang` at
+restructuring. Getting the mechanism right is what makes the advice right.
+
 ---
 
 ## Measured results
