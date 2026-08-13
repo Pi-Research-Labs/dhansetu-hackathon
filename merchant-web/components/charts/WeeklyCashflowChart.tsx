@@ -20,23 +20,16 @@ export function WeeklyCashflowChart({ data }: Props) {
   const { lang } = useMerchantStore();
   const t = L[lang] || L.en;
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border border-[#E7E5DA] p-10 flex flex-col items-center justify-center text-center mt-2.5">
-        <p className="color-[#6F6B5E] text-sm font-bold">
-          {t.noCashflowRecords}
-        </p>
-        <p className="color-[#94A3B8] text-xs mt-1 max-w-xs">
-          {t.addDailyEntriesHint}
-        </p>
-      </div>
-    );
-  }
-
+  // Every hook has to run before the empty-data early return below. React
+  // identifies hooks by call order, so a hook placed after that return is
+  // skipped while there is no data and then called once it arrives, which
+  // throws "Rendered more hooks than during the previous render." That is the
+  // normal path here: `data` starts empty and fills when fetchMerchantData
+  // resolves.
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [translatedData, setTranslatedData] = useState<WeeklyData[]>([]);
 
-  const rawDisplayData = data.slice(-5); // Last 5 weeks
+  const rawDisplayData = data ? data.slice(-5) : []; // Last 5 weeks
 
   useEffect(() => {
     let isMounted = true;
@@ -74,6 +67,19 @@ export function WeeklyCashflowChart({ data }: Props) {
       isMounted = false;
     };
   }, [data, lang]);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-[#E7E5DA] p-10 flex flex-col items-center justify-center text-center mt-2.5">
+        <p className="color-[#6F6B5E] text-sm font-bold">
+          {t.noCashflowRecords}
+        </p>
+        <p className="color-[#94A3B8] text-xs mt-1 max-w-xs">
+          {t.addDailyEntriesHint}
+        </p>
+      </div>
+    );
+  }
 
   const displayData = translatedData.length > 0 ? translatedData : rawDisplayData;
 
