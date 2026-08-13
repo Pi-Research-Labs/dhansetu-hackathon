@@ -3,9 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   EnterpriseCard,
+  fetchDistrictWeather,
   fetchMapTileBlobUrl,
   getNetInflowHeatmap,
   NetInflowHeatmapItem,
+  WeatherDay,
 } from "@/utils/api-config";
 import { formatCurrency, formatCurrencyCompact } from "@/utils/formatters";
 import { Enterprise } from "@/types/enterprise";
@@ -22,6 +24,7 @@ import {
   Maximize2,
   Minimize2,
   Loader2,
+  Thermometer,
   TrendingUp,
   AlertCircle,
   Activity,
@@ -95,6 +98,14 @@ export default function EnterpriseDetailCard({
   const creditHeadroom = card?.credit_headroom ?? enterprise?.metrics.creditHeadroom ?? 0;
   const bridgeHeadroom = card?.bridge_headroom ?? enterprise?.metrics.savings ?? 0;
   const marginGap = card?.margin_gap_90d ?? null;
+
+  // Latest observed weather for this enterprise's district. Sits next to the
+  // margin gap on purpose: for dairy the two are the same story -- heat cuts
+  // yield at the moment fodder cost peaks -- so seeing THI beside the gap it
+  // helps cause is the point. Null until loaded, and the pill simply does not
+  // render if the fetch fails; weather is context, never a blocker.
+  const districtId = typeof card?.district_id === "number" ? card.district_id : null;
+  const [weather, setWeather] = useState<WeatherDay | null>(null);
 
   // Interactive Map State
   const [zoom, setZoom] = useState<number>(15);
@@ -185,6 +196,29 @@ export default function EnterpriseDetailCard({
     };
   }, [id, timePeriod]);
 
+  // District weather. Asks for a short window and takes the last row, because
+  // the API returns one row per day oldest-first and already prefers a real
+  // observation over a synthetic one for any given date.
+  useEffect(() => {
+    if (districtId === null) {
+      setWeather(null);
+      return;
+    }
+    let isMounted = true;
+
+    fetchDistrictWeather(districtId, 7)
+      .then((days) => {
+        if (isMounted) setWeather(days?.length ? days[days.length - 1] : null);
+      })
+      .catch(() => {
+        if (isMounted) setWeather(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [districtId]);
+
   // Auto-scroll heatmap to the most recent trailing week when period changes
   useEffect(() => {
     if (heatmapScrollRef.current && heatmapData.length > 0) {
@@ -268,6 +302,27 @@ export default function EnterpriseDetailCard({
                   {t?.dash?.marginGap90d || "90D Margin Gap"}:{" "}
                 </span>
                 <strong className="text-[#C62828]">{marginGap}%</strong>
+              </div>
+            )}
+
+            {weather?.thi != null && (
+              <div
+                className="bg-[#FAFBF6] border border-[#E2E6D8] px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono"
+                title={`${weather.district ?? ""} ${weather.obs_date} — ${weather.rainfall_mm ?? 0} mm rain, max ${weather.temp_max_c ?? "-"}°C, ${weather.humidity_pct ?? "-"}% humidity. Temperature-humidity index; above 78 dairy yield measurably declines. Source: ${weather.provenance}.`}
+              >
+                <Thermometer
+                  className={`w-3.5 h-3.5 ${weather.thi_dairy_stress ? "text-[#C62828]" : "text-[#2E7D32]"}`}
+                />
+                <span className="text-[#5F6656]">
+                  {t?.dash?.heatStress || "Heat stress"}:{" "}
+                </span>
+                <strong className={weather.thi_dairy_stress ? "text-[#C62828]" : "text-[#2E7D32]"}>
+                  THI {Math.round(Number(weather.thi))}
+                  {" · "}
+                  {weather.thi_dairy_stress
+                    ? t?.dash?.heatStressHigh || "high"
+                    : t?.dash?.heatStressNormal || "normal"}
+                </strong>
               </div>
             )}
           </div>

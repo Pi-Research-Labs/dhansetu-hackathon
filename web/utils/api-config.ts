@@ -190,6 +190,8 @@ export interface EnterpriseCard {
   reason_3?: string | null;
   margin_gap_90d?: number | null;
   digital_share?: number | null;
+  // 1-6. Needed to fetch district weather without keeping a name-to-id map here.
+  district_id?: number | null;
   [key: string]: unknown;
 }
 
@@ -614,6 +616,28 @@ export async function fetchMarketCategories(): Promise<MarketCategory[]> {
 export async function fetchMarketIntelligence(subType?: string): Promise<MarketIntelligenceDetail> {
   const params = subType ? { sub_type: subType } : {};
   return await apiClient.get<MarketIntelligenceDetail>("/market-intelligence", { params });
+}
+
+// District weather. One row per calendar day, newest last. `provenance` is
+// "open_meteo" for real observations and "synthetic" for generated panel days --
+// the API already prefers real over synthetic per date, so this can be read
+// straight through without deduplicating.
+export interface WeatherDay {
+  district_id: number;
+  district: string | null;
+  state: string | null;
+  obs_date: string;
+  rainfall_mm: number | null;
+  temp_max_c: number | null;
+  humidity_pct: number | null;
+  thi: number | null;
+  thi_dairy_stress: boolean | null;
+  is_forecast: boolean;
+  provenance: string;
+}
+
+export async function fetchDistrictWeather(districtId: number, days = 7): Promise<WeatherDay[]> {
+  return await apiClient.get<WeatherDay[]>(`/weather/${districtId}?days=${days}`);
 }
 
 export default api;

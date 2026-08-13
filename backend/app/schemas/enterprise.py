@@ -14,6 +14,9 @@ class EnterpriseCard(BaseModel):
     sub_type: str | None
     sector: str | None
     district: str | None
+    # Needed to call GET /weather/{district_id} for this enterprise's district
+    # without the client keeping its own name-to-id map of the six districts.
+    district_id: int | None = None
     state: str | None
     block: str | None
     preferred_lang: str | None
