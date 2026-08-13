@@ -8,7 +8,7 @@ class WeatherDay(BaseModel):
     """One district-day of weather, real or synthetic.
 
     `provenance` is the point of this shape: 'open_meteo' rows are real
-    observations pulled by database/ingest_open_meteo.py, 'synthetic' rows come
+    observations pulled by backend/scripts/ingest_open_meteo.py, 'synthetic' rows come
     from the generated panel. A caller can always tell which it is looking at
     rather than having to trust that everything is real.
     """

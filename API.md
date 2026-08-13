@@ -908,7 +908,7 @@ GET /api/v1/weather/1?days=30&include_forecast=false
 
 **`provenance` is the field to care about.** `open_meteo` rows are real
 observations pulled from Open-Meteo by
-[`database/ingest_open_meteo.py`](database/ingest_open_meteo.py); `synthetic`
+[`backend/scripts/ingest_open_meteo.py`](backend/scripts/ingest_open_meteo.py); `synthetic`
 rows come from the generated panel, which ends 2026-07-31. Real readings
 supersede synthetic ones wherever both cover a date, so **you get exactly one
 row per calendar day and can chart the response directly** — no dedup needed on

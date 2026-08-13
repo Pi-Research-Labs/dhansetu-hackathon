@@ -129,14 +129,16 @@ panel rather than replace it:
   (both carry a `provenance` column).
 - **`ingestion_runs`** — log every API pull.
 
-## Pulling real weather (`ingest_open_meteo.py`)
+## Pulling real weather (`backend/scripts/ingest_open_meteo.py`)
 
-`04_live_data.sql` creates the tables; this script fills them.
+`04_live_data.sql` creates the tables; this script fills them. It lives under
+`backend/` rather than here because it has to run on the VM on a schedule, and
+`deploy.yml` only copies `backend/` there.
 
 ```bash
-backend/.venv/bin/python database/ingest_open_meteo.py                    # 30d back + 7d forecast
-backend/.venv/bin/python database/ingest_open_meteo.py --dry-run          # fetch, write nothing
-backend/.venv/bin/python database/ingest_open_meteo.py --past-days 90
+backend/.venv/bin/python backend/scripts/ingest_open_meteo.py                    # 30d back + 7d forecast
+backend/.venv/bin/python backend/scripts/ingest_open_meteo.py --dry-run          # fetch, write nothing
+backend/.venv/bin/python backend/scripts/ingest_open_meteo.py --past-days 90
 ```
 
 Needs `DATABASE_URL` (environment, or read from `backend/.env`). Uses `asyncpg`
@@ -154,7 +156,7 @@ sequence usage) — no extra grant step.
 To keep it current on the VM, a daily cron inside the 9AM–9PM window:
 
 ```cron
-30 9 * * *  cd /opt/dhansetu && backend/.venv/bin/python database/ingest_open_meteo.py >> /var/log/dhansetu-open-meteo.log 2>&1
+30 9 * * *  cd ~/dhansetu-backend && .venv/bin/python scripts/ingest_open_meteo.py >> ~/open-meteo.log 2>&1
 ```
 
 Read it back via `GET /weather/{district_id}` (see [`API.md`](../API.md)) or
