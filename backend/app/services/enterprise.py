@@ -7,8 +7,20 @@ from app.core.db import get_pool
 async def get_enterprise_card(enterprise_id: str) -> dict | None:
     pool = get_pool()
     async with pool.acquire() as conn:
+        # district_id comes from v_enterprises_safe rather than v_enterprise_card,
+        # which exposes the district by name only. Clients that need a district
+        # id -- GET /weather/{district_id} is the first -- would otherwise have
+        # to keep their own name-to-id map of the six districts. Joined here
+        # instead of appended to the view because CREATE OR REPLACE VIEW cannot
+        # reorder or retype existing columns, so changing the view means a drop
+        # and recreate against the live database for one integer.
         row = await conn.fetchrow(
-            "SELECT * FROM dhansetu.v_enterprise_card WHERE enterprise_id = $1",
+            """
+            SELECT c.*, e.district_id
+            FROM dhansetu.v_enterprise_card c
+            JOIN dhansetu.v_enterprises_safe e USING (enterprise_id)
+            WHERE c.enterprise_id = $1
+            """,
             enterprise_id,
         )
         return dict(row) if row else None

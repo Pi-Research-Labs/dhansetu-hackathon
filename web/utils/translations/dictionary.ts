@@ -118,6 +118,9 @@ export interface TranslationDictionary {
     riskTier: string;
     bridgeHeadroom: string;
     marginGap90d: string;
+    heatStress: string;
+    heatStressHigh: string;
+    heatStressNormal: string;
     heatmapTitle: string;
     heatmapTimeHorizon: string;
     heatmapLoading: string;
@@ -305,6 +308,9 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "RISK TIER",
       bridgeHeadroom: "Bridge Headroom",
       marginGap90d: "90D Margin Gap",
+      heatStress: "Heat stress",
+      heatStressHigh: "high",
+      heatStressNormal: "normal",
       heatmapTitle: "Net Cashflow Heatmap",
       heatmapTimeHorizon: "Heatmap Time Horizon",
       heatmapLoading: "Loading Heatmap...",
@@ -540,6 +546,9 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "जोखिम स्तर",
       bridgeHeadroom: "ब्रिज हेडरूम",
       marginGap90d: "90D मार्जिन अंतर",
+      heatStress: "गर्मी का दबाव",
+      heatStressHigh: "अधिक",
+      heatStressNormal: "सामान्य",
       heatmapTitle: "नकदी प्रवाह हीटमैप",
       heatmapTimeHorizon: "हीटमैप समय सीमा",
       heatmapLoading: "हीटमैप लोड हो रहा है...",
@@ -775,6 +784,9 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "రిస్క్ వర్గం",
       bridgeHeadroom: "బ్రిడ్జ్ హెడ్‌రూమ్",
       marginGap90d: "90D మార్జిన్ నిష్పత్తి",
+      heatStress: "వేడి ఒత్తిడి",
+      heatStressHigh: "ఎక్కువ",
+      heatStressNormal: "సాధారణం",
       heatmapTitle: "నికర నగదు ప్రవాహ హీట్‌మ్యాప్",
       heatmapTimeHorizon: "హీట్‌మ్యాప్ సమయ పరిమితి",
       heatmapLoading: "హీట్‌మ్యాప్ లోడ్ అవుతోంది...",
@@ -1010,6 +1022,9 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "जोखीम स्तर",
       bridgeHeadroom: "ब्रिज हेडरूम",
       marginGap90d: "90D मार्जिन फरक",
+      heatStress: "उष्णतेचा ताण",
+      heatStressHigh: "जास्त",
+      heatStressNormal: "सामान्य",
       heatmapTitle: "निव्वळ रोख प्रवाह हीटमॅप",
       heatmapTimeHorizon: "हीटमॅप कालावधी",
       heatmapLoading: "हीटमॅप लोड होत आहे...",
