@@ -1,12 +1,42 @@
+"""Final export stage of the dataset generator. Kept for provenance.
+
+This is NOT a one-command regenerator and will not run from a fresh clone: it
+resumes from intermediate pickles (stage1-stage4) produced by the earlier stages,
+and those are deliberately not committed -- they are hundreds of MB of
+intermediate simulation state. See ../README.md.
+
+Paths were absolute to the machine the dataset was generated on. They are now
+resolved relative to this file, with environment overrides, so the script at
+least describes its own inputs honestly:
+
+  DHANSETU_STAGE_DIR   where stage1..stage4.pkl live   (default: alongside src/)
+  DHANSETU_EXPORT_OUT  where the CSVs are written      (default: ../ , the
+                                                        dataset directory)
+"""
 import numpy as np, pandas as pd, pickle, sys, json, os
-sys.path.insert(0, '/home/claude/dhansetu')
+from pathlib import Path
+
+_SRC = Path(__file__).resolve().parent
+sys.path.insert(0, str(_SRC))
 import refdata as R, analyse as A, export as E
 
-OUT = "/home/claude/out/dhansetu_v1_2"
-d1 = pickle.load(open('/home/claude/stage1.pkl', 'rb'))
-d2 = pickle.load(open('/home/claude/stage2.pkl', 'rb'))
-d3 = pickle.load(open('/home/claude/stage3.pkl', 'rb'))
-d4 = pickle.load(open('/home/claude/stage4.pkl', 'rb'))
+STAGE = Path(os.environ.get("DHANSETU_STAGE_DIR", _SRC))
+OUT = os.environ.get("DHANSETU_EXPORT_OUT", str(_SRC.parent))
+
+
+def _stage(n: int):
+    path = STAGE / f"stage{n}.pkl"
+    if not path.exists():
+        sys.exit(
+            f"missing {path}\n"
+            "This script resumes from the earlier generator stages; those pickles are "
+            "not part of the repo. Set DHANSETU_STAGE_DIR if you have them."
+        )
+    with open(path, "rb") as fh:
+        return pickle.load(fh)
+
+
+d1, d2, d3, d4 = _stage(1), _stage(2), _stage(3), _stage(4)
 
 ents, panel, wx, px = d1['ents'], d1['panel'], d1['wx'], d1['px']
 ev, scope, loans, sched = d1['ev'], d1['scope'], d1['loans'], d1['sched']
@@ -161,7 +191,7 @@ XLSX_SHEETS = ["_data_dictionary", "districts", "sectors", "sub_types", "sector_
                "eval_lead_time", "eval_reason_code_accuracy"]
 
 man = E.write_bundle(tables, OUT, XLSX_SHEETS,
-                     "/home/claude/out/dhansetu-prototype-dataset_v1_2.xlsx", NOTES)
+                     os.path.join(OUT, "dhansetu-prototype-dataset_v1_2.xlsx"), NOTES)
 print(man[["table", "rows", "cols"]].to_string(index=False))
 print("\ntotal bytes:", f"{man.bytes.sum():,}")
-pickle.dump(dict(man=man), open('/home/claude/stage5.pkl', 'wb'))
+pickle.dump(dict(man=man), open(STAGE / 'stage5.pkl', 'wb'))

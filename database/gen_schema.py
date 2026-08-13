@@ -4,10 +4,21 @@ Hand-writing DDL for a 76-column table is how load failures happen. This reads
 the real files, so column names, order and types cannot drift from the data.
 """
 import os, glob, gzip, json
+from pathlib import Path
+
 import pandas as pd
 
-SRC = "/home/claude/out/dhansetu_v1_2"
-OUT = "/home/claude/out/dhansetu_db"
+# Resolved relative to this file, so `python3 gen_schema.py` works from a clone
+# with no arguments. These were absolute paths on the machine the dataset was
+# originally generated on, which meant the command documented in README.md could
+# not run anywhere else.
+#
+# Override either with an environment variable to generate against a different
+# dataset or write the SQL elsewhere:
+#   DHANSETU_DATA_DIR=/path/to/csvs DHANSETU_SQL_OUT=/tmp/out python3 gen_schema.py
+_HERE = Path(__file__).resolve().parent
+SRC = os.environ.get("DHANSETU_DATA_DIR", str(_HERE / "data" / "dhansetu_v1_2"))
+OUT = os.environ.get("DHANSETU_SQL_OUT", str(_HERE))
 os.makedirs(OUT, exist_ok=True)
 
 # money-like columns -> NUMERIC(16,2); everything else float -> DOUBLE PRECISION
