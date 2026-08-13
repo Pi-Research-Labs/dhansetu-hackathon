@@ -260,15 +260,15 @@ class SmsListenerModule(private val reactContext: ReactApplicationContext) :
                     val body = c.getString(bodyIdx) ?: continue
                     val date = c.getLong(dateIdx)
 
-                    if (SmsReceiver.isBankSender(address)) {
-                        val smsMap: WritableMap = Arguments.createMap().apply {
-                            putString("sender", address)
-                            putString("body", body)
-                            putDouble("timestamp", date.toDouble())
-                        }
-                        results.pushMap(smsMap)
-                        count++
+                    // For the hackathon/testing, allow all senders in the inbox scan too
+                    // Let the JS side parser filter/validate the message body
+                    val smsMap: WritableMap = Arguments.createMap().apply {
+                        putString("sender", address)
+                        putString("body", body)
+                        putDouble("timestamp", date.toDouble())
                     }
+                    results.pushMap(smsMap)
+                    count++
                 }
             }
 
