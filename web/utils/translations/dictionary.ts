@@ -118,9 +118,11 @@ export interface TranslationDictionary {
     riskTier: string;
     bridgeHeadroom: string;
     marginGap90d: string;
-    heatStress: string;
+    heatToday: string;
     heatStressHigh: string;
     heatStressNormal: string;
+    heatTooltipHigh: string;
+    heatTooltipNormal: string;
     heatmapTitle: string;
     heatmapTimeHorizon: string;
     heatmapLoading: string;
@@ -308,9 +310,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "RISK TIER",
       bridgeHeadroom: "Bridge Headroom",
       marginGap90d: "90D Margin Gap",
-      heatStress: "Heat stress",
-      heatStressHigh: "high",
-      heatStressNormal: "normal",
+      heatToday: "Heat today",
+      heatStressHigh: "High",
+      heatStressNormal: "Normal",
+      heatTooltipHigh: "Hot and humid enough to reduce livestock yield.",
+      heatTooltipNormal: "Not hot enough to affect livestock yield.",
       heatmapTitle: "Net Cashflow Heatmap",
       heatmapTimeHorizon: "Heatmap Time Horizon",
       heatmapLoading: "Loading Heatmap...",
@@ -546,9 +550,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "जोखिम स्तर",
       bridgeHeadroom: "ब्रिज हेडरूम",
       marginGap90d: "90D मार्जिन अंतर",
-      heatStress: "गर्मी का दबाव",
+      heatToday: "आज की गर्मी",
       heatStressHigh: "अधिक",
       heatStressNormal: "सामान्य",
+      heatTooltipHigh: "गर्मी और नमी इतनी है कि पशुओं का उत्पादन घट सकता है।",
+      heatTooltipNormal: "गर्मी इतनी नहीं है कि पशुओं के उत्पादन पर असर पड़े।",
       heatmapTitle: "नकदी प्रवाह हीटमैप",
       heatmapTimeHorizon: "हीटमैप समय सीमा",
       heatmapLoading: "हीटमैप लोड हो रहा है...",
@@ -784,9 +790,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "రిస్క్ వర్గం",
       bridgeHeadroom: "బ్రిడ్జ్ హెడ్‌రూమ్",
       marginGap90d: "90D మార్జిన్ నిష్పత్తి",
-      heatStress: "వేడి ఒత్తిడి",
+      heatToday: "నేటి వేడి",
       heatStressHigh: "ఎక్కువ",
       heatStressNormal: "సాధారణం",
+      heatTooltipHigh: "పశువుల ఉత్పత్తి తగ్గేంత వేడి మరియు తేమ ఉంది.",
+      heatTooltipNormal: "పశువుల ఉత్పత్తిపై ప్రభావం చూపేంత వేడి లేదు.",
       heatmapTitle: "నికర నగదు ప్రవాహ హీట్‌మ్యాప్",
       heatmapTimeHorizon: "హీట్‌మ్యాప్ సమయ పరిమితి",
       heatmapLoading: "హీట్‌మ్యాప్ లోడ్ అవుతోంది...",
@@ -1022,9 +1030,11 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
       riskTier: "जोखीम स्तर",
       bridgeHeadroom: "ब्रिज हेडरूम",
       marginGap90d: "90D मार्जिन फरक",
-      heatStress: "उष्णतेचा ताण",
+      heatToday: "आजची उष्णता",
       heatStressHigh: "जास्त",
       heatStressNormal: "सामान्य",
+      heatTooltipHigh: "जनावरांचे उत्पादन घटण्याइतकी उष्णता आणि आर्द्रता आहे.",
+      heatTooltipNormal: "जनावरांच्या उत्पादनावर परिणाम होण्याइतकी उष्णता नाही.",
       heatmapTitle: "निव्वळ रोख प्रवाह हीटमॅप",
       heatmapTimeHorizon: "हीटमॅप कालावधी",
       heatmapLoading: "हीटमॅप लोड होत आहे...",

@@ -99,12 +99,23 @@ export default function EnterpriseDetailCard({
   const bridgeHeadroom = card?.bridge_headroom ?? enterprise?.metrics.savings ?? 0;
   const marginGap = card?.margin_gap_90d ?? null;
 
-  // Latest observed weather for this enterprise's district. Sits next to the
-  // margin gap on purpose: for dairy the two are the same story -- heat cuts
-  // yield at the moment fodder cost peaks -- so seeing THI beside the gap it
-  // helps cause is the point. Null until loaded, and the pill simply does not
-  // render if the fetch fails; weather is context, never a blocker.
-  const districtId = typeof card?.district_id === "number" ? card.district_id : null;
+  // Latest observed weather, shown only where heat actually drives the business.
+  //
+  // Dairy is the founding case -- heat cuts yield at the moment fodder cost peaks
+  // -- so this sits next to the margin gap it helps cause. Poultry is the other
+  // one: heat raises broiler mortality and worsens feed conversion. For a weaver,
+  // a potter, a kirana store or a food processor, a heat reading is noise on the
+  // card, so it is not rendered at all.
+  //
+  // The UI never says "THI". The dashboard deliberately says "chance of cash
+  // trouble" rather than prob_stress; an index name with a threshold the reader
+  // does not know is the same mistake. The officer gets the consequence, and the
+  // figures live in the tooltip.
+  const HEAT_SENSITIVE_SECTORS = ["DAIRY", "POULTRY"];
+  const isHeatSensitive =
+    typeof card?.sector === "string" && HEAT_SENSITIVE_SECTORS.includes(card.sector);
+  const districtId =
+    isHeatSensitive && typeof card?.district_id === "number" ? card.district_id : null;
   const [weather, setWeather] = useState<WeatherDay | null>(null);
 
   // Interactive Map State
@@ -308,20 +319,23 @@ export default function EnterpriseDetailCard({
             {weather?.thi != null && (
               <div
                 className="bg-[#FAFBF6] border border-[#E2E6D8] px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono"
-                title={`${weather.district ?? ""} ${weather.obs_date} — ${weather.rainfall_mm ?? 0} mm rain, max ${weather.temp_max_c ?? "-"}°C, ${weather.humidity_pct ?? "-"}% humidity. Temperature-humidity index; above 78 dairy yield measurably declines. Source: ${weather.provenance}.`}
+                title={
+                  (weather.thi_dairy_stress
+                    ? t?.dash?.heatTooltipHigh || "Hot and humid enough to reduce livestock yield."
+                    : t?.dash?.heatTooltipNormal || "Not hot enough to affect livestock yield.") +
+                  ` ${weather.temp_max_c ?? "-"}°C, ${weather.humidity_pct ?? "-"}% humidity, ${weather.rainfall_mm ?? 0} mm rain in ${weather.district ?? ""} on ${weather.obs_date}. Source: ${weather.provenance === "open_meteo" ? "Open-Meteo (observed)" : weather.provenance}.`
+                }
               >
                 <Thermometer
                   className={`w-3.5 h-3.5 ${weather.thi_dairy_stress ? "text-[#C62828]" : "text-[#2E7D32]"}`}
                 />
                 <span className="text-[#5F6656]">
-                  {t?.dash?.heatStress || "Heat stress"}:{" "}
+                  {t?.dash?.heatToday || "Heat today"}:{" "}
                 </span>
                 <strong className={weather.thi_dairy_stress ? "text-[#C62828]" : "text-[#2E7D32]"}>
-                  THI {Math.round(Number(weather.thi))}
-                  {" · "}
                   {weather.thi_dairy_stress
-                    ? t?.dash?.heatStressHigh || "high"
-                    : t?.dash?.heatStressNormal || "normal"}
+                    ? t?.dash?.heatStressHigh || "High"
+                    : t?.dash?.heatStressNormal || "Normal"}
                 </strong>
               </div>
             )}
