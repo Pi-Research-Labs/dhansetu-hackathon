@@ -111,6 +111,7 @@ Missing token → `403`. Invalid/expired token → `401`.
 | `GET /evidence/forecast-accuracy` | officer only | array of JSON | MAE + band coverage by horizon |
 | `GET /evidence/headroom-by-tier` | officer only | array of JSON | proof headroom isn't just the tier restated |
 | `GET /evidence/data-provenance` | officer only | array of JSON | real vs. simulated data share per enterprise |
+| `GET /weather/{district_id}` | either role | array of JSON | real daily weather + THI for a district, one row per day |
 
 The two rows in **bold** are the ones that don't behave like a normal JSON
 `fetch()` call — jump to their sections below for exact client code.
@@ -868,6 +869,62 @@ a training label — see `database/README.md`).
 ```
 Unknown `task_id` → `400`. Invalid `outcome` value → `422` (only the three
 values above are accepted).
+
+## `GET /weather/{district_id}` — either role
+
+Daily weather for one of the six districts, **real where we have it**. Open to
+both roles and not scoped to an enterprise: weather over a district is a public
+fact, not merchant data, and both apps want it for the same district.
+
+```
+GET /api/v1/weather/1?days=30&include_forecast=false
+```
+
+| Param | Default | Notes |
+|---|---|---|
+| `days` | `30` | Trailing window, 1–400. Looks backwards from today. |
+| `include_forecast` | `false` | Also return Open-Meteo's forward days (up to 16 out). |
+
+`district_id` is 1–6 (`1` Anand, `2` Bhilwara, `3` Nizamabad, `4` Kolhapur,
+`5` Nagaon, `6` Ganjam). Unknown id → `404`.
+
+```json
+[
+  {
+    "district_id": 1,
+    "district": "Anand",
+    "state": "Gujarat",
+    "obs_date": "2026-08-12",
+    "rainfall_mm": "3.6",
+    "temp_max_c": "29.6",
+    "humidity_pct": "88.0",
+    "thi": "83.46",
+    "thi_dairy_stress": true,
+    "is_forecast": false,
+    "provenance": "open_meteo"
+  }
+]
+```
+
+**`provenance` is the field to care about.** `open_meteo` rows are real
+observations pulled from Open-Meteo by
+[`database/ingest_open_meteo.py`](database/ingest_open_meteo.py); `synthetic`
+rows come from the generated panel, which ends 2026-07-31. Real readings
+supersede synthetic ones wherever both cover a date, so **you get exactly one
+row per calendar day and can chart the response directly** — no dedup needed on
+the client. Ask for `days=400` and you can see the handover: synthetic through
+2026-07-13, real from 2026-07-14.
+
+**`thi`** is the temperature-humidity index, computed in Postgres from observed
+temperature and humidity (a `GENERATED` column on `weather_live`, not an
+application calculation). **`thi_dairy_stress`** flags `thi >= 78`, the level
+above which dairy yield measurably declines — the mechanism behind the dairy
+margin squeeze, as a real observation rather than a hand-authored seasonality
+curve.
+
+Note this endpoint does **not** feed the risk model. Every published evidence
+number is computed out-of-time against the synthetic panel; live weather is
+additive and labelled, so scoring stays reproducible.
 
 ## Error shape
 

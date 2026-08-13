@@ -11,6 +11,7 @@ from app.api.routes import (
     risk,
     task,
     voice,
+    weather,
     worklist,
 )
 
@@ -26,4 +27,5 @@ api_router.include_router(voice.router)
 api_router.include_router(maps.router)
 api_router.include_router(evidence.router)
 api_router.include_router(market.router)
+api_router.include_router(weather.router)
 
