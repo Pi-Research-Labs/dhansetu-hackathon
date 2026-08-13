@@ -9,8 +9,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  NativeModules,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import {
   Lock,
   Eye,
@@ -102,6 +104,24 @@ export function LoginScreen() {
       // Update merchant store state
       const { login: storeLogin } = useMerchantStore.getState();
       await storeLogin(trimmedPhone, data.access_token, data.enterprise_id, data.proprietor_name);
+
+      // Request microphone and SMS permissions if not already granted
+      try {
+        await requestRecordingPermissionsAsync();
+      } catch (audioErr) {
+        console.warn('Failed to request microphone permission on login:', audioErr);
+      }
+
+      try {
+        if (Platform.OS === 'android') {
+          const SmsListener = NativeModules.SmsListenerModule;
+          if (SmsListener) {
+            await SmsListener.requestPermission();
+          }
+        }
+      } catch (smsErr) {
+        console.warn('Failed to request SMS permission on login:', smsErr);
+      }
 
       // Redirect to main screens
       router.replace('/(tabs)');
