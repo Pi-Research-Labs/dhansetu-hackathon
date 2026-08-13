@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Pull real daily weather for the six districts from Open-Meteo into weather_live.
 
-    backend/.venv/bin/python database/ingest_open_meteo.py
-    backend/.venv/bin/python database/ingest_open_meteo.py --past-days 60 --dry-run
+    backend/.venv/bin/python backend/scripts/ingest_open_meteo.py
+    backend/.venv/bin/python backend/scripts/ingest_open_meteo.py --past-days 60 --dry-run
 
 Needs DATABASE_URL (read from the environment, or from backend/.env if present).
 Uses asyncpg + httpx, both already backend dependencies -- run it with the
@@ -75,19 +75,26 @@ _TIMEOUT = httpx.Timeout(30.0)
 
 
 def _load_database_url() -> str:
-    """Environment first, then backend/.env, which is gitignored and holds the real one."""
+    """Environment first, then the backend's .env, which is gitignored.
+
+    This file lives at backend/scripts/, so .env is one level up. That holds
+    both in the repo and on the VM, where deploy.yml copies backend/ to
+    ~/dhansetu-backend and .env already sits at the root of it -- which is the
+    whole reason the script lives under backend/ rather than database/: cron
+    needs it on the VM, and only backend/ is deployed there.
+    """
     url = os.environ.get("DATABASE_URL")
     if url:
         return url
 
-    env_path = Path(__file__).resolve().parent.parent / "backend" / ".env"
+    env_path = Path(__file__).resolve().parent.parent / ".env"
     if env_path.exists():
         for line in env_path.read_text().splitlines():
             line = line.strip()
             if line.startswith("DATABASE_URL="):
                 return line.split("=", 1)[1].strip().strip("'\"")
 
-    sys.exit("DATABASE_URL not set and not found in backend/.env")
+    sys.exit(f"DATABASE_URL not set and not found in {env_path}")
 
 
 async def _fetch_district(

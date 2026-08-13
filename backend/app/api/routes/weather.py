@@ -19,7 +19,7 @@ async def district_weather(
     Reads v_weather_series, which unions the real Open-Meteo observations in
     weather_live with the synthetic weather_daily panel and labels every row with
     a `provenance`. This is the read path for
-    database/ingest_open_meteo.py -- before it, nothing in the API touched
+    backend/scripts/ingest_open_meteo.py -- before it, nothing in the API touched
     weather at all and the live weather tables had no consumer.
 
     Open to either role and not scoped to an enterprise: weather over a district
