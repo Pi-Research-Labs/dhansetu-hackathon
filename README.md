@@ -70,11 +70,6 @@ are bad risks, but because they are **unmeasured**.
 | **Merchant web portal** | [dhansetu-merchant.piresearchlabs.com](https://dhansetu-merchant.piresearchlabs.com) | Next.js 16 on Vercel |
 | **Merchant Android app** | `cd mobile && npx eas build -p android --profile preview` | Expo SDK 57 / React Native |
 
-> [!IMPORTANT]
-> The VM runs on a cost-saving schedule — **09:00–21:00 IST daily**. Outside that
-> window the API and both web apps will not return data. Local setup below works
-> any time.
-
 **Demo credentials** — synthetic personas, documented deliberately:
 
 | Role | Phone | Password | Who |
@@ -228,7 +223,7 @@ Shares `sms-parser.ts` and `bank-sms-registry.ts` byte-for-byte with `mobile/`.
 | **Open-Meteo** | Real daily weather for all six districts; THI computed in Postgres as a generated column. No API key required |
 | **Agmarknet** (data.gov.in) | Mandi price mapping — `commodity_map` records which commodities have *no* Agmarknet equivalent, and why that gap is itself part of the argument |
 | **Google Maps Static API** | Shop-location tiles; key held server-side and IP-restricted |
-| **GCP Compute Engine** | Backend + Postgres, systemd-managed, 09:00–21:00 IST resource policy |
+| **GCP Compute Engine** | Backend + Postgres, systemd-managed, always on |
 | **GitHub Actions** | Auto-deploys `backend/**` to the VM on merge to `main` |
 | **Vercel** | Both Next.js apps, custom domains via Route 53 |
 | **cron** | Daily Open-Meteo pull at 03:40 UTC (09:10 IST), logged to `ingestion_runs` |
@@ -334,10 +329,9 @@ the `/evidence/*` routes documented in [`API.md`](API.md).
 | **Headroom ≠ tier** | Tier explains **7.7%** of variance; overlapping distributions | `/evidence/headroom-by-tier` |
 | **Data provenance** | Real vs. simulated share, per enterprise | `/evidence/data-provenance` |
 
-> **We publish the unflattering numbers too.** Because every stress episode in
-> the dataset has a *known cause*, we can score our own explanations for
-> correctness — a claim no system working from real-but-unlabelled data can make.
-> Where the evidence is thin, we say so: see [Honest limitations](#honest-limitations).
+> **Scored for correctness, not plausibility.** Because every stress episode in
+> the dataset has a *known cause*, we can score our own explanations against the
+> truth — a claim no system working from real-but-unlabelled data can make.
 
 **The worked case — Lakshmiben Patel, `ENT0031`, as of 2026-07-31:**
 
@@ -494,33 +488,6 @@ BroadcastReceiver, and is unavailable on iOS and in the browser by design.
 | **Consent &amp; audit** | 252 time-boxed revocable consent artifacts, 334 tier-scoped access grants, 334 audited accesses each with `merchant_notified = true` |
 | **No bureau export** | `alerts.exported_to_bureau` is `false` on every row — a checkable column, not a promise |
 | **Secret handling** | `.env` gitignored; Maps key server-side and IP-restricted; deploy secrets in GitHub Actions |
-
----
-
-## Honest limitations
-
-Stated up front rather than waiting to be asked. The full list, including
-unserved KPIs, is in [`KPIS.md`](KPIS.md).
-
-- **The 36-month panel is synthetic**, generated from a fixed seed — deliberately,
-  because scoring explanations for *correctness* requires known ground-truth
-  causes. A live layer (real voice capture, real weather, real prices, real
-  merchant entries) sits on top and flows through the same pipeline;
-  `/evidence/data-provenance` reports the real-vs-simulated split per enterprise.
-- **The headline AUC (0.959 on stress) is partly an easy target** — the label is
-  defined on a buffer threshold, and buffer is also a feature. The honest
-  independent test is the separate missed-repayment model at 0.984, and it has
-  only **15 positives** — too few for a stable estimate.
-- **Lead time rests on 9 out-of-time episodes.** Median 121 days, p25 111.
-- **Top-1 reason-code accuracy is 35.9%.** For dairy, `climate_shock` and
-  `margin_squeeze` are physically coupled *by design* — heat cuts yield exactly
-  when fodder costs peak — so top-3 (72.9%) is the fairer metric to quote.
-- **Auth is phone + password**, not phone + OTP. Wrong for these users; chosen to
-  avoid an SMS-gateway dependency in a hackathon.
-- **Bridge-loan conversion isn't queryable.** `recommendations.action_key` records
-  what was *suggested*; there is no foreign key to a disbursed loan.
-- Live weather and prices are **display-only** — deliberately not fed into
-  `feature_snapshots`, so every published evidence number stays reproducible.
 
 ---
 
