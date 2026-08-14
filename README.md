@@ -34,7 +34,7 @@
 
 ---
 
-## The problem, in one paragraph
+## The problem
 
 A dairy unit in Anand is profitable across the year and still collapses every
 April–September, when heat cuts milk yield at the exact moment fodder cost peaks.
