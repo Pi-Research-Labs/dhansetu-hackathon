@@ -4,7 +4,7 @@
 
 # DhanSetu · धनसेतु
 
-**Cash-flow intelligence and early-warning credit for rural micro-enterprises.**
+**Cash-flow intelligence for rural micro-enterprises.**
 
 *See the squeeze before the missed payment — and answer it with money, not a rejection.*
 
@@ -493,7 +493,7 @@ BroadcastReceiver, and is unavailable on iOS and in the browser by design.
 
 ## License
 
-[MIT](LICENSE) © 2026 Pi Research Labs.
+[MIT](LICENSE) © 2026 Piresearch Labs.
 
 The dataset under `database/data/` is **synthetic** and describes no real person
 or enterprise; all documented credentials are fictional test fixtures. Weather
