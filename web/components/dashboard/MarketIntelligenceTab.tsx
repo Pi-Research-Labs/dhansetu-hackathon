@@ -8,6 +8,11 @@ import {
   MarketIntelligenceDetail,
   MarketRiskCard,
 } from "@/utils/api-config";
+import { useAppSelector } from "@/redux/hooks";
+import { translateText } from "@/utils/translator";
+import { LanguageCode } from "@/redux/slices/languageSlice";
+import { translations } from "@/utils/translations/dictionary";
+import { Translate } from "@/components/common/Translate";
 import { formatCurrency } from "@/utils/formatters";
 import {
   Activity,
@@ -44,7 +49,7 @@ interface TooltipPayloadEntry {
   [key: string]: unknown;
 }
 
-const formatMonthLabel = (value: any) => {
+const formatMonthLabel = (value: any, lang: string = "en") => {
   if (!value || typeof value !== "string") return String(value || "");
   const parts = value.split("-");
   if (parts.length !== 2) return value;
@@ -62,15 +67,17 @@ const formatMonthLabel = (value: any) => {
     yearStr = parts[1];
   }
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
   if (monthNum >= 1 && monthNum <= 12) {
-    const shortMonth = months[monthNum - 1];
-    const shortYear = yearStr.slice(-2);
-    return `${shortMonth}'${shortYear}`;
+    try {
+      const date = new Date(parseInt(yearStr, 10), monthNum - 1, 1);
+      const formatter = new Intl.DateTimeFormat(lang, {
+        month: "short",
+        year: "2-digit",
+      });
+      return formatter.format(date);
+    } catch {
+      // fallback
+    }
   }
   return value;
 };
@@ -79,18 +86,20 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadEntry[];
   label?: string;
+  lang?: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+const CustomTooltip = ({ active, payload, label, lang = "en" }: CustomTooltipProps) => {
+  const tIntel = translations[lang as LanguageCode]?.marketIntel;
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-[#E2E6D8] p-3 rounded-xl shadow-md text-xs font-sans">
-        <p className="font-bold text-[#1A2016] mb-1.5">{formatMonthLabel(label)}</p>
+        <p className="font-bold text-[#1A2016] mb-1.5">{formatMonthLabel(label, lang)}</p>
         {payload.map((entry: TooltipPayloadEntry, index: number) => {
           const isPrice = entry.dataKey === "price_index";
           const color = isPrice ? "#2E7D32" : "#1565C0";
-          const labelName = isPrice ? "Price Index" : "Rainfall";
-          const valueSuffix = isPrice ? "" : " mm";
+          const labelName = isPrice ? (tIntel?.priceIndexLabel || "Price Index") : (tIntel?.rainfallLabel.replace(/\s*\(mm\)/i, "") || "Rainfall");
+          const valFormatted = isPrice ? String(entry.value) : `${entry.value} mm`;
           return (
             <div key={index} className="flex items-center justify-between gap-4 py-0.5">
               <span className="text-[#5F6656] flex items-center gap-1.5">
@@ -98,7 +107,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
                 {labelName}
               </span>
               <span className="font-mono font-bold" style={{ color }}>
-                {entry.value}{valueSuffix}
+                {valFormatted}
               </span>
             </div>
           );
@@ -132,6 +141,12 @@ interface MarketIntelligenceTabProps {
 }
 
 export default function MarketIntelligenceTab({ initialSubType }: MarketIntelligenceTabProps = {}) {
+  const currentLanguage = useAppSelector(
+    (state) => state.language.currentLanguage || "en"
+  ) as LanguageCode;
+
+  const t = translations[currentLanguage];
+
   const [categories, setCategories] = useState<MarketCategory[]>([]);
   const [selectedSubType, setSelectedSubType] = useState<string>("Dairy Producer");
   const [prevSelectedSubType, setPrevSelectedSubType] = useState<string>("Dairy Producer");
@@ -140,11 +155,98 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
+  const [translatedCategories, setTranslatedCategories] = useState<MarketCategory[]>([]);
+  const [translatedIntel, setTranslatedIntel] = useState<MarketIntelligenceDetail | null>(null);
+
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
       setIsMobile(true);
     }
   }, []);
+
+  // Translate categories list reactively
+  useEffect(() => {
+    if (categories.length === 0) {
+      setTranslatedCategories([]);
+      return;
+    }
+    let isMounted = true;
+    async function translateCats() {
+      try {
+        const translated = await Promise.all(
+          categories.map(async (cat) => {
+            const sub_type_tr = await translateText(cat.sub_type, currentLanguage);
+            const sector_tr = await translateText(cat.sector, currentLanguage);
+            return {
+              ...cat,
+              sub_type: sub_type_tr,
+              sector: sector_tr,
+            };
+          })
+        );
+        if (isMounted) {
+          setTranslatedCategories(translated);
+        }
+      } catch (err) {
+        console.error("Failed to translate categories", err);
+      }
+    }
+    translateCats();
+    return () => {
+      isMounted = false;
+    };
+  }, [categories, currentLanguage]);
+
+  // Translate market intelligence details reactively
+  useEffect(() => {
+    if (!intel) {
+      setTranslatedIntel(null);
+      return;
+    }
+    const currentIntel = intel;
+    let isMounted = true;
+    async function translateIntelData() {
+      try {
+        const tracked_commodity_tr = await translateText(currentIntel.tracked_commodity, currentLanguage);
+        const productivity_outlook_tr = await translateText(currentIntel.productivity_outlook, currentLanguage);
+        const seasonal_pattern_tr = await translateText(currentIntel.seasonal_pattern, currentLanguage);
+        const district_tr = currentIntel.district ? await translateText(currentIntel.district, currentLanguage) : currentIntel.district;
+        const sub_type_tr = await translateText(currentIntel.sub_type, currentLanguage);
+        const sector_tr = await translateText(currentIntel.sector, currentLanguage);
+
+        const risks_tr = await Promise.all(
+          (currentIntel.risks || []).map(async (risk) => {
+            const risk_type_tr = await translateText(risk.risk_type, currentLanguage);
+            const detail_tr = await translateText(risk.detail, currentLanguage);
+            return {
+              ...risk,
+              risk_type: risk_type_tr,
+              detail: detail_tr,
+            };
+          })
+        );
+
+        if (isMounted) {
+          setTranslatedIntel({
+            ...currentIntel,
+            tracked_commodity: tracked_commodity_tr,
+            productivity_outlook: productivity_outlook_tr,
+            seasonal_pattern: seasonal_pattern_tr,
+            district: district_tr,
+            sub_type: sub_type_tr,
+            sector: sector_tr,
+            risks: risks_tr,
+          });
+        }
+      } catch (err) {
+        console.error("Error translating market intelligence", err);
+      }
+    }
+    translateIntelData();
+    return () => {
+      isMounted = false;
+    };
+  }, [intel, currentLanguage]);
 
   // Sync loading and error states during render-phase when selectedSubType changes
   if (selectedSubType !== prevSelectedSubType) {
@@ -233,8 +335,11 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
   }, [selectedSubType]);
 
   const selectedCategory = useMemo(() => {
-    return categories.find((cat) => cat.sub_type === selectedSubType);
-  }, [categories, selectedSubType]);
+    const rawCat = categories.find((cat) => cat.sub_type === selectedSubType);
+    if (!rawCat) return null;
+    const trCat = translatedCategories.find((cat) => cat.sub_type_id === rawCat.sub_type_id);
+    return trCat || rawCat;
+  }, [categories, translatedCategories, selectedSubType]);
 
   if (loading && !intel) {
     return (
@@ -324,13 +429,21 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
     };
   };
 
+  const severityLabel = (severity: string) => {
+    const s = severity.toUpperCase();
+    if (s === "HIGH") return t.tiers?.RED || "High";
+    if (s === "MEDIUM") return t.tiers?.AMBER || "Medium";
+    if (s === "LOW") return t.tiers?.GREEN || "Low";
+    return severity;
+  };
+
   return (
     <div className="w-full h-auto lg:h-full flex flex-col min-h-0 overflow-visible lg:overflow-y-auto space-y-5 pb-4 pr-1 lg:[&::-webkit-scrollbar]:w-1 lg:[&::-webkit-scrollbar-thumb]:bg-neutral-400/50 lg:hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400/70 lg:[&::-webkit-scrollbar-thumb]:rounded-full lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[scrollbar-width:thin] lg:[scrollbar-color:rgba(163,163,163,0.5)_transparent]">
       {/* Dropdown Selector row */}
       <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-[#5F6656] uppercase tracking-wider">
-            Select Category Sub-Type
+            {t.marketIntel.selectSubType}
           </label>
           <div className="relative inline-block w-full md:w-64">
             <select
@@ -338,11 +451,14 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
               onChange={(e) => setSelectedSubType(e.target.value)}
               className="w-full appearance-none bg-[#FAFBF6] border border-[#E2E6D8] rounded-lg px-3 py-2 text-xs font-bold text-[#1A2016] focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] cursor-pointer pr-8"
             >
-              {categories.map((cat) => (
-                <option key={cat.sub_type_id} value={cat.sub_type}>
-                  {cat.sub_type}
-                </option>
-              ))}
+              {categories.map((cat) => {
+                const trCat = translatedCategories.find(tc => tc.sub_type_id === cat.sub_type_id);
+                return (
+                  <option key={cat.sub_type_id} value={cat.sub_type}>
+                    {trCat?.sub_type || cat.sub_type}
+                  </option>
+                );
+              })}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#5F6656]">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -355,17 +471,17 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
         {selectedCategory && (
           <div className="flex flex-wrap items-center gap-4 text-xs">
             <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-3 py-1.5 rounded-lg flex items-center gap-2">
-              <span className="text-[10px] font-bold text-[#5F6656] uppercase">Sector:</span>
+              <span className="text-[10px] font-bold text-[#5F6656] uppercase">{t.marketIntel.sector}:</span>
               <span className="font-mono font-bold text-[#2E7D32] uppercase">{selectedCategory.sector}</span>
             </div>
             <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-3 py-1.5 rounded-lg flex items-center gap-2">
-              <span className="text-[10px] font-bold text-[#5F6656] uppercase">ID:</span>
+              <span className="text-[10px] font-bold text-[#5F6656] uppercase">{t.marketIntel.id}:</span>
               <span className="font-mono font-bold text-[#5F6656]">{selectedCategory.sub_type_id}</span>
             </div>
-            {intel?.district && (
+            {translatedIntel?.district && (
               <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-3 py-1.5 rounded-lg flex items-center gap-2">
-                <span className="text-[10px] font-bold text-[#5F6656] uppercase">District:</span>
-                <span className="font-mono font-bold text-[#1565C0] uppercase">{intel.district}</span>
+                <span className="text-[10px] font-bold text-[#5F6656] uppercase">{t.marketIntel.district}:</span>
+                <span className="font-mono font-bold text-[#1565C0] uppercase">{translatedIntel.district}</span>
               </div>
             )}
           </div>
@@ -378,14 +494,14 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
         <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col justify-between space-y-2">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#5F6656] uppercase tracking-wider">
             <Layers className="w-3.5 h-3.5 text-[#2E7D32]" />
-            <span>Tracked Commodity</span>
+            <span>{t.marketIntel.trackedCommodity}</span>
           </div>
           <div>
             <div className="text-sm font-bold text-[#1A2016] font-sans leading-snug">
-              {intel?.tracked_commodity || "N/A"}
+              {translatedIntel?.tracked_commodity || "N/A"}
             </div>
             <p className="text-[9.5px] text-[#5F6656] mt-0.5 leading-tight">
-              Primary product or index monitored for pricing volatility
+              {t.marketIntel.trackedCommodityDesc}
             </p>
           </div>
         </div>
@@ -393,24 +509,24 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
         {/* 12-Month Price Trend */}
         <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col justify-between space-y-2">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#5F6656] uppercase tracking-wider">
-            {intel && intel.price_trend_12m_pct >= 0 ? (
+            {translatedIntel && translatedIntel.price_trend_12m_pct >= 0 ? (
               <TrendingUp className="w-3.5 h-3.5 text-[#2E7D32]" />
             ) : (
               <TrendingDown className="w-3.5 h-3.5 text-[#C62828]" />
             )}
-            <span>12-Mo Price Trend</span>
+            <span>{t.marketIntel.priceTrend12m}</span>
           </div>
           <div>
             <div className="flex items-baseline gap-2">
-              <span className={`text-xl font-extrabold font-mono ${intel && intel.price_trend_12m_pct >= 0 ? "text-[#2E7D32]" : "text-[#C62828]"}`}>
-                {intel ? `${intel.price_trend_12m_pct > 0 ? "+" : ""}${intel.price_trend_12m_pct}%` : "0%"}
+              <span className={`text-xl font-extrabold font-mono ${translatedIntel && translatedIntel.price_trend_12m_pct >= 0 ? "text-[#2E7D32]" : "text-[#C62828]"}`}>
+                {translatedIntel ? `${translatedIntel.price_trend_12m_pct > 0 ? "+" : ""}${translatedIntel.price_trend_12m_pct}%` : "0%"}
               </span>
-              <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-sm ${intel && intel.price_trend_12m_pct >= 0 ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFEBEE] text-[#C62828]"}`}>
-                {intel && intel.price_trend_12m_pct >= 0 ? "GROWING" : "DECLINING"}
+              <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-sm ${translatedIntel && translatedIntel.price_trend_12m_pct >= 0 ? "bg-[#E8F5E9] text-[#2E7D32]" : "bg-[#FFEBEE] text-[#C62828]"}`}>
+                {translatedIntel && translatedIntel.price_trend_12m_pct >= 0 ? t.marketIntel.growing : t.marketIntel.declining}
               </span>
             </div>
             <p className="text-[9.5px] text-[#5F6656] mt-0.5 leading-tight">
-              Percentage shift in baseline price index over last 12 months
+              {t.marketIntel.priceTrendDesc}
             </p>
           </div>
         </div>
@@ -419,14 +535,14 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
         <div className="bg-white border border-[#E2E6D8] p-4 rounded-xl shadow-3xs flex flex-col justify-between space-y-2">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#5F6656] uppercase tracking-wider">
             <DollarSign className="w-3.5 h-3.5 text-[#E65100]" />
-            <span>Typical Daily Turnover</span>
+            <span>{t.marketIntel.typicalDailyTurnover}</span>
           </div>
           <div>
             <div className="text-xl font-bold text-[#E65100] font-mono">
               {selectedCategory?.typical_daily_turnover ? formatCurrency(selectedCategory.typical_daily_turnover) : "N/A"}
             </div>
             <p className="text-[9.5px] text-[#5F6656] mt-0.5 leading-tight">
-              Average daily transactions for enterprise type in local area
+              {t.marketIntel.typicalDailyTurnoverDesc}
             </p>
           </div>
         </div>
@@ -438,24 +554,24 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-[#2E7D32]" />
             <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-              12-Month Price Index & Rainfall Chart
+              {t.marketIntel.chartTitle}
             </h3>
           </div>
           <span className="text-[9px] font-mono text-[#5F6656] bg-[#FAFBF6] border border-[#E2E6D8] px-2 py-0.5 rounded-sm uppercase">
-            Dual-Axis Index
+            {t.marketIntel.dualAxisIndex}
           </span>
         </div>
         <div className="flex-1 w-full min-h-[300px]">
-          {intel?.chart_data && intel.chart_data.length > 0 ? (<ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
+          {translatedIntel?.chart_data && translatedIntel.chart_data.length > 0 ? (<ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
             <ComposedChart
-              data={intel.chart_data}
+              data={translatedIntel.chart_data}
               margin={isMobile ? { top: 10, right: 5, left: 5, bottom: 5 } : { top: 15, right: 10, left: 10, bottom: 5 }}
               style={{ outline: "none" }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#F0F2EB" vertical={false} />
               <XAxis
                 dataKey="month"
-                tickFormatter={formatMonthLabel}
+                tickFormatter={(val) => formatMonthLabel(val, currentLanguage)}
                 tick={{ fill: "#5F6656", fontSize: isMobile ? 8 : 9, fontFamily: "system-ui, sans-serif" }}
                 tickLine={{ stroke: "#E2E6D8" }}
                 axisLine={{ stroke: "#E2E6D8" }}
@@ -469,7 +585,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
                 tickLine={{ stroke: "#E2E6D8" }}
                 axisLine={{ stroke: "#E2E6D8" }}
                 label={isMobile ? undefined : {
-                  value: "Price Index",
+                  value: t.marketIntel.priceIndexLabel,
                   angle: -90,
                   position: "insideLeft",
                   offset: -5,
@@ -485,14 +601,14 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
                 tickLine={{ stroke: "#E2E6D8" }}
                 axisLine={{ stroke: "#E2E6D8" }}
                 label={isMobile ? undefined : {
-                  value: "Rainfall (mm)",
+                  value: t.marketIntel.rainfallLabel,
                   angle: 90,
                   position: "insideRight",
                   offset: 5,
                   style: { fill: "#1565C0", fontSize: 9, fontWeight: "bold", fontFamily: "sans-serif" },
                 }}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#F0F2EB", strokeWidth: 1 }} />
+              <Tooltip content={<CustomTooltip lang={currentLanguage} />} cursor={{ stroke: "#F0F2EB", strokeWidth: 1 }} />
               <Legend
                 verticalAlign="top"
                 height={30}
@@ -501,7 +617,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
               <Bar
                 yAxisId="rainfall"
                 dataKey="rainfall_mm"
-                name="Rainfall (mm)"
+                name={t.marketIntel.rainfallLabel}
                 fill="#BBDEFB"
                 radius={[2, 2, 0, 0]}
                 barSize={isMobile ? 10 : 18}
@@ -510,7 +626,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
                 yAxisId="price"
                 type="monotone"
                 dataKey="price_index"
-                name="Price Index"
+                name={t.marketIntel.priceIndexLabel}
                 stroke="#2E7D32"
                 strokeWidth={2.5}
                 dot={{ r: 3, stroke: "#2E7D32", strokeWidth: 1.5, fill: "#fff" }}
@@ -520,7 +636,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
           </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-xs text-[#5F6656] italic">
-              No chart data available
+              <Translate>No chart data available</Translate>
             </div>
           )}
         </div>
@@ -538,7 +654,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
               </div>
               <div>
                 <h3 className="text-[11px] font-bold text-[#1A2016] uppercase tracking-wider">
-                  Productivity Outlook
+                  {t.marketIntel.productivityOutlook}
                 </h3>
               </div>
             </div>
@@ -546,7 +662,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
             {/* Content */}
             <div className="bg-[#FAFBF6] border border-[#E2E6D8]/40 rounded-lg p-3.5">
               <p className="text-[12px] text-[#1A2016] leading-relaxed font-medium">
-                {intel?.productivity_outlook || "N/A"}
+                {translatedIntel?.productivity_outlook || "N/A"}
               </p>
             </div>
 
@@ -554,7 +670,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
             <div className="flex items-center gap-2 mt-3.5">
               <Eye className="w-3.5 h-3.5 text-[#8C9385]" />
               <span className="text-[10px] text-[#5F6656]">
-                Analysis based on regional production data and climate models
+                {t.marketIntel.productivityOutlookDesc}
               </span>
             </div>
           </div>
@@ -570,7 +686,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
               </div>
               <div>
                 <h3 className="text-[11px] font-bold text-[#1A2016] uppercase tracking-wider">
-                  Seasonal Pattern & Demand
+                  {t.marketIntel.seasonalPattern}
                 </h3>
               </div>
             </div>
@@ -578,7 +694,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
             {/* Content */}
             <div className="bg-[#FAFBF6] border border-[#E2E6D8]/40 rounded-lg p-3.5">
               <p className="text-[12px] text-[#1A2016] leading-relaxed font-medium">
-                {intel?.seasonal_pattern || "N/A"}
+                {translatedIntel?.seasonal_pattern || "N/A"}
               </p>
             </div>
 
@@ -586,7 +702,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
             <div className="flex items-center gap-2 mt-3.5">
               <Eye className="w-3.5 h-3.5 text-[#8C9385]" />
               <span className="text-[10px] text-[#5F6656]">
-                Analysis based on historical seasonal demand cycles
+                {t.marketIntel.seasonalPatternDesc}
               </span>
             </div>
           </div>
@@ -603,15 +719,15 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
             </div>
             <div>
               <h3 className="text-xs font-bold text-[#1A2016] uppercase tracking-wider">
-                Climate & Market Risk Assessment
+                {t.marketIntel.riskAssessment}
               </h3>
-              <p className="text-[10px] text-[#5F6656] mt-0.5">Identified threats and vulnerability indicators</p>
+              <p className="text-[10px] text-[#5F6656] mt-0.5">{t.marketIntel.riskAssessmentDesc}</p>
             </div>
           </div>
-          {intel?.risks && intel.risks.length > 0 && (
+          {translatedIntel?.risks && translatedIntel.risks.length > 0 && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-[#E2E6D8]">
               <span className="text-[10px] font-bold text-[#1A2016]">
-                {intel.risks.length} Active Risks
+                {t.marketIntel.activeRisks(translatedIntel.risks.length)}
               </span>
             </div>
           )}
@@ -619,16 +735,16 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
 
         {/* Risk Cards */}
         <div className="p-5">
-          {intel?.risks && intel.risks.length > 0 ? (
-            <div className={`grid gap-4 ${intel.risks.length === 1
+          {translatedIntel?.risks && translatedIntel.risks.length > 0 ? (
+            <div className={`grid gap-4 ${translatedIntel.risks.length === 1
               ? "grid-cols-1 max-w-xl"
-              : intel.risks.length === 2
+              : translatedIntel.risks.length === 2
                 ? "grid-cols-1 md:grid-cols-2"
-                : intel.risks.length === 3
+                : translatedIntel.risks.length === 3
                   ? "grid-cols-1 md:grid-cols-3"
                   : "grid-cols-1 md:grid-cols-2"
               }`}>
-              {intel.risks.map((risk: MarketRiskCard, idx: number) => {
+              {translatedIntel.risks.map((risk: MarketRiskCard, idx: number) => {
                 const s = risk.severity.toLowerCase();
 
                 let borderClass = "border-[#E2E6D8]";
@@ -673,7 +789,7 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
                         </span>
                       </div>
                       <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${badgeClass}`}>
-                        {risk.severity}
+                        {severityLabel(risk.severity)}
                       </span>
                     </div>
 
@@ -684,10 +800,10 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
 
                     {/* Severity progress bar */}
                     <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-medium text-[#8C9385]">Severity</span>
+                      <span className="text-[10px] font-medium text-[#8C9385]">{t.marketIntel.severityLabel}</span>
                       <div className="flex-1 h-1 bg-[#F5F6F2] rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${barColor}`}
+                           className={`h-full rounded-full ${barColor}`}
                           style={{ width: barWidth }}
                         />
                       </div>
@@ -701,9 +817,9 @@ export default function MarketIntelligenceTab({ initialSubType }: MarketIntellig
               <div className="w-10 h-10 rounded-full bg-[#F1F8F2] border border-[#C8E6C9] flex items-center justify-center mb-3">
                 <ShieldAlert className="w-4 h-4 text-[#2E7D32]" />
               </div>
-              <p className="text-[11px] font-bold text-[#1A2016] mb-1">No Active Risks</p>
+              <p className="text-[11px] font-bold text-[#1A2016] mb-1">{t.marketIntel.noActiveRisksTitle}</p>
               <p className="text-[10px] text-[#5F6656] max-w-xs">
-                No climate or market risks have been identified for this enterprise type at this time.
+                {t.marketIntel.noActiveRisksDesc}
               </p>
             </div>
           )}

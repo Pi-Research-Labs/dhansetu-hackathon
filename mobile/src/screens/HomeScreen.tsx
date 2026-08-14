@@ -34,6 +34,8 @@ export function HomeScreen() {
     entries,
     receivables,
     todaysTotals,
+    creditHeadroom,
+    bridgeHeadroom,
     fetchMerchantData,
   } = useMerchantStore();
 
@@ -69,7 +71,6 @@ export function HomeScreen() {
           </View>
           <View>
             <Text style={styles.govTitle}>DHANSETU</Text>
-            <Text style={styles.portalTitle}>{t.portalTitle}</Text>
           </View>
         </View>
       </View>
@@ -118,6 +119,20 @@ export function HomeScreen() {
                 {emi ? formatCurrency(emi) : '0'}
               </Text>
               {missedEmi >= 1 && <Text style={styles.statSubWarn}>{missedEmi} {t.missedEmiSuffix}</Text>}
+            </View>
+          </View>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>{t.creditHeadroom}</Text>
+              <Text style={[styles.statValue, styles.textGreen]}>{formatCurrency(creditHeadroom)}</Text>
+              <Text style={styles.statSubText}>Term credit capacity</Text>
+            </View>
+
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>{t.bridgeHeadroom}</Text>
+              <Text style={[styles.statValue, styles.textGreen]}>{formatCurrency(bridgeHeadroom)}</Text>
+              <Text style={styles.statSubText}>Bridge credit capacity</Text>
             </View>
           </View>
         </View>

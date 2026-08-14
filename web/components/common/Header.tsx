@@ -95,7 +95,7 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-9 h-9 rounded-full border border-[#2E7D32]/30 overflow-hidden group-hover:scale-105 transition-transform">
             <Image
-              src="/logo.png"
+              src="/favicon.png"
               alt="Dhansetu Logo"
               width={36}
               height={36}

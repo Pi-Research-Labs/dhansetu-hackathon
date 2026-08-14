@@ -5,6 +5,7 @@ import { ReceivableItem } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
 import { Receipt, AlertCircle, CheckCircle2, Clock, Info } from "lucide-react";
+import { Translate } from "@/components/common/Translate";
 
 interface ReceivablesCardProps {
   items: ReceivableItem[];
@@ -138,7 +139,7 @@ export default function ReceivablesCard({ items, isLoading = false, t }: Receiva
             {items.map((row, idx) => (
               <tr key={idx} className="hover:bg-[#FAFBF6]">
                 <td className="py-2 px-2.5 font-sans font-medium text-[#1A2016] capitalize">
-                  {t?.counterpartyTypes?.[row.counterparty_type] || row.counterparty_type.replace(/_/g, " ")}
+                  {t?.counterpartyTypes?.[row.counterparty_type] || <Translate>{row.counterparty_type.replace(/_/g, " ")}</Translate>}
                 </td>
                 <td className="py-2 px-2.5 text-[#5F6656]">{row.invoices}</td>
                 <td className="py-2 px-2.5 font-bold text-[#1A2016]">

@@ -6,6 +6,7 @@ import Select from "react-select";
 import { getTransactions, getWorklist, LedgerTransaction, WorklistItem } from "@/utils/api-config";
 import { formatCurrency } from "@/utils/formatters";
 import { TranslationDictionary } from "@/utils/translations/dictionary";
+import { Translate } from "@/components/common/Translate";
 import {
   Calendar,
   Globe,
@@ -262,17 +263,17 @@ export default function TransactionsTab({
   }, [enterpriseOptions, activeEnterpriseId]);
 
   const directionOptions = [
-    { value: "all", label: "All Directions" },
-    { value: "inflow", label: "Inflow (Income)" },
-    { value: "outflow", label: "Outflow (Expense)" },
+    { value: "all", label: t.dash.allDirections || "All Directions" },
+    { value: "inflow", label: t.dash.inflowIncome || "Inflow (Income)" },
+    { value: "outflow", label: t.dash.outflowExpense || "Outflow (Expense)" },
   ];
 
   const selectedDirectionOption = useMemo(() => {
     return directionOptions.find((opt) => opt.value === directionFilter) || directionOptions[0];
-  }, [directionFilter]);
+  }, [directionFilter, t]);
 
   const tenderOptions = [
-    { value: "all", label: "All Tender Modes" },
+    { value: "all", label: t.dash.allTenderModes || "All Tender Modes" },
     { value: "cash", label: t.dash.cashLabel || "Cash" },
     { value: "upi", label: t.dash.upiLabel || "UPI" },
     { value: "wallet", label: t.dash.walletLabel || "Wallet" },
@@ -288,7 +289,7 @@ export default function TransactionsTab({
       <div className="bg-[#FAFBF6] border border-[#E2E6D8] p-3.5 rounded-2xl flex flex-wrap items-center gap-3 shadow-2xs">
         <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#5F6656] uppercase tracking-wider mr-2 shrink-0">
           <Filter className="w-3.5 h-3.5 text-[#2E7D32]" />
-          <span>Filters</span>
+          <span>{t.dash.filters || "Filters"}</span>
         </div>
 
         {/* Enterprise Dropdown Selection (Lists all by name) */}
@@ -335,7 +336,7 @@ export default function TransactionsTab({
             onClick={resetFilters}
             className="px-3.5 py-2 text-xs font-bold text-[#C62828] hover:bg-[#FFEBEE] rounded-xl transition-all border border-transparent hover:border-[#C62828]/20 cursor-pointer"
           >
-            Reset Filters
+            {t.dash.resetFilters || "Reset Filters"}
           </button>
         )}
       </div>
@@ -414,7 +415,9 @@ export default function TransactionsTab({
                       {/* Transcript */}
                       <td className="px-4 py-3.5 max-w-[280px]">
                         <div className="text-[11.5px] font-serif italic text-[#1A2016] leading-relaxed break-words">
-                          {item.transcript ? `"${item.transcript}"` : "-"}
+                          {item.transcript ? (
+                            <span>"<Translate>{item.transcript}</Translate>"</span>
+                          ) : "-"}
                         </div>
                       </td>
 
@@ -432,7 +435,7 @@ export default function TransactionsTab({
                       <td className="px-4 py-3.5 whitespace-nowrap text-[10.5px] font-semibold text-[#5F6656] capitalize">
                         <div className="flex items-center gap-1.5">
                           {getTenderIcon(tenderVal)}
-                          <span>{tenderVal}</span>
+                          <span><Translate>{tenderVal}</Translate></span>
                         </div>
                       </td>
                       {/* Amount & Direction */}

@@ -17,6 +17,8 @@ export interface Translations {
   savBal: string;
   loanOut: string;
   mEmi: string;
+  creditHeadroom: string;
+  bridgeHeadroom: string;
   missedEmiSuffix: string;
   noLoan: string;
   runwaySuffix: string;
@@ -213,6 +215,8 @@ export const L: Record<SupportedLang, Translations> = {
     savBal: 'Savings Balance',
     loanOut: 'Loan Outstanding',
     mEmi: 'Monthly EMI',
+    creditHeadroom: 'Credit Headroom',
+    bridgeHeadroom: 'Bridge Headroom',
     missedEmiSuffix: 'missed 90d',
     noLoan: 'No active loan',
     runwaySuffix: 'mo runway',
@@ -412,6 +416,8 @@ export const L: Record<SupportedLang, Translations> = {
     savBal: 'बचत शेष',
     loanOut: 'बकाया ऋण',
     mEmi: 'मासिक EMI',
+    creditHeadroom: 'क्रेडिट सीमा (Credit Headroom)',
+    bridgeHeadroom: 'ब्रिज सीमा (Bridge Headroom)',
     missedEmiSuffix: 'चूकी 90d',
     noLoan: 'कोई ऋण नहीं',
     runwaySuffix: 'माह बचत',
@@ -611,6 +617,8 @@ export const L: Record<SupportedLang, Translations> = {
     savBal: 'बचत शिल्लक',
     loanOut: 'थकीत कर्ज',
     mEmi: 'मासिक EMI',
+    creditHeadroom: 'क्रेडिट मर्यादा (Credit Headroom)',
+    bridgeHeadroom: 'ब्रिज मर्यादा (Bridge Headroom)',
     missedEmiSuffix: 'चुकल्या ९०d',
     noLoan: 'कर्ज नाही',
     runwaySuffix: 'महिने बचत',
@@ -810,6 +818,8 @@ export const L: Record<SupportedLang, Translations> = {
     savBal: 'పొదుపు నిల్వ',
     loanOut: 'బాకీ ఉన్న రుణం',
     mEmi: 'నెలవారీ EMI',
+    creditHeadroom: 'క్రెడిట్ హెడ్‌రూమ్',
+    bridgeHeadroom: 'బ్రిడ్జ్ హెడ్‌రూమ్',
     missedEmiSuffix: 'మిస్సయినవి 90d',
     noLoan: 'రుణం లేదు',
     runwaySuffix: 'నెల్ల పొదుపు',

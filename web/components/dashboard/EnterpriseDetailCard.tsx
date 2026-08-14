@@ -35,6 +35,7 @@ import {
   Filter,
   X,
 } from "lucide-react";
+import { Translate } from "@/components/common/Translate";
 
 interface EnterpriseDetailCardProps {
   card?: EnterpriseCard | null;
@@ -282,7 +283,7 @@ export default function EnterpriseDetailCard({
             <span className="font-mono">{t?.dash?.id || "ID"}: {id}</span>
             <span>·</span>
             <span>
-              {t?.dash?.district || "District"}: {district}
+              {t?.dash?.district || "District"}: <Translate>{district}</Translate>
             </span>
           </p>
 
