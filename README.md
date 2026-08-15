@@ -34,15 +34,11 @@
 
 ## The problem
 
-A dairy unit in Anand is profitable across the year and still collapses every
-April–September, when heat cuts milk yield at the exact moment fodder cost peaks.
-A bank statement doesn't show that coming. A credit bureau doesn't either — a
-merchant with **no formal loan has nothing to default on**, so a
-default-probability model scores her as risk-free right up until she is borrowing
-from a moneylender to stay afloat.
+A dairy unit in Anand can be profitable throughout the year and still collapse every April–September, when heat reduces milk yield just as fodder costs peak. A bank statement doesn't show that coming. A credit bureau doesn't either — a merchant with no formal credit history can appear risk-free until she is borrowing from a moneylender to stay afloat.
+Across rural India, millions of micro-enterprises and households remain underserved by formal banking and affordable credit — not because they are bad risks, but because they are unmeasured.
 
-India's rural micro-enterprises are excluded from formal credit not because they
-are bad risks, but because they are **unmeasured**.
+Their cash flows, seasonal realities, market conditions and emerging risks remain largely invisible to conventional lending systems. This limits access to timely, affordable finance and leaves a large section of India's population outside the full benefits of financial inclusion.
+The challenge is not simply to lend more. It is to make financial services more inclusive, intelligent and accessible — ensuring that every viable rural enterprise has a fair opportunity to be seen, understood and supported by the formal financial system.
 
 ## What DhanSetu does
 
@@ -53,9 +49,6 @@ are bad risks, but because they are **unmeasured**.
 | **Explains** | Ranked, named mechanisms from a closed vocabulary of six — not a bare score. Scored for *correctness* against known ground truth, not plausibility. |
 | **Acts** | An alert carrying a **rupee shortfall with a deadline** and a **bridge credit limit she can actually draw**, engineered to stay positive precisely in distress. |
 | **Protects** | Alerts are never exported to a bureau. Consent is time-boxed and revocable, every access is audited, household spending is structurally excluded from business scoring. |
-
-> **The thesis:** risk monitoring becomes origination. The system's answer to
-> "you're in trouble" is a specific amount of money, not a rejection letter.
 
 ---
 
