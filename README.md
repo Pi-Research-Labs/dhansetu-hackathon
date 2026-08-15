@@ -6,8 +6,6 @@
 
 **Cash-flow intelligence for rural micro-enterprises.**
 
-*See the squeeze before the missed payment — and answer it with money, not a rejection.*
-
 <br/>
 
 [![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
