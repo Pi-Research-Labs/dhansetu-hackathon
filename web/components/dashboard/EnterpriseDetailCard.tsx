@@ -98,7 +98,13 @@ export default function EnterpriseDetailCard({
   // Secondary metrics
   const creditHeadroom = card?.credit_headroom ?? enterprise?.metrics.creditHeadroom ?? 0;
   const bridgeHeadroom = card?.bridge_headroom ?? enterprise?.metrics.savings ?? 0;
-  const marginGap = card?.margin_gap_90d ?? null;
+  // margin_gap_90d is a RATIO (cost_index_chg_90d − rev_index_chg_90d), so 0.2171
+  // means 21.7 percentage points. Rendering it straight against a "%" sign printed
+  // "0.2171%" — a fifth of a percent, when the real figure is a fifth of her
+  // margin. Converted once here rather than at the render site so the pill and any
+  // future consumer cannot disagree.
+  const marginGapPct =
+    card?.margin_gap_90d != null ? Number(card.margin_gap_90d) * 100 : null;
 
   // Latest observed weather, shown only where heat actually drives the business.
   //
@@ -307,13 +313,13 @@ export default function EnterpriseDetailCard({
               <strong className="text-[#2E7D32]">{formatCurrency(bridgeHeadroom)}</strong>
             </div>
 
-            {marginGap !== null && (
+            {marginGapPct !== null && (
               <div className="bg-[#FAFBF6] border border-[#E2E6D8] px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-mono">
                 <ShieldAlert className="w-3.5 h-3.5 text-[#C62828]" />
                 <span className="text-[#5F6656]">
                   {t?.dash?.marginGap90d || "90D Margin Gap"}:{" "}
                 </span>
-                <strong className="text-[#C62828]">{marginGap}%</strong>
+                <strong className="text-[#C62828]">{marginGapPct.toFixed(1)}%</strong>
               </div>
             )}
 
