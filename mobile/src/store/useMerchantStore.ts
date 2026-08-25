@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { SupportedLang } from '@/i18n/translations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+
+
   authLogin,
   authMe,
   getEnterprise,
@@ -17,6 +19,15 @@ import {
   getDailyTotals,
   DailyTotalsResponse,
 } from '@/utils/api-config';
+
+// margin_gap_90d arrives as a RATIO (cost index change minus revenue index
+// change), so 0.2171 means 21.7 percentage points. Rendered straight into the
+// "gap of {x}%" sentences below it read "gap of 0.2171%" -- a fifth of a percent,
+// when what is actually happening to her is a fifth of her margin. One helper so
+// all four languages and the English fallback convert identically.
+const marginGapPct = (card: { margin_gap_90d?: number | string | null } | null | undefined) =>
+  card?.margin_gap_90d != null ? Number((Number(card.margin_gap_90d) * 100).toFixed(1)) : null;
+
 
 export interface Entry {
   id: string;
@@ -342,7 +353,7 @@ export const useMerchantStore = create<MerchantStore>()(
             margin_squeeze: {
               tag: 'Margin Squeeze',
               detail: card.margin_gap_90d
-                ? `Severe pressure on input costs compressing operating margins (margin gap: ${card.margin_gap_90d}%).`
+                ? `Severe pressure on input costs compressing operating margins (margin gap: ${(Number(card.margin_gap_90d) * 100).toFixed(1)}%).`
                 : 'Severe pressure on input costs compressing operating margins.',
             },
             working_capital_erosion: {
@@ -393,7 +404,7 @@ export const useMerchantStore = create<MerchantStore>()(
               key: card.reason_1,
               ...reasonMapping[card.reason_1],
               params: {
-                marginGapPct: card.margin_gap_90d ?? null,
+                marginGapPct: marginGapPct(card),
                 missedEmi: card.missed_emi ?? null,
                 bufferMonths:
                   card.net_buffer_days != null
@@ -407,7 +418,7 @@ export const useMerchantStore = create<MerchantStore>()(
               key: card.reason_2,
               ...reasonMapping[card.reason_2],
               params: {
-                marginGapPct: card.margin_gap_90d ?? null,
+                marginGapPct: marginGapPct(card),
                 missedEmi: card.missed_emi ?? null,
                 bufferMonths:
                   card.net_buffer_days != null
@@ -421,7 +432,7 @@ export const useMerchantStore = create<MerchantStore>()(
               key: card.reason_3,
               ...reasonMapping[card.reason_3],
               params: {
-                marginGapPct: card.margin_gap_90d ?? null,
+                marginGapPct: marginGapPct(card),
                 missedEmi: card.missed_emi ?? null,
                 bufferMonths:
                   card.net_buffer_days != null
